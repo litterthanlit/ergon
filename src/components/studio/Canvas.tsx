@@ -10,14 +10,17 @@ export function Canvas() {
 
   const code = useStudioStore((s) => s.code);
   const values = useStudioStore((s) => s.values);
+  const codeVersion = useStudioStore((s) => s.codeVersion);
   const setSchema = useStudioStore((s) => s.setSchema);
   const setStatus = useStudioStore((s) => s.setStatus);
   const setError = useStudioStore((s) => s.setError);
 
+  const codeRef = useRef(code);
+  codeRef.current = code;
   const valuesRef = useRef(values);
   valuesRef.current = values;
 
-  const handleIframeLoad = useCallback(() => {
+  const setupBridge = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
@@ -33,14 +36,30 @@ export function Canvas() {
     bridgeRef.current = bridge;
 
     setTimeout(() => {
-      bridge.load(code, valuesRef.current);
+      bridge.load(codeRef.current, valuesRef.current);
     }, 100);
-  }, [code, setSchema, setStatus, setError]);
+  }, [setSchema, setStatus, setError]);
 
+  const handleIframeLoad = useCallback(() => {
+    setupBridge();
+  }, [setupBridge]);
+
+  // Reload sandbox when codeVersion changes (user pressed Run)
+  useEffect(() => {
+    if (codeVersion > 0 && bridgeRef.current) {
+      const iframe = iframeRef.current;
+      if (iframe) {
+        iframe.src = iframe.src; // triggers reload + onLoad
+      }
+    }
+  }, [codeVersion]);
+
+  // Send param updates without reload
   useEffect(() => {
     bridgeRef.current?.updateParams(values);
   }, [values]);
 
+  // Cleanup
   useEffect(() => {
     return () => { bridgeRef.current?.destroy(); };
   }, []);
