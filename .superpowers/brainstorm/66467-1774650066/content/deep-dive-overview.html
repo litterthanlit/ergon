@@ -1,0 +1,120 @@
+<h2>ERGON — Deep Dive: The Hard Problems</h2>
+<p class="subtitle">Seven areas that needed building-level specificity. Review and push back.</p>
+
+<div class="section">
+  <div class="label">1. First-Run Experience</div>
+  <div style="background: #111; color: #fff; padding: 24px; border-radius: 8px; font-size: 0.9em;">
+    <div style="display: flex; gap: 24px; align-items: start;">
+      <div style="flex: 1;">
+        <div style="color: #999; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Second 0</div>
+        <div>Full-screen Drift template already running. No blank canvas. No template picker. Just art.</div>
+      </div>
+      <div style="color: #444; font-size: 1.5em; align-self: center;">→</div>
+      <div style="flex: 1;">
+        <div style="color: #999; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Second 5</div>
+        <div>3 floating sliders appear on the art. "Move a slider."</div>
+      </div>
+      <div style="color: #444; font-size: 1.5em; align-self: center;">→</div>
+      <div style="flex: 1;">
+        <div style="color: #999; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Second 10</div>
+        <div><strong>The "whoa" moment.</strong> They moved density. Sparse wisps became dense rivers.</div>
+      </div>
+      <div style="color: #444; font-size: 1.5em; align-self: center;">→</div>
+      <div style="flex: 1;">
+        <div style="color: #999; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Second 30+</div>
+        <div>Code tab peeks from bottom. The slider they moved is highlighted in the code.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">2. Signature Transition</div>
+  <div style="font-size: 0.9em;">
+    <div style="display: flex; gap: 2px; margin-bottom: 8px;">
+      <div style="flex: 3; background: #e8e8e8; padding: 6px 8px; border-radius: 4px 0 0 4px; font-size: 0.8em;">Grid dissolves <span style="color:#999">(0-300ms)</span></div>
+      <div style="flex: 5.5; background: #333; color: #fff; padding: 6px 8px; font-size: 0.8em;">Piece expands via FLIP <span style="color:#999">(100-650ms)</span></div>
+      <div style="flex: 4; background: #666; color: #fff; padding: 6px 8px; font-size: 0.8em;">BG white→black <span style="color:#999">(200-600ms)</span></div>
+      <div style="flex: 2; background: #C4362C; color: #fff; padding: 6px 8px; font-size: 0.8em;">Swap <span style="color:#999">(400-600)</span></div>
+      <div style="flex: 1.5; background: #999; color: #fff; padding: 6px 8px; border-radius: 0 4px 4px 0; font-size: 0.8em;">Chrome</div>
+    </div>
+    <div style="color: #666; font-size: 0.85em;">Pre-warm canvas on hover. Cross-fade thumbnail→live at 70% expansion. Reverse is faster (400ms vs 800ms). Framer Motion layoutId for FLIP.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">3. MVP Templates (5, not 10)</div>
+  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; font-size: 0.85em;">
+    <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
+      <div style="font-weight: 600;">Drift</div>
+      <div style="color: #999; font-size: 0.8em;">Flow fields</div>
+      <div style="color: #666; margin-top: 4px;">Noise + particles. The "hello world." Runs on first open.</div>
+    </div>
+    <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
+      <div style="font-weight: 600;">Grid</div>
+      <div style="color: #999; font-size: 0.8em;">Geometric patterns</div>
+      <div style="color: #666; margin-top: 4px;">Repetition + variation. Looks like Swiss posters.</div>
+    </div>
+    <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
+      <div style="font-weight: 600;">Pulse</div>
+      <div style="color: #999; font-size: 0.8em;">Oscillation</div>
+      <div style="color: #666; margin-top: 4px;">sin() + time. The first animated template. Hypnotic.</div>
+    </div>
+    <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
+      <div style="font-weight: 600;">Scatter</div>
+      <div style="color: #999; font-size: 0.8em;">Controlled randomness</div>
+      <div style="color: #666; margin-top: 4px;">The "aha" — randomness with rules = beauty.</div>
+    </div>
+    <div style="border: 1px solid #e5e5e5; border-radius: 6px; padding: 12px;">
+      <div style="font-weight: 600;">Weave</div>
+      <div style="color: #999; font-size: 0.8em;">Recursive subdivision</div>
+      <div style="color: #666; margin-top: 4px;">Depth slider is magical. See the algorithm think.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">4. Parameter Architecture (revised from spec)</div>
+  <div style="background: #fafafa; padding: 16px; border-radius: 6px; border-left: 3px solid #C4362C;">
+    <strong>Spec change: One-way sync, not bidirectional.</strong>
+    <div style="color: #666; margin-top: 4px; font-size: 0.9em;">Artists declare params via <code>ergon.params({...})</code>. Platform generates UI controls. Controls send values at runtime via postMessage. Code never mutates from slider interaction. This achieves the same UX for 10% of the engineering effort.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">7. Revised Timeline (4 months, not 3)</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+    <div style="padding: 16px; border: 2px solid #000; border-radius: 6px;">
+      <div style="font-weight: 700; font-size: 1.1em;">Milestone 1</div>
+      <div style="color: #999; font-size: 0.8em; margin-bottom: 8px;">30 days → 5 artists</div>
+      <div style="font-size: 0.85em;">"Proof of Magic"</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">Sandbox + params + 3 templates + code editor + auth + shareable links. No gallery, no payments.</div>
+      <div style="color: #C4362C; font-size: 0.8em; margin-top: 8px;">Validates: Do artists enjoy making things with this?</div>
+    </div>
+    <div style="padding: 16px; border: 2px solid #666; border-radius: 6px;">
+      <div style="font-weight: 700; font-size: 1.1em;">Milestone 2</div>
+      <div style="color: #999; font-size: 0.8em; margin-bottom: 8px;">+60 days → 25 artists</div>
+      <div style="font-size: 0.85em;">"The Stage"</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">Gallery + signature transition + immersive mode + OG images + 2 more templates + polish.</div>
+      <div style="color: #C4362C; font-size: 0.8em; margin-top: 8px;">Validates: Does the experience make people explore and stay?</div>
+    </div>
+    <div style="padding: 16px; border: 2px solid #999; border-radius: 6px;">
+      <div style="font-weight: 700; font-size: 1.1em;">Milestone 3</div>
+      <div style="color: #999; font-size: 0.8em; margin-bottom: 8px;">+30 days → 50 artists</div>
+      <div style="font-size: 0.85em;">"The Market"</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">Stripe Connect + collecting + editions + collector profiles + beta launch.</div>
+      <div style="color: #C4362C; font-size: 0.8em; margin-top: 8px;">Validates: Will people pay for generative art here?</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; border: 1px solid #e5e5e5; border-radius: 6px;">
+  <div style="font-weight: 600; margin-bottom: 8px;">Key Changes from Original Spec</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85em;">
+    <div style="color: #999;">Bidirectional param sync →</div><div>One-way declared params</div>
+    <div style="color: #999;">10 templates →</div><div>5 templates (3 for M1, 2 for M2)</div>
+    <div style="color: #999;">90-day plan →</div><div>120-day plan with 3 validation milestones</div>
+    <div style="color: #999;">Custom auth →</div><div>Supabase Auth (ship faster)</div>
+    <div style="color: #999;">CodeMirror or Monaco →</div><div>CodeMirror 6 (firm — lighter, embeddable)</div>
+  </div>
+</div>

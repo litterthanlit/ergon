@@ -1,0 +1,89 @@
+<h2>ERGON — Design Specification</h2>
+<p class="subtitle">Review the full spec, then let me know what to revise</p>
+
+<div class="section">
+  <div class="label">Identity</div>
+  <div style="font-size: 1.1em; margin-bottom: 8px;"><strong>Bandcamp for generative art.</strong> A creative tool that happens to be a platform.</div>
+  <div style="color: #888; font-size: 0.95em;">Brand voice: Precise. Quiet. Confident. Warm.</div>
+</div>
+
+<div class="section">
+  <div class="label">Core Product</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div style="background: #f5f5f5; padding: 16px; border-radius: 6px;">
+      <strong>The Studio</strong>
+      <div style="color: #666; margin-top: 4px; font-size: 0.9em;">Hybrid editor — visual parameter layer on top, code editor underneath. Templates as starting points. Learning gradient: Explorer → Tweaker → Modifier → Creator.</div>
+    </div>
+    <div style="background: #f5f5f5; padding: 16px; border-radius: 6px;">
+      <strong>Gallery → Immersive</strong>
+      <div style="color: #666; margin-top: 4px; font-size: 0.9em;">Curated grid with editorial voice. Click a piece → signature transition → full-bleed live rendering. The platform disappears. The art takes over.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Design System</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+    <div style="padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.1em; color: #999;">Palette</div>
+      <div style="margin-top: 8px; display: flex; gap: 6px; justify-content: center;">
+        <div style="width: 24px; height: 24px; background: #000; border-radius: 3px;"></div>
+        <div style="width: 24px; height: 24px; background: #666; border-radius: 3px;"></div>
+        <div style="width: 24px; height: 24px; background: #999; border-radius: 3px;"></div>
+        <div style="width: 24px; height: 24px; background: #e5e5e5; border-radius: 3px;"></div>
+        <div style="width: 24px; height: 24px; background: #fff; border: 1px solid #e5e5e5; border-radius: 3px;"></div>
+        <div style="width: 24px; height: 24px; background: #C4362C; border-radius: 3px;"></div>
+      </div>
+      <div style="font-size: 0.8em; color: #888; margin-top: 6px;">Achromatic + one accent</div>
+    </div>
+    <div style="padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.1em; color: #999;">Typography</div>
+      <div style="margin-top: 8px; font-size: 0.85em; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 600;">DISPLAY</div>
+      <div style="font-size: 0.85em;">Headings</div>
+      <div style="font-size: 0.8em; color: #666;">Body text</div>
+      <div style="font-size: 0.75em; color: #999; font-variant: small-caps;">metadata</div>
+    </div>
+    <div style="padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; text-align: center;">
+      <div style="font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.1em; color: #999;">Spacing</div>
+      <div style="font-size: 0.8em; color: #666; margin-top: 8px;">8px base unit</div>
+      <div style="font-size: 0.8em; color: #888; margin-top: 2px;">When in doubt,</div>
+      <div style="font-size: 0.8em; color: #888;">add more space</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Business Model</div>
+  <div style="background: #f5f5f5; padding: 16px; border-radius: 6px;">
+    <strong>Studio is free. Always. No tiers. No gates.</strong>
+    <div style="color: #666; margin-top: 4px; font-size: 0.9em;">15% transaction cut when art sells (Bandcamp model). Artist gets 85%. Revenue aligned with artist success.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">90-Day MVP</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+    <div style="padding: 12px; border-left: 3px solid #000; background: #fafafa;">
+      <div style="font-weight: 600; font-size: 0.85em;">Month 1</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">The Studio — editor, sandbox, templates, parameter sync</div>
+    </div>
+    <div style="padding: 12px; border-left: 3px solid #666; background: #fafafa;">
+      <div style="font-weight: 600; font-size: 0.85em;">Month 2</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">Publishing + Gallery — profiles, grid, immersive mode, transition</div>
+    </div>
+    <div style="padding: 12px; border-left: 3px solid #999; background: #fafafa;">
+      <div style="font-weight: 600; font-size: 0.85em;">Month 3</div>
+      <div style="color: #666; font-size: 0.85em; margin-top: 4px;">Collecting + Polish — Stripe, editions, beta with 50 artists</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 32px; padding: 16px; border: 1px solid #e5e5e5; border-radius: 6px; background: #fafafa;">
+  <div style="font-weight: 600; margin-bottom: 8px;">Non-Negotiables for V1</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9em; color: #444;">
+    <div>1. Studio feels magic on first use (&lt;3s to "whoa")</div>
+    <div>2. Signature transition is cinematic</div>
+    <div>3. Typography and spacing are impeccable</div>
+    <div>4. Art renders fast and looks sharp</div>
+  </div>
+</div>
