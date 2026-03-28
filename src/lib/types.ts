@@ -47,7 +47,22 @@ export type UpdateParamsMessage = {
   values: ParamValues;
 };
 
-export type ParentMessage = LoadCodeMessage | UpdateParamsMessage;
+// --- Export Messages ---
+
+export type RequestExportMessage = {
+  type: "ergon:export";
+  format: "png";
+  scale: number;
+};
+
+export type ExportDataMessage = {
+  type: "ergon:export-data";
+  dataUrl: string;
+  width: number;
+  height: number;
+};
+
+export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage;
 
 // --- Messages: Iframe → Parent ---
 
@@ -65,7 +80,7 @@ export type ErrorMessage = {
   message: string;
 };
 
-export type ChildMessage = SchemaMessage | ReadyMessage | ErrorMessage;
+export type ChildMessage = SchemaMessage | ReadyMessage | ErrorMessage | ExportDataMessage;
 
 // --- Validation ---
 

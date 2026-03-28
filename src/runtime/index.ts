@@ -64,6 +64,22 @@ function handleParams(values: ParamValues): void {
   paramManager.update(values);
 }
 
+function handleExport(scale: number): void {
+  const canvas = document.querySelector("canvas");
+  if (!canvas) {
+    sendError("No canvas found for export");
+    return;
+  }
+  const dataUrl = canvas.toDataURL("image/png");
+  const msg = {
+    type: "ergon:export-data" as const,
+    dataUrl,
+    width: canvas.width,
+    height: canvas.height,
+  };
+  window.parent.postMessage(msg, "*");
+}
+
 window.addEventListener("message", (event: MessageEvent<ParentMessage>) => {
   const msg = event.data;
   if (!msg || typeof msg.type !== "string") return;
@@ -74,6 +90,9 @@ window.addEventListener("message", (event: MessageEvent<ParentMessage>) => {
       break;
     case "ergon:params":
       handleParams(msg.values);
+      break;
+    case "ergon:export":
+      handleExport(msg.scale);
       break;
   }
 });

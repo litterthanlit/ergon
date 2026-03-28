@@ -5,16 +5,18 @@ export type BridgeCallbacks = {
   onSchema: (schema: ParamSchema) => void;
   onReady: () => void;
   onError: (message: string) => void;
+  onExportData?: (dataUrl: string, width: number, height: number) => void;
 };
 
 export type Bridge = {
   load: (code: string, params: ParamValues) => void;
   updateParams: (values: ParamValues) => void;
   destroy: () => void;
+  requestExport: (scale?: number) => void;
 };
 
 export function createBridge(callbacks: BridgeCallbacks): Bridge {
-  const { iframe, onSchema, onReady, onError } = callbacks;
+  const { iframe, onSchema, onReady, onError, onExportData } = callbacks;
 
   function sendToIframe(msg: ParentMessage): void {
     iframe.contentWindow?.postMessage(msg, "*");
@@ -35,6 +37,9 @@ export function createBridge(callbacks: BridgeCallbacks): Bridge {
       case "ergon:error":
         onError(msg.message);
         break;
+      case "ergon:export-data":
+        onExportData?.(msg.dataUrl, msg.width, msg.height);
+        break;
     }
   }
 
@@ -49,6 +54,9 @@ export function createBridge(callbacks: BridgeCallbacks): Bridge {
     },
     destroy() {
       window.removeEventListener("message", handleMessage);
+    },
+    requestExport(scale = 1) {
+      sendToIframe({ type: "ergon:export", format: "png", scale });
     },
   };
 }
