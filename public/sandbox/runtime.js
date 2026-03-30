@@ -145,4 +145,19 @@
     }
   });
   window.parent.postMessage({ type: "ergon:runtime-ready" }, "*");
+  function checkHashParams() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const searchParams = new URLSearchParams(hash);
+    const code = searchParams.get("code");
+    const paramValues = searchParams.get("params");
+    if (code) {
+      const decoded = decodeURIComponent(code);
+      const values = paramValues ? JSON.parse(decodeURIComponent(paramValues)) : {};
+      setTimeout(() => {
+        handleLoad(decoded, values);
+      }, 200);
+    }
+  }
+  checkHashParams();
 })();
