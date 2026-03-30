@@ -69,49 +69,38 @@ export function LayerItem({
         </div>
       </div>
 
-      {/* Opacity + blend mode */}
-      {isActive && (
-        <div className="flex items-center gap-2 mt-1">
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={opacity}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => onOpacityChange(parseFloat(e.target.value))}
-            className="flex-1"
-          />
-          <span className="text-xs font-mono text-ergon-muted w-7 text-right">
-            {Math.round(opacity * 100)}%
-          </span>
-        </div>
-      )}
+      {/* Opacity — always visible */}
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={opacity}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => onOpacityChange(parseFloat(e.target.value))}
+          className="flex-1"
+        />
+        <span className="text-[10px] font-mono text-ergon-muted w-7 text-right">
+          {Math.round(opacity * 100)}%
+        </span>
+      </div>
 
-      {/* Blend mode — always visible as label, editable when active */}
-      {!isActive && blendMode !== "normal" && (
-        <div className="mt-1.5">
-          <span className="text-[10px] font-medium text-ergon-muted uppercase tracking-[0.05em]">
-            {blendMode}
-          </span>
-        </div>
-      )}
-      {isActive && (
-        <div className="mt-2">
-          <select
-            value={blendMode}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-            className="w-full text-xs text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text appearance-none"
-          >
-            {BLEND_MODES.map((mode) => (
-              <option key={mode} value={mode}>
-                {mode}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* Blend mode — always visible as dropdown */}
+      <div className="mt-1.5">
+        <select
+          value={blendMode}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
+          className="w-full text-[11px] text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text"
+        >
+          {BLEND_MODES.map((mode) => (
+            <option key={mode} value={mode}>
+              {mode}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
