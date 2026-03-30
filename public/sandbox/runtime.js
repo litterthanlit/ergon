@@ -99,6 +99,18 @@
   function handleParams(values) {
     paramManager.update(values);
   }
+  function handleSeed(seed) {
+    const w = window;
+    if (typeof w.randomSeed === "function") {
+      w.randomSeed(seed);
+    }
+    if (typeof w.noiseSeed === "function") {
+      w.noiseSeed(seed);
+    }
+    if (typeof w.redraw === "function") {
+      w.redraw();
+    }
+  }
   function handleExport(scale) {
     const canvas = document.querySelector("canvas");
     if (!canvas) {
@@ -126,6 +138,9 @@
         break;
       case "ergon:export":
         handleExport(msg.scale);
+        break;
+      case "ergon:seed":
+        handleSeed(msg.seed);
         break;
     }
   });

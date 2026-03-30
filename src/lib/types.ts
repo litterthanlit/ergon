@@ -47,6 +47,11 @@ export type UpdateParamsMessage = {
   values: ParamValues;
 };
 
+export type SeedMessage = {
+  type: "ergon:seed";
+  seed: number;
+};
+
 // --- Export Messages ---
 
 export type RequestExportMessage = {
@@ -62,7 +67,7 @@ export type ExportDataMessage = {
   height: number;
 };
 
-export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage;
+export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage | SeedMessage;
 
 // --- Messages: Iframe → Parent ---
 

@@ -13,6 +13,7 @@ export type Bridge = {
   updateParams: (values: ParamValues) => void;
   destroy: () => void;
   requestExport: (scale?: number) => void;
+  sendSeed: (seed: number) => void;
 };
 
 export function createBridge(callbacks: BridgeCallbacks): Bridge {
@@ -57,6 +58,9 @@ export function createBridge(callbacks: BridgeCallbacks): Bridge {
     },
     requestExport(scale = 1) {
       sendToIframe({ type: "ergon:export", format: "png", scale });
+    },
+    sendSeed(seed: number) {
+      sendToIframe({ type: "ergon:seed", seed });
     },
   };
 }

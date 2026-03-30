@@ -11,6 +11,7 @@ export function Canvas() {
   const code = useStudioStore((s) => s.code);
   const values = useStudioStore((s) => s.values);
   const codeVersion = useStudioStore((s) => s.codeVersion);
+  const seed = useStudioStore((s) => s.seed);
   const setSchema = useStudioStore((s) => s.setSchema);
   const setStatus = useStudioStore((s) => s.setStatus);
   const setError = useStudioStore((s) => s.setError);
@@ -58,6 +59,11 @@ export function Canvas() {
   useEffect(() => {
     bridgeRef.current?.updateParams(values);
   }, [values]);
+
+  // Send seed updates without reload
+  useEffect(() => {
+    bridgeRef.current?.sendSeed(seed);
+  }, [seed]);
 
   // Cleanup
   useEffect(() => {

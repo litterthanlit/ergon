@@ -64,6 +64,19 @@ function handleParams(values: ParamValues): void {
   paramManager.update(values);
 }
 
+function handleSeed(seed: number): void {
+  const w = window as unknown as Record<string, unknown>;
+  if (typeof w.randomSeed === "function") {
+    (w.randomSeed as (s: number) => void)(seed);
+  }
+  if (typeof w.noiseSeed === "function") {
+    (w.noiseSeed as (s: number) => void)(seed);
+  }
+  if (typeof w.redraw === "function") {
+    (w.redraw as () => void)();
+  }
+}
+
 function handleExport(scale: number): void {
   const canvas = document.querySelector("canvas");
   if (!canvas) {
@@ -93,6 +106,9 @@ window.addEventListener("message", (event: MessageEvent<ParentMessage>) => {
       break;
     case "ergon:export":
       handleExport(msg.scale);
+      break;
+    case "ergon:seed":
+      handleSeed(msg.seed);
       break;
   }
 });
