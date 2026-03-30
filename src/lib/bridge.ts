@@ -14,6 +14,7 @@ export type Bridge = {
   destroy: () => void;
   requestExport: (scale?: number) => void;
   sendSeed: (seed: number) => void;
+  setTransparent: (enabled: boolean) => void;
 };
 
 export function createBridge(callbacks: BridgeCallbacks): Bridge {
@@ -61,6 +62,9 @@ export function createBridge(callbacks: BridgeCallbacks): Bridge {
     },
     sendSeed(seed: number) {
       sendToIframe({ type: "ergon:seed", seed });
+    },
+    setTransparent(enabled: boolean) {
+      sendToIframe({ type: "ergon:transparent", enabled });
     },
   };
 }

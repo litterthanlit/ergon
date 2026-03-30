@@ -120,7 +120,12 @@ export type ExportDataMessage = {
   height: number;
 };
 
-export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage | SeedMessage;
+export type TransparentMessage = {
+  type: "ergon:transparent";
+  enabled: boolean;
+};
+
+export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage | SeedMessage | TransparentMessage;
 
 // --- Messages: Iframe → Parent ---
 
