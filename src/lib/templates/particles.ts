@@ -121,4 +121,5 @@ export const particles: Template = {
   description: "Mouse-driven particles attracted or repelled by your cursor, with variable sizes and trails.",
   schema: particlesSchema,
   code: particlesCode,
+  compositionHint: { blendMode: "screen", opacity: 0.8 },
 };

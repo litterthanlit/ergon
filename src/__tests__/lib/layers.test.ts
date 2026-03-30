@@ -13,8 +13,8 @@ describe("layers", () => {
     expect(layer.templateId).toBe("drift");
     expect(layer.name).toBe("Drift");
     expect(layer.visible).toBe(true);
-    expect(layer.opacity).toBe(1);
-    expect(layer.blendMode).toBe("normal");
+    expect(layer.opacity).toBe(0.7);
+    expect(layer.blendMode).toBe("screen");
     expect(layer.code).toContain("ergon.params");
   });
 

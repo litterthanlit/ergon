@@ -20,6 +20,9 @@ export const driftSchema: ParamSchema = {
     default: "Arctic",
     label: "Color Palette",
   },
+  weight: {
+    type: "number", min: 0.5, max: 6, default: 1.5, step: 0.5, label: "Weight",
+  },
 };
 
 export const driftCode = `
@@ -38,6 +41,7 @@ const params = ergon.params({
   turbulence: { type: 'number', min: 0.001, max: 0.02, default: 0.005, step: 0.001, label: 'Turbulence' },
   trail:      { type: 'number', min: 1, max: 80, default: 20, step: 1, label: 'Trail Length' },
   palette:    { type: 'select', options: ['Arctic', 'Sunset', 'Mono', 'Neon', 'Earth', 'Rose'], default: 'Arctic', label: 'Color Palette' },
+  weight:     { type: 'number', min: 0.5, max: 6, default: 1.5, step: 0.5, label: 'Weight' },
 });
 
 let particles = [];
@@ -79,7 +83,7 @@ function draw() {
     const c = colors[constrain(colorIdx, 0, colors.length - 1)];
     fill(c);
 
-    circle(p.x, p.y, 1.5);
+    circle(p.x, p.y, params.weight);
 
     if (p.x < 0) p.x = width;
     if (p.x > width) p.x = 0;
@@ -99,4 +103,5 @@ export const drift: Template = {
   description: "Particles flowing through a noise field. The hello world of generative art.",
   schema: driftSchema,
   code: driftCode,
+  compositionHint: { blendMode: "screen", opacity: 0.6 },
 };

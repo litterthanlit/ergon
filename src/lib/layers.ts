@@ -47,7 +47,7 @@ export function createLayer(
     schema,
     values,
     visible: true,
-    opacity: 1,
-    blendMode: "normal",
+    opacity: 0.7,
+    blendMode: "screen",
   };
 }

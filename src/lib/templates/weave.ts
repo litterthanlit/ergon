@@ -58,4 +58,5 @@ export const weave: Template = {
   description: "Recursive subdivision. Watch the algorithm think at each depth level.",
   schema: weaveSchema,
   code: weaveCode,
+  compositionHint: { blendMode: "multiply", opacity: 0.5 },
 };

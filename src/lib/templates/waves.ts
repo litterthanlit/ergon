@@ -56,10 +56,10 @@ function draw() {
     const freq = params.frequency * 0.005;
 
     stroke(sr, sg, sb, alpha);
-    strokeWeight(1.2);
+    strokeWeight(2);
 
     if (params.fill) {
-      fill(sr, sg, sb, alpha * 0.25);
+      fill(sr, sg, sb, alpha * 0.4);
       beginShape();
       vertex(0, height);
       for (let x = 0; x <= width; x += 3) {
@@ -91,4 +91,5 @@ export const waves: Template = {
   description: "Layered sine waves stacked vertically. Toggle fill to switch between solid and outline styles.",
   schema: wavesSchema,
   code: wavesCode,
+  compositionHint: { blendMode: "overlay", opacity: 0.6 },
 };

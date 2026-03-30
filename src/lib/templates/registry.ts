@@ -6,6 +6,10 @@ export type Template = {
   description: string;
   schema: ParamSchema;
   code: string;
+  compositionHint?: {
+    blendMode: string;
+    opacity: number;
+  };
 };
 
 import { drift } from "./drift";

@@ -55,4 +55,5 @@ export const grid: Template = {
   description: "Geometric repetition with controlled variation. Looks like a Swiss poster.",
   schema: gridSchema,
   code: gridCode,
+  compositionHint: { blendMode: "multiply", opacity: 0.5 },
 };

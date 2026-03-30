@@ -125,4 +125,5 @@ export const aurora: Template = {
   description: "Flowing aurora-like bands with gradient colors drifting through a noise field.",
   schema: auroraSchema,
   code: auroraCode,
+  compositionHint: { blendMode: "screen", opacity: 0.7 },
 };

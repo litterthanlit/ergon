@@ -64,4 +64,5 @@ export const scatter: Template = {
   description: "Controlled randomness. The difference between noise and composition.",
   schema: scatterSchema,
   code: scatterCode,
+  compositionHint: { blendMode: "overlay", opacity: 0.6 },
 };

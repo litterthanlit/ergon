@@ -94,4 +94,5 @@ export const spiral: Template = {
   description: "Mathematical spiral patterns with HSB color mapping across arms. Click to randomize.",
   schema: spiralSchema,
   code: spiralCode,
+  compositionHint: { blendMode: "overlay", opacity: 0.6 },
 };

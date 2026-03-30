@@ -47,4 +47,5 @@ export const pulse: Template = {
   description: "Concentric rings breathing with sine-wave rhythm. Time as a creative variable.",
   schema: pulseSchema,
   code: pulseCode,
+  compositionHint: { blendMode: "screen", opacity: 0.7 },
 };

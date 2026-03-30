@@ -106,4 +106,5 @@ export const flowfield: Template = {
   description: "Organic flow lines trace paths through a Perlin noise vector field.",
   schema: flowfieldSchema,
   code: flowfieldCode,
+  compositionHint: { blendMode: "screen", opacity: 0.7 },
 };

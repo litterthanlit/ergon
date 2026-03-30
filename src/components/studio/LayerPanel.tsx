@@ -27,6 +27,15 @@ export function LayerPanel({ onLayerSelect }: Props) {
     const t = templates.find((tpl) => tpl.id === templateId);
     if (t) {
       addLayer(t.id, t.name, t.code, t.schema, getDefaultValues(t.schema));
+      // Apply composition hints from template
+      if (t.compositionHint) {
+        const newLayers = useStudioStore.getState().layers;
+        const newLayer = newLayers[newLayers.length - 1];
+        if (newLayer) {
+          updateLayerOpacity(newLayer.id, t.compositionHint.opacity);
+          updateLayerBlendMode(newLayer.id, t.compositionHint.blendMode as BlendMode);
+        }
+      }
       setShowPicker(false);
     }
   };
