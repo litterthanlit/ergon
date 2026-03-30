@@ -95,6 +95,12 @@
     if (typeof p5Constructor === "function") {
       p5Instance = new p5Constructor();
     }
+    const w = window;
+    if (typeof w.frameRate === "function") {
+      setTimeout(() => {
+        w.frameRate(30);
+      }, 50);
+    }
     if (transparentMode) {
       setTimeout(() => handleTransparent(true), 50);
     }

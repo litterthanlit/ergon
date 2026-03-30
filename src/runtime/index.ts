@@ -58,6 +58,14 @@ function handleLoad(code: string, initialParams: ParamValues): void {
     p5Instance = new (p5Constructor as new () => unknown)();
   }
 
+  // Cap frame rate at 30fps to reduce CPU usage (still smooth for generative art)
+  const w = window as unknown as Record<string, unknown>;
+  if (typeof w.frameRate === "function") {
+    setTimeout(() => {
+      (w.frameRate as (fps: number) => void)(30);
+    }, 50);
+  }
+
   // Re-apply transparent mode after p5 initializes (it resets globals)
   if (transparentMode) {
     setTimeout(() => handleTransparent(true), 50);

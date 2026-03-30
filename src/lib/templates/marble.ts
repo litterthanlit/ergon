@@ -25,7 +25,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
   colorMode(HSB, 360, 100, 100, 100);
-  pg = createGraphics(floor(width / 2), floor(height / 2));
+  pg = createGraphics(floor(width / 3), floor(height / 3));
   pg.pixelDensity(1);
   pg.colorMode(HSB, 360, 100, 100, 100);
 }
@@ -99,7 +99,7 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  pg = createGraphics(floor(width / 2), floor(height / 2));
+  pg = createGraphics(floor(width / 3), floor(height / 3));
   pg.pixelDensity(1);
   pg.colorMode(HSB, 360, 100, 100, 100);
 }
