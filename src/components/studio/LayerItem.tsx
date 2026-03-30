@@ -94,7 +94,7 @@ export function LayerItem({
             value={blendMode}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-            className="w-full text-xs text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text"
+            className="w-full text-xs text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text appearance-none"
           >
             {BLEND_MODES.map((mode) => (
               <option key={mode} value={mode}>

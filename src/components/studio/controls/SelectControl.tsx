@@ -18,8 +18,8 @@ export function SelectControl({ label, options, value, onChange }: Props) {
             onClick={() => onChange(option)}
             className={`px-3 py-1.5 text-xs rounded transition-all duration-150 ${
               value === option
-                ? "bg-ergon-text text-white font-medium"
-                : "bg-ergon-surface text-ergon-subtle hover:bg-ergon-border hover:text-ergon-text"
+                ? "bg-ergon-text text-white font-semibold"
+                : "bg-ergon-surface text-ergon-subtle font-medium hover:bg-ergon-border hover:text-ergon-text"
             }`}
           >
             {option}
