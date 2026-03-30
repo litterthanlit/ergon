@@ -177,15 +177,15 @@ export function Studio() {
 
         {/* Parameter Panel */}
         {!isFullscreen && (
-          <div className="w-72 bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
+          <div className="w-80 bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
             {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-ergon-border">
-              <h2 className="text-[11px] font-bold text-ergon-text uppercase tracking-[0.18em]">
+            <div className="px-6 pt-5 pb-4 border-b border-ergon-border">
+              <h2 className="text-xs font-bold text-ergon-text uppercase tracking-[0.15em]">
                 {compositionMode
                   ? `Layer: ${layers[activeLayerIndex]?.name ?? "—"}`
                   : template.name}
               </h2>
-              <p className="text-[10px] text-ergon-muted mt-1.5 leading-relaxed">
+              <p className="text-[11px] text-ergon-muted mt-1.5 leading-relaxed">
                 {compositionMode
                   ? `${layers.length} layer${layers.length !== 1 ? "s" : ""}`
                   : template.description}
@@ -194,13 +194,13 @@ export function Studio() {
 
             {/* Composition: Layer panel */}
             {compositionMode && (
-              <div className="px-5 py-4 border-b border-ergon-border">
+              <div className="px-6 py-4 border-b border-ergon-border">
                 <LayerPanel />
               </div>
             )}
 
             {/* Controls — show active layer's params in composition mode */}
-            <div className="flex-1 overflow-y-auto px-5 py-5">
+            <div className="flex-1 overflow-y-auto px-6 py-5">
               {compositionMode ? (
                 <ParameterPanel
                   schema={layers[activeLayerIndex]?.schema ?? null}
@@ -220,11 +220,11 @@ export function Studio() {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 border-t border-ergon-border">
+            <div className="px-6 py-3 border-t border-ergon-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-1.5 h-1.5 rounded-full ${
+                    className={`w-2 h-2 rounded-full ${
                       status === "ready"
                         ? "bg-emerald-500"
                         : status === "error"
@@ -232,7 +232,7 @@ export function Studio() {
                           : "bg-amber-500 animate-pulse"
                     }`}
                   />
-                  <span className="text-[9px] text-ergon-muted uppercase tracking-[0.18em] font-medium">
+                  <span className="text-[11px] text-ergon-muted uppercase tracking-[0.15em] font-medium">
                     {status === "ready"
                       ? "Running"
                       : status === "error"
@@ -240,7 +240,7 @@ export function Studio() {
                         : "Loading"}
                   </span>
                 </div>
-                <span className="text-[9px] text-ergon-muted/50 font-mono">
+                <span className="text-[11px] text-ergon-muted/50 font-mono">
                   {editorOpen ? "⌘↵ Run" : "⌘E Code"}
                 </span>
               </div>
