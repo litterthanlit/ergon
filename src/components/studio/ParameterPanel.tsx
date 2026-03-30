@@ -3,18 +3,19 @@ import { SliderControl } from "./controls/SliderControl";
 import { SelectControl } from "./controls/SelectControl";
 import { ToggleControl } from "./controls/ToggleControl";
 import { ColorControl } from "./controls/ColorControl";
+import { XYPadControl } from "./controls/XYPadControl";
 
 type Props = {
   schema: ParamSchema | null;
   values: ParamValues;
-  onChange: (key: string, value: number | string | boolean) => void;
+  onChange: (key: string, value: number | string | boolean | { x: number; y: number }) => void;
 };
 
 function renderControl(
   key: string,
   def: ParamDef,
-  value: number | string | boolean,
-  onChange: (key: string, value: number | string | boolean) => void
+  value: number | string | boolean | { x: number; y: number },
+  onChange: (key: string, value: number | string | boolean | { x: number; y: number }) => void
 ) {
   switch (def.type) {
     case "number":
@@ -25,6 +26,19 @@ function renderControl(
       return (<ToggleControl key={key} label={def.label} value={value as boolean} onChange={(v) => onChange(key, v)} />);
     case "color":
       return (<ColorControl key={key} label={def.label} value={value as string} onChange={(v) => onChange(key, v)} />);
+    case "xy":
+      return (
+        <XYPadControl
+          key={key}
+          label={def.label}
+          minX={def.minX}
+          maxX={def.maxX}
+          minY={def.minY}
+          maxY={def.maxY}
+          value={(value as { x: number; y: number }) ?? def.default}
+          onChange={(v) => onChange(key, v)}
+        />
+      );
   }
 }
 

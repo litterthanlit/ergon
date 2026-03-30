@@ -28,11 +28,21 @@ export type ColorParam = {
   label: string;
 };
 
-export type ParamDef = NumberParam | SelectParam | BooleanParam | ColorParam;
+export type XYParam = {
+  type: "xy";
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  default: { x: number; y: number };
+  label: string;
+};
+
+export type ParamDef = NumberParam | SelectParam | BooleanParam | ColorParam | XYParam;
 
 export type ParamSchema = Record<string, ParamDef>;
 
-export type ParamValues = Record<string, number | string | boolean>;
+export type ParamValues = Record<string, number | string | boolean | { x: number; y: number }>;
 
 // --- Messages: Parent → Iframe ---
 
@@ -110,6 +120,12 @@ export function validateParamSchema(schema: ParamSchema): boolean {
         break;
       case "color":
         if (typeof param.default !== "string") return false;
+        break;
+      case "xy":
+        if (typeof param.default !== "object" || param.default === null) return false;
+        if (typeof param.default.x !== "number" || typeof param.default.y !== "number") return false;
+        if (param.default.x < param.minX || param.default.x > param.maxX) return false;
+        if (param.default.y < param.minY || param.default.y > param.maxY) return false;
         break;
       default:
         return false;
