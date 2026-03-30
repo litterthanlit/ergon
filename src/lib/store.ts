@@ -7,6 +7,8 @@ import { createHistory, type History } from "./history";
 
 type SandboxStatus = "loading" | "ready" | "error";
 
+type AspectRatio = "free" | "1:1" | "16:9" | "4:3";
+
 let paramHistory: History = createHistory(getDefaultValues(drift.schema));
 
 type StudioState = {
@@ -31,6 +33,8 @@ type StudioState = {
   isFullscreen: boolean;
   editorHeight: number;
   setEditorHeight: (height: number) => void;
+  aspect: AspectRatio;
+  cycleAspect: () => void;
 
   // Seed
   seed: number;
@@ -66,6 +70,7 @@ export const useStudioStore = create<StudioState>((set) => ({
   editorOpen: false,
   isFullscreen: false,
   editorHeight: 300,
+  aspect: "free" as AspectRatio,
   canUndo: false,
   canRedo: false,
 
@@ -151,4 +156,13 @@ export const useStudioStore = create<StudioState>((set) => ({
 
   randomize: () =>
     set({ seed: Math.floor(Math.random() * 999999) }),
+
+  cycleAspect: () =>
+    set((state) => {
+      const ratios: AspectRatio[] = ["free", "1:1", "16:9", "4:3"];
+      const idx = ratios.indexOf(state.aspect);
+      return { aspect: ratios[(idx + 1) % ratios.length] };
+    }),
 }));
+
+export type { AspectRatio };

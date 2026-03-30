@@ -15,6 +15,7 @@ export function Canvas() {
   const setSchema = useStudioStore((s) => s.setSchema);
   const setStatus = useStudioStore((s) => s.setStatus);
   const setError = useStudioStore((s) => s.setError);
+  const aspect = useStudioStore((s) => s.aspect);
 
   const codeRef = useRef(code);
   codeRef.current = code;
@@ -70,15 +71,28 @@ export function Canvas() {
     return () => { bridgeRef.current?.destroy(); };
   }, []);
 
+  const aspectClass =
+    aspect === "1:1"
+      ? "aspect-square"
+      : aspect === "16:9"
+        ? "aspect-video"
+        : aspect === "4:3"
+          ? "aspect-[4/3]"
+          : "";
+
   return (
-    <iframe
-      ref={iframeRef}
-      title="Ergon Sandbox"
-      src="/sandbox/index.html"
-      sandbox="allow-scripts"
-      onLoad={handleIframeLoad}
-      className="w-full h-full border-0"
-      style={{ background: "#000" }}
-    />
+    <div className="w-full h-full flex items-center justify-center bg-black">
+      <div className={`${aspectClass ? aspectClass + " max-h-full max-w-full" : "w-full h-full"}`}>
+        <iframe
+          ref={iframeRef}
+          title="Ergon Sandbox"
+          src="/sandbox/index.html"
+          sandbox="allow-scripts"
+          onLoad={handleIframeLoad}
+          className="w-full h-full border-0"
+          style={{ background: "#000" }}
+        />
+      </div>
+    </div>
   );
 }
