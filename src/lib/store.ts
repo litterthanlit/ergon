@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ParamSchema, ParamValues } from "./types";
+import type { ParamSchema, ParamValues, ParamValue } from "./types";
 import { getDefaultValues } from "./types";
 import type { Template } from "./templates/registry";
 import { drift } from "./templates/drift";
@@ -68,7 +68,7 @@ type StudioState = {
   updateLayerOpacity: (layerId: string, opacity: number) => void;
   updateLayerBlendMode: (layerId: string, blendMode: BlendMode) => void;
   reorderLayers: (fromIndex: number, toIndex: number) => void;
-  updateLayerParams: (layerId: string, key: string, value: number | string | boolean | { x: number; y: number }) => void;
+  updateLayerParams: (layerId: string, key: string, value: ParamValue) => void;
   updateLayerCode: (layerId: string, code: string) => void;
 
   // Actions
@@ -76,7 +76,7 @@ type StudioState = {
   setCode: (code: string) => void;
   runCode: () => void;
   setSchema: (schema: ParamSchema) => void;
-  setParamValue: (key: string, value: number | string | boolean | { x: number; y: number }) => void;
+  setParamValue: (key: string, value: ParamValue) => void;
   setStatus: (status: SandboxStatus) => void;
   setError: (error: string | null) => void;
   toggleEditor: () => void;

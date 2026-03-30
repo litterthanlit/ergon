@@ -26,4 +26,54 @@ describe("ParameterPanel", () => {
     render(<ParameterPanel schema={{ count: schema.count }} values={{ count: 50 }} onChange={vi.fn()} />);
     expect(screen.getByRole("slider")).toBeInTheDocument();
   });
+
+  it("renders a gradient control for gradient params", () => {
+    const gradientSchema: ParamSchema = {
+      bg: {
+        type: "gradient",
+        maxStops: 5,
+        default: [{ color: "#000", position: 0 }, { color: "#fff", position: 1 }],
+        label: "Background",
+      },
+    };
+    render(
+      <ParameterPanel
+        schema={gradientSchema}
+        values={{ bg: [{ color: "#000", position: 0 }, { color: "#fff", position: 1 }] }}
+        onChange={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Background")).toBeInTheDocument();
+    expect(screen.getByTestId("gradient-bar")).toBeInTheDocument();
+  });
+
+  it("renders a curve control for curve params", () => {
+    const curveSchema: ParamSchema = {
+      ease: { type: "curve", default: { x1: 0.25, y1: 0.1, x2: 0.25, y2: 1.0 }, label: "Easing" },
+    };
+    render(
+      <ParameterPanel
+        schema={curveSchema}
+        values={{ ease: { x1: 0.25, y1: 0.1, x2: 0.25, y2: 1.0 } }}
+        onChange={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Easing")).toBeInTheDocument();
+    expect(screen.getByTestId("curve-editor")).toBeInTheDocument();
+  });
+
+  it("renders a range control for range params", () => {
+    const rangeSchema: ParamSchema = {
+      radius: { type: "range", min: 0, max: 100, default: { min: 20, max: 80 }, label: "Radius" },
+    };
+    render(
+      <ParameterPanel
+        schema={rangeSchema}
+        values={{ radius: { min: 20, max: 80 } }}
+        onChange={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Radius")).toBeInTheDocument();
+    expect(screen.getByTestId("range-track")).toBeInTheDocument();
+  });
 });

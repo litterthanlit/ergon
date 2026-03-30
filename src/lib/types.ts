@@ -38,11 +38,54 @@ export type XYParam = {
   label: string;
 };
 
-export type ParamDef = NumberParam | SelectParam | BooleanParam | ColorParam | XYParam;
+export type GradientStop = { color: string; position: number };
+
+export type GradientParam = {
+  type: "gradient";
+  default: GradientStop[];
+  maxStops: number;
+  label: string;
+};
+
+export type CurveParam = {
+  type: "curve";
+  default: { x1: number; y1: number; x2: number; y2: number };
+  label: string;
+};
+
+export type RangeParam = {
+  type: "range";
+  min: number;
+  max: number;
+  step?: number;
+  default: { min: number; max: number };
+  label: string;
+};
+
+export type ParamDef =
+  | NumberParam
+  | SelectParam
+  | BooleanParam
+  | ColorParam
+  | XYParam
+  | GradientParam
+  | CurveParam
+  | RangeParam;
 
 export type ParamSchema = Record<string, ParamDef>;
 
-export type ParamValues = Record<string, number | string | boolean | { x: number; y: number }>;
+export type ParamValues = Record<
+  string,
+  | number
+  | string
+  | boolean
+  | { x: number; y: number }
+  | GradientStop[]
+  | { x1: number; y1: number; x2: number; y2: number }
+  | { min: number; max: number }
+>;
+
+export type ParamValue = ParamValues[string];
 
 // --- Messages: Parent → Iframe ---
 
@@ -127,6 +170,32 @@ export function validateParamSchema(schema: ParamSchema): boolean {
         if (param.default.x < param.minX || param.default.x > param.maxX) return false;
         if (param.default.y < param.minY || param.default.y > param.maxY) return false;
         break;
+      case "gradient": {
+        if (!Array.isArray(param.default) || param.default.length === 0) return false;
+        if (typeof param.maxStops !== "number" || param.maxStops < 1) return false;
+        for (const stop of param.default) {
+          if (typeof stop.color !== "string") return false;
+          if (typeof stop.position !== "number") return false;
+          if (stop.position < 0 || stop.position > 1) return false;
+        }
+        break;
+      }
+      case "curve": {
+        const d = param.default;
+        if (typeof d !== "object" || d === null) return false;
+        for (const k of ["x1", "y1", "x2", "y2"] as const) {
+          if (typeof d[k] !== "number") return false;
+        }
+        if (d.x1 < 0 || d.x1 > 1 || d.x2 < 0 || d.x2 > 1) return false;
+        break;
+      }
+      case "range": {
+        const d = param.default;
+        if (typeof d !== "object" || d === null) return false;
+        if (typeof d.min !== "number" || typeof d.max !== "number") return false;
+        if (d.min < param.min || d.max > param.max || d.min > d.max) return false;
+        break;
+      }
       default:
         return false;
     }
