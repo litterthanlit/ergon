@@ -21,6 +21,8 @@ import { bloom } from "./bloom";
 import { glitch } from "./glitch";
 import { mesh } from "./mesh";
 import { aurora } from "./aurora";
+import { flowfield } from "./flowfield";
+import { particles } from "./particles";
 
 export const templates: Template[] = [
   drift,
@@ -36,6 +38,8 @@ export const templates: Template[] = [
   glitch,
   mesh,
   aurora,
+  flowfield,
+  particles,
 ];
 
 export function getTemplate(id: string): Template | undefined {

@@ -2,40 +2,82 @@ import type { Template } from "./registry";
 import type { ParamSchema } from "@/lib/types";
 
 export const auroraSchema: ParamSchema = {
-  bands: { type: "number", min: 2, max: 8, default: 4, step: 1, label: "Bands" },
-  shimmer: { type: "number", min: 0.001, max: 0.02, default: 0.005, step: 0.001, label: "Shimmer" },
-  opacity: { type: "number", min: 20, max: 120, default: 60, step: 5, label: "Opacity" },
-  style: { type: "select", options: ["Curtain", "Ribbons", "Rays", "Veil"], default: "Curtain", label: "Style" },
-  palette: { type: "select", options: ["Boreal", "Tropical", "Crimson", "Solar", "Void"], default: "Boreal", label: "Palette" },
+  bands: {
+    type: "number", min: 2, max: 8, default: 4, step: 1, label: "Bands",
+  },
+  speed: {
+    type: "number", min: 0.2, max: 3, default: 1, step: 0.1, label: "Speed",
+  },
+  amplitude: {
+    type: "number", min: 20, max: 200, default: 80, step: 1, label: "Amplitude",
+  },
+  gradient: {
+    type: "gradient",
+    default: [
+      { color: "#00ff88", position: 0 },
+      { color: "#0088ff", position: 0.5 },
+      { color: "#8800ff", position: 1 },
+    ],
+    maxStops: 5,
+    label: "Aurora Colors",
+  },
 };
 
 export const auroraCode = `
-const palettes = {
-  Boreal:   ['#00ff87', '#00bfff', '#7b2fff', '#ff00c8', '#00ffd5'],
-  Tropical: ['#f7971e', '#ffd200', '#00c9ff', '#92fe9d', '#ff6fd8'],
-  Crimson:  ['#ff416c', '#ff4b2b', '#f953c6', '#b91d73', '#ff0099'],
-  Solar:    ['#f7971e', '#ffd200', '#ff6a00', '#ee0979', '#ff6fd8'],
-  Void:     ['#4776e6', '#8e54e9', '#00b4db', '#0083b0', '#c471ed'],
-};
-
 const params = ergon.params({
-  bands:   { type: 'number', min: 2, max: 8, default: 4, step: 1, label: 'Bands' },
-  shimmer: { type: 'number', min: 0.001, max: 0.02, default: 0.005, step: 0.001, label: 'Shimmer' },
-  opacity: { type: 'number', min: 20, max: 120, default: 60, step: 5, label: 'Opacity' },
-  style:   { type: 'select', options: ['Curtain', 'Ribbons', 'Rays', 'Veil'], default: 'Curtain', label: 'Style' },
-  palette: { type: 'select', options: ['Boreal', 'Tropical', 'Crimson', 'Solar', 'Void'], default: 'Boreal', label: 'Palette' },
+  bands:     { type: 'number', min: 2, max: 8, default: 4, step: 1, label: 'Bands' },
+  speed:     { type: 'number', min: 0.2, max: 3, default: 1, step: 0.1, label: 'Speed' },
+  amplitude: { type: 'number', min: 20, max: 200, default: 80, step: 1, label: 'Amplitude' },
+  gradient: {
+    type: 'gradient',
+    default: [
+      { color: '#00ff88', position: 0 },
+      { color: '#0088ff', position: 0.5 },
+      { color: '#8800ff', position: 1 },
+    ],
+    maxStops: 5,
+    label: 'Aurora Colors',
+  },
 });
 
 let t = 0;
 
-function bandY(x, band, time) {
-  const n1 = noise(x * 0.003 + band * 3.7, time * params.shimmer);
-  const n2 = noise(x * 0.006 + band * 1.3, time * params.shimmer * 2 + 5);
-  return (n1 * 0.7 + n2 * 0.3) * height * 0.6 + height * 0.1 + band * (height * 0.1);
+// Interpolate a color from the gradient stops at position t (0-1)
+function sampleGradient(stops, pos) {
+  if (!stops || stops.length === 0) return [0, 255, 136];
+  const sorted = stops.slice().sort((a, b) => a.position - b.position);
+  if (pos <= sorted[0].position) return hexToRgb(sorted[0].color);
+  if (pos >= sorted[sorted.length - 1].position) return hexToRgb(sorted[sorted.length - 1].color);
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const s0 = sorted[i];
+    const s1 = sorted[i + 1];
+    if (pos >= s0.position && pos <= s1.position) {
+      const f = (pos - s0.position) / (s1.position - s0.position);
+      const c0 = hexToRgb(s0.color);
+      const c1 = hexToRgb(s1.color);
+      return [
+        lerp(c0[0], c1[0], f),
+        lerp(c0[1], c1[1], f),
+        lerp(c0[2], c1[2], f),
+      ];
+    }
+  }
+  return [0, 255, 136];
 }
 
-function bandWidth(x, band, time) {
-  return noise(x * 0.004 + band * 2.1, time * params.shimmer + 10) * height * 0.12 + 20;
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
+}
+
+function bandY(x, band, time) {
+  const n1 = noise(x * 0.003 + band * 3.7, time * 0.01 * params.speed);
+  const n2 = noise(x * 0.006 + band * 1.3, time * 0.02 * params.speed + 5);
+  return (n1 * 0.7 + n2 * 0.3) * height * 0.5 + height * 0.1 + band * (height * 0.7 / params.bands);
 }
 
 function setup() {
@@ -46,65 +88,31 @@ function setup() {
 function draw() {
   background(5, 5, 20, 30);
   t++;
-  const colors = palettes[params.palette] || palettes.Boreal;
+  noStroke();
 
   for (let band = 0; band < params.bands; band++) {
-    const col = colors[band % colors.length];
-    const r = parseInt(col.slice(1, 3), 16);
-    const g = parseInt(col.slice(3, 5), 16);
-    const b = parseInt(col.slice(5, 7), 16);
+    const gradPos = band / max(params.bands - 1, 1);
+    const rgb = sampleGradient(params.gradient, gradPos);
+    const r = rgb[0], g = rgb[1], b = rgb[2];
 
-    if (params.style === 'Rays') {
-      // vertical ray columns
-      for (let x = 0; x < width; x += 8) {
-        const cy = bandY(x, band, t);
-        const bw = bandWidth(x, band, t);
-        const alpha = map(noise(x * 0.01, t * params.shimmer + band), 0, 1, 0, params.opacity);
-        stroke(r, g, b, alpha);
-        strokeWeight(3);
-        line(x, cy - bw, x, cy + bw);
-      }
-    } else if (params.style === 'Ribbons') {
-      // thin flowing curves stacked
-      for (let offset = -2; offset <= 2; offset++) {
-        noFill();
-        stroke(r, g, b, params.opacity * 0.4);
-        strokeWeight(1.5);
-        beginShape();
-        for (let x = 0; x <= width; x += 6) {
-          const cy = bandY(x, band, t) + offset * 8;
-          vertex(x, cy);
-        }
-        endShape();
-      }
-    } else {
-      // Curtain / Veil: filled shape between two noise curves
-      const thicknessMod = params.style === 'Veil' ? 2.5 : 1.0;
-      noStroke();
+    for (let x = 0; x < width; x += 4) {
+      const midY = bandY(x, band, t);
+      const hw = params.amplitude * noise(x * 0.004 + band * 2.1, t * 0.01 * params.speed + 10);
+      const alpha = map(noise(x * 0.008, t * 0.005 * params.speed + band * 1.1), 0, 1, 10, 80);
 
-      // Draw as a series of thin vertical strips for smooth alpha gradient
-      for (let x = 0; x < width; x += 4) {
-        const midY = bandY(x, band, t);
-        const hw = bandWidth(x, band, t) * thicknessMod;
-        const alpha = map(noise(x * 0.008, t * params.shimmer * 0.5 + band * 1.1), 0, 1, 10, params.opacity);
-
-        for (let dy = -hw; dy <= hw; dy += 2) {
-          const fade = 1 - abs(dy) / hw;
-          fill(r, g, b, alpha * fade * 0.6);
-          rect(x, midY + dy, 4, 2);
-        }
+      for (let dy = -hw; dy <= hw; dy += 2) {
+        const fade = 1 - abs(dy) / max(hw, 1);
+        fill(r, g, b, alpha * fade * 0.7);
+        rect(x, midY + dy, 4, 2);
       }
     }
   }
 
-  // stars in the background
-  noStroke();
-  fill(255, 255, 255, 60);
-  randomSeed(99);
+  // Stars
+  fill(255, 255, 255, 50);
+  randomSeed(42);
   for (let i = 0; i < 80; i++) {
-    const sx = random(width);
-    const sy = random(height * 0.7);
-    circle(sx, sy, random(0.5, 1.5));
+    circle(random(width), random(height * 0.75), random(0.5, 1.5));
   }
 }
 
@@ -114,7 +122,7 @@ function windowResized() { resizeCanvas(windowWidth, windowHeight); }
 export const aurora: Template = {
   id: "aurora",
   name: "Aurora",
-  description: "Northern lights rendered as noise-shaped color bands drifting across the sky.",
+  description: "Flowing aurora-like bands with gradient colors drifting through a noise field.",
   schema: auroraSchema,
   code: auroraCode,
 };
