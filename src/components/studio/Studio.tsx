@@ -6,6 +6,7 @@ import { ParameterPanel } from "./ParameterPanel";
 import { CodeEditor } from "./CodeEditor";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { Toolbar } from "./Toolbar";
+import { ResizeHandle } from "./ResizeHandle";
 import { useStudioStore } from "@/lib/store";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { getTemplate } from "@/lib/templates/registry";
@@ -23,8 +24,17 @@ export function Studio() {
   const setParamValue = useStudioStore((s) => s.setParamValue);
   const setCode = useStudioStore((s) => s.setCode);
   const setTemplate = useStudioStore((s) => s.setTemplate);
+  const editorHeight = useStudioStore((s) => s.editorHeight);
+  const setEditorHeight = useStudioStore((s) => s.setEditorHeight);
 
   useKeyboardShortcuts();
+
+  const handleResize = useCallback(
+    (deltaY: number) => {
+      setEditorHeight(editorHeight + deltaY);
+    },
+    [editorHeight, setEditorHeight]
+  );
 
   const handleTemplateSelect = useCallback(
     (id: string) => {
@@ -90,11 +100,17 @@ export function Studio() {
             )}
           </div>
 
-          {/* Code editor panel — slides up from bottom */}
+          {/* Code editor panel — resizable */}
           {editorOpen && (
-            <div className="h-[40vh] border-t border-neutral-800 bg-[#0a0a0a] shrink-0">
-              <CodeEditor code={code} onChange={setCode} />
-            </div>
+            <>
+              <ResizeHandle onResize={handleResize} />
+              <div
+                className="border-t border-neutral-800 bg-[#0a0a0a] shrink-0"
+                style={{ height: editorHeight }}
+              >
+                <CodeEditor code={code} onChange={setCode} />
+              </div>
+            </>
           )}
         </div>
 

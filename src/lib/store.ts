@@ -29,6 +29,8 @@ type StudioState = {
   // UI
   editorOpen: boolean;
   isFullscreen: boolean;
+  editorHeight: number;
+  setEditorHeight: (height: number) => void;
 
   // Seed
   seed: number;
@@ -42,7 +44,7 @@ type StudioState = {
   setCode: (code: string) => void;
   runCode: () => void;
   setSchema: (schema: ParamSchema) => void;
-  setParamValue: (key: string, value: number | string | boolean) => void;
+  setParamValue: (key: string, value: number | string | boolean | { x: number; y: number }) => void;
   setStatus: (status: SandboxStatus) => void;
   setError: (error: string | null) => void;
   toggleEditor: () => void;
@@ -63,6 +65,7 @@ export const useStudioStore = create<StudioState>((set) => ({
   seed: Math.floor(Math.random() * 999999),
   editorOpen: false,
   isFullscreen: false,
+  editorHeight: 300,
   canUndo: false,
   canRedo: false,
 
@@ -140,6 +143,9 @@ export const useStudioStore = create<StudioState>((set) => ({
   setError: (error) => set({ error, status: "error" }),
 
   toggleEditor: () => set((state) => ({ editorOpen: !state.editorOpen })),
+
+  setEditorHeight: (height) =>
+    set({ editorHeight: Math.max(120, Math.min(height, typeof window !== "undefined" ? window.innerHeight * 0.7 : 600)) }),
 
   toggleFullscreen: () => set((state) => ({ isFullscreen: !state.isFullscreen })),
 
