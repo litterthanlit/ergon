@@ -102,6 +102,12 @@ export function Canvas() {
 
     setTimeout(() => {
       bridge.load(layer.code, layer.values);
+      // Enable transparent mode for non-bottom layers so blend modes work
+      const currentLayers = useStudioStore.getState().layers;
+      const layerIndex = currentLayers.findIndex((l: Layer) => l.id === layerId);
+      if (layerIndex > 0) {
+        setTimeout(() => bridge.setTransparent(true), 150);
+      }
     }, 100);
   }, []);
 
