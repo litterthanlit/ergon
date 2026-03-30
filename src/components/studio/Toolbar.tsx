@@ -19,6 +19,8 @@ export function Toolbar() {
   const workSlug = useStudioStore((s) => s.workSlug);
   const isSaving = useStudioStore((s) => s.isSaving);
   const isPublishing = useStudioStore((s) => s.isPublishing);
+  const compositionMode = useStudioStore((s) => s.compositionMode);
+  const toggleCompositionMode = useStudioStore((s) => s.toggleCompositionMode);
 
   return (
     <div className="flex items-center justify-between px-5 h-11 bg-white border-b border-ergon-border shrink-0">
@@ -94,6 +96,17 @@ export function Toolbar() {
           }`}
         >
           Code
+        </button>
+
+        <button
+          onClick={toggleCompositionMode}
+          className={`px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded transition-colors ${
+            compositionMode
+              ? "bg-ergon-text text-white"
+              : "text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface"
+          }`}
+        >
+          Layers
         </button>
 
         <button

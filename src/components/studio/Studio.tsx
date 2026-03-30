@@ -7,6 +7,7 @@ import { CodeEditor } from "./CodeEditor";
 import { TemplateSwitcher } from "./TemplateSwitcher";
 import { Toolbar } from "./Toolbar";
 import { ResizeHandle } from "./ResizeHandle";
+import { LayerPanel } from "./LayerPanel";
 import { useStudioStore } from "@/lib/store";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { getTemplate } from "@/lib/templates/registry";
@@ -39,6 +40,10 @@ export function Studio() {
   const setWorkSlug = useStudioStore((s) => s.setWorkSlug);
   const setIsSaving = useStudioStore((s) => s.setIsSaving);
   const setIsPublishing = useStudioStore((s) => s.setIsPublishing);
+  const compositionMode = useStudioStore((s) => s.compositionMode);
+  const layers = useStudioStore((s) => s.layers);
+  const activeLayerIndex = useStudioStore((s) => s.activeLayerIndex);
+  const updateLayerParams = useStudioStore((s) => s.updateLayerParams);
 
   useKeyboardShortcuts();
 
@@ -176,20 +181,42 @@ export function Studio() {
             {/* Header */}
             <div className="px-5 pt-5 pb-4 border-b border-ergon-border">
               <h2 className="text-[11px] font-bold text-ergon-text uppercase tracking-[0.18em]">
-                {template.name}
+                {compositionMode
+                  ? `Layer: ${layers[activeLayerIndex]?.name ?? "—"}`
+                  : template.name}
               </h2>
               <p className="text-[10px] text-ergon-muted mt-1.5 leading-relaxed">
-                {template.description}
+                {compositionMode
+                  ? `${layers.length} layer${layers.length !== 1 ? "s" : ""}`
+                  : template.description}
               </p>
             </div>
 
-            {/* Controls */}
+            {/* Composition: Layer panel */}
+            {compositionMode && (
+              <div className="px-5 py-4 border-b border-ergon-border">
+                <LayerPanel />
+              </div>
+            )}
+
+            {/* Controls — show active layer's params in composition mode */}
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <ParameterPanel
-                schema={schema}
-                values={values}
-                onChange={setParamValue}
-              />
+              {compositionMode ? (
+                <ParameterPanel
+                  schema={layers[activeLayerIndex]?.schema ?? null}
+                  values={layers[activeLayerIndex]?.values ?? {}}
+                  onChange={(key, value) => {
+                    const layer = layers[activeLayerIndex];
+                    if (layer) updateLayerParams(layer.id, key, value);
+                  }}
+                />
+              ) : (
+                <ParameterPanel
+                  schema={schema}
+                  values={values}
+                  onChange={setParamValue}
+                />
+              )}
             </div>
 
             {/* Footer */}
