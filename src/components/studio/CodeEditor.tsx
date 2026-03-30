@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { EditorState } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from "@codemirror/view";
+import { EditorState, StateEffect, StateField } from "@codemirror/state";
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, Decoration, type DecorationSet } from "@codemirror/view";
 import { javascript } from "@codemirror/lang-javascript";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
@@ -51,6 +51,10 @@ const darkTheme = EditorView.theme({
   ".cm-scroller": {
     overflow: "auto",
   },
+  ".cm-errorLine": {
+    backgroundColor: "#ff000015",
+    borderLeft: "2px solid #ef4444",
+  },
 }, { dark: true });
 
 const syntaxColors = EditorView.theme({
@@ -67,12 +71,34 @@ const syntaxColors = EditorView.theme({
   ".cm-bool": { color: "#d19a66" },
 }, { dark: true });
 
+const setErrorLine = StateEffect.define<number | null>();
+
+const errorLineField = StateField.define<DecorationSet>({
+  create() {
+    return Decoration.none;
+  },
+  update(decorations, tr) {
+    for (const effect of tr.effects) {
+      if (effect.is(setErrorLine)) {
+        if (effect.value === null) return Decoration.none;
+        const lineNum = Math.min(effect.value, tr.state.doc.lines);
+        const line = tr.state.doc.line(lineNum);
+        const deco = Decoration.line({ class: "cm-errorLine" }).range(line.from);
+        return Decoration.set([deco]);
+      }
+    }
+    return decorations;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 type Props = {
   code: string;
   onChange: (code: string) => void;
+  errorLine?: number | null;
 };
 
-export function CodeEditor({ code, onChange }: Props) {
+export function CodeEditor({ code, onChange, errorLine }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -109,6 +135,7 @@ export function CodeEditor({ code, onChange }: Props) {
         syntaxColors,
         updateListener,
         EditorView.lineWrapping,
+        errorLineField,
       ],
     });
 
@@ -138,6 +165,12 @@ export function CodeEditor({ code, onChange }: Props) {
       isExternalUpdate.current = false;
     }
   }, [code]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({ effects: setErrorLine.of(errorLine ?? null) });
+  }, [errorLine]);
 
   return (
     <div

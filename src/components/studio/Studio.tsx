@@ -12,6 +12,12 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { getTemplate } from "@/lib/templates/registry";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
 
+function parseErrorLine(error: string | null): number | null {
+  if (!error) return null;
+  const match = error.match(/line (\d+)/i) || error.match(/:(\d+):/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 export function Studio() {
   const schema = useStudioStore((s) => s.schema);
   const values = useStudioStore((s) => s.values);
@@ -108,7 +114,11 @@ export function Studio() {
                 className="border-t border-neutral-800 bg-[#0a0a0a] shrink-0"
                 style={{ height: editorHeight }}
               >
-                <CodeEditor code={code} onChange={setCode} />
+                <CodeEditor
+                  code={code}
+                  onChange={setCode}
+                  errorLine={parseErrorLine(error)}
+                />
               </div>
             </>
           )}
