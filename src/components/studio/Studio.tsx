@@ -12,6 +12,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { getTemplate, templates } from "@/lib/templates/registry";
 import { getDefaultValues } from "@/lib/types";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
+import { compositeLayersToDataUrl, type CompositeLayer } from "@/lib/compositor";
 import { saveWork, publishWork } from "@/lib/actions/works";
 
 function parseErrorLine(error: string | null): number | null {
@@ -77,12 +78,51 @@ export function Studio() {
   );
 
   const handleExport = useCallback(() => {
+    const filename = exportFilename(template.name, "png");
+
+    if (compositionMode && layers.length > 0) {
+      // Composition mode: composite all layer canvases
+      try {
+        const compositeLayers: CompositeLayer[] = [];
+        let maxWidth = 0;
+        let maxHeight = 0;
+
+        for (const layer of layers) {
+          const iframe = document.querySelector<HTMLIFrameElement>(
+            `iframe[title="Layer: ${layer.name}"]`
+          );
+          if (!iframe) continue;
+
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          const canvas = iframeDoc?.querySelector("canvas");
+          if (!canvas) continue;
+
+          maxWidth = Math.max(maxWidth, canvas.width);
+          maxHeight = Math.max(maxHeight, canvas.height);
+
+          compositeLayers.push({
+            canvas,
+            opacity: layer.opacity,
+            blendMode: layer.blendMode,
+            visible: layer.visible,
+          });
+        }
+
+        if (compositeLayers.length > 0) {
+          const dataUrl = compositeLayersToDataUrl(compositeLayers, maxWidth, maxHeight);
+          downloadDataUrl(dataUrl, filename);
+        }
+      } catch {
+        console.warn("Cannot access layer canvases for composition export.");
+      }
+      return;
+    }
+
+    // Single mode export
     const iframe = document.querySelector<HTMLIFrameElement>(
       'iframe[title="Ergon Sandbox"]'
     );
     if (!iframe) return;
-
-    const filename = exportFilename(template.name, "png");
 
     try {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -94,7 +134,7 @@ export function Studio() {
     } catch {
       console.warn("Cannot access iframe canvas directly. Use postMessage export.");
     }
-  }, [template.name]);
+  }, [template.name, compositionMode, layers]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
