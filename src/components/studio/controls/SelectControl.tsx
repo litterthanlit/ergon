@@ -8,7 +8,7 @@ type Props = {
 export function SelectControl({ label, options, value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <label className="text-[11px] font-medium text-ergon-subtle uppercase tracking-[0.12em]">
+      <label className="text-xs font-medium text-ergon-subtle uppercase tracking-[0.12em]">
         {label}
       </label>
       <div className="flex flex-wrap gap-1">

@@ -179,13 +179,13 @@ export function Studio() {
         {!isFullscreen && (
           <div className="w-80 bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
             {/* Header */}
-            <div className="px-6 pt-5 pb-4 border-b border-ergon-border">
-              <h2 className="text-xs font-bold text-ergon-text uppercase tracking-[0.15em]">
+            <div className="px-6 pt-6 pb-4 border-b border-ergon-border">
+              <h2 className="text-sm font-bold text-ergon-text uppercase tracking-[0.12em]">
                 {compositionMode
                   ? `Layer: ${layers[activeLayerIndex]?.name ?? "—"}`
                   : template.name}
               </h2>
-              <p className="text-[11px] text-ergon-muted mt-1.5 leading-relaxed">
+              <p className="text-xs text-ergon-muted mt-2 leading-relaxed">
                 {compositionMode
                   ? `${layers.length} layer${layers.length !== 1 ? "s" : ""}`
                   : template.description}
@@ -232,7 +232,7 @@ export function Studio() {
                           : "bg-amber-500 animate-pulse"
                     }`}
                   />
-                  <span className="text-[11px] text-ergon-muted uppercase tracking-[0.15em] font-medium">
+                  <span className="text-xs text-ergon-muted uppercase tracking-[0.12em] font-medium">
                     {status === "ready"
                       ? "Running"
                       : status === "error"
@@ -240,7 +240,7 @@ export function Studio() {
                         : "Loading"}
                   </span>
                 </div>
-                <span className="text-[11px] text-ergon-muted/50 font-mono">
+                <span className="text-xs text-ergon-muted/50 font-mono">
                   {editorOpen ? "⌘↵ Run" : "⌘E Code"}
                 </span>
               </div>

@@ -40,7 +40,7 @@ export function LayerItem({
     >
       {/* Top row: name + visibility + remove */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-ergon-text truncate">
+        <span className="text-sm font-medium text-ergon-text truncate">
           {name}
         </span>
         <div className="flex items-center gap-1">
@@ -82,7 +82,7 @@ export function LayerItem({
             onChange={(e) => onOpacityChange(parseFloat(e.target.value))}
             className="flex-1"
           />
-          <span className="text-[11px] font-mono text-ergon-muted w-7 text-right">
+          <span className="text-xs font-mono text-ergon-muted w-7 text-right">
             {Math.round(opacity * 100)}%
           </span>
         </div>
@@ -94,7 +94,7 @@ export function LayerItem({
             value={blendMode}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-            className="w-full text-[11px] text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text"
+            className="w-full text-xs text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text"
           >
             {BLEND_MODES.map((mode) => (
               <option key={mode} value={mode}>
