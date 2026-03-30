@@ -251,8 +251,8 @@ export function Studio() {
                 <div className="p-5">
                   <p className="text-xs text-ergon-muted mb-4">
                     {compositionMode
-                      ? "Click a template to add it as a new layer."
-                      : "Click a template to switch the active sketch."}
+                      ? "Select a template to add as a new layer."
+                      : "Select a template to start creating."}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {templates.map((t) => (
@@ -320,6 +320,7 @@ export function Studio() {
                       <button
                         onClick={() => {
                           toggleCompositionMode();
+                          setSidebarTab("layers");
                         }}
                         className="px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg bg-ergon-text text-white hover:opacity-90 transition-opacity cursor-pointer"
                       >
@@ -342,13 +343,7 @@ export function Studio() {
                           Exit layers
                         </button>
                       </div>
-                      <LayerPanel />
-                      <button
-                        onClick={() => setSidebarTab("templates")}
-                        className="w-full mt-3 py-2.5 text-sm font-medium text-ergon-subtle border border-dashed border-ergon-border rounded-lg hover:border-ergon-muted hover:bg-ergon-surface/50 transition-colors cursor-pointer"
-                      >
-                        + Add layer from template
-                      </button>
+                      <LayerPanel onLayerSelect={() => setSidebarTab("parameters")} />
                     </>
                   )}
                 </div>

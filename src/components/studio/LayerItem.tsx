@@ -88,6 +88,14 @@ export function LayerItem({
         </div>
       )}
 
+      {/* Blend mode — always visible as label, editable when active */}
+      {!isActive && blendMode !== "normal" && (
+        <div className="mt-1.5">
+          <span className="text-[10px] font-medium text-ergon-muted uppercase tracking-[0.05em]">
+            {blendMode}
+          </span>
+        </div>
+      )}
       {isActive && (
         <div className="mt-2">
           <select
