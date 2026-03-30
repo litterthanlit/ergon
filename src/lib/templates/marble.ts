@@ -73,22 +73,44 @@ function getColor(val) {
   }
 }
 
+// HSB to RGB conversion (avoids p5 color object overhead)
+function hsb2rgb(h, s, b) {
+  h = ((h % 360) + 360) % 360;
+  s = s / 100; b = b / 100;
+  const c = b * s;
+  const x = c * (1 - abs((h / 60) % 2 - 1));
+  const m = b - c;
+  let r, g, bl;
+  if (h < 60) { r=c; g=x; bl=0; }
+  else if (h < 120) { r=x; g=c; bl=0; }
+  else if (h < 180) { r=0; g=c; bl=x; }
+  else if (h < 240) { r=0; g=x; bl=c; }
+  else if (h < 300) { r=x; g=0; bl=c; }
+  else { r=c; g=0; bl=x; }
+  return [(r+m)*255, (g+m)*255, (bl+m)*255];
+}
+
 function draw() {
   pg.loadPixels();
+  const d = pg.pixels;
   const w = pg.width;
   const h = pg.height;
   const sc = params.scale;
   const oct = params.complexity;
+  const den = pg.pixelDensity();
+  const rowLen = w * den * 4;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const val = warp(x * sc, y * sc, t, oct);
-
-      // Add specular-like highlights for glossy feel
       const highlight = pow(val, 3) * 0.3;
-      const [hue, sat, bri] = getColor(val);
-
-      pg.set(x, y, pg.color(hue, sat * (1 - highlight), min(bri + highlight * 100, 100)));
+      const [hu, sa, br] = getColor(val);
+      const [r, g, b] = hsb2rgb(hu, sa * (1 - highlight), min(br + highlight * 100, 100));
+      const idx = (y * rowLen) + (x * 4);
+      d[idx] = r;
+      d[idx+1] = g;
+      d[idx+2] = b;
+      d[idx+3] = 255;
     }
   }
   pg.updatePixels();
