@@ -27,12 +27,12 @@ export function LayerPanel() {
     <div className="flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-semibold text-ergon-subtle uppercase tracking-[0.14em]">
+        <span className="text-[11px] font-semibold text-ergon-subtle uppercase tracking-[0.12em]">
           Layers
         </span>
         <button
           onClick={handleAddLayer}
-          className="text-[10px] font-medium text-ergon-muted hover:text-ergon-text transition-colors uppercase tracking-[0.1em]"
+          className="text-[11px] font-medium text-ergon-muted hover:text-ergon-text transition-colors uppercase tracking-[0.1em]"
         >
           + Add
         </button>
