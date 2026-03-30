@@ -57,6 +57,7 @@
 
   // src/runtime/index.ts
   var p5Instance = null;
+  var transparentMode = false;
   var paramManager = createParamManager(handleSchema);
   window.ergon = {
     params: (schema) => {
@@ -94,10 +95,33 @@
     if (typeof p5Constructor === "function") {
       p5Instance = new p5Constructor();
     }
+    if (transparentMode) {
+      setTimeout(() => handleTransparent(true), 50);
+    }
     sendReady();
   }
   function handleParams(values) {
     paramManager.update(values);
+  }
+  function handleTransparent(enabled) {
+    transparentMode = enabled;
+    const w = window;
+    if (enabled) {
+      if (w.background && !w.__originalBackground) {
+        w.__originalBackground = w.background;
+      }
+      w.background = function() {
+        if (typeof w.clear === "function") {
+          w.clear();
+        }
+      };
+    } else {
+      const orig = w.__originalBackground;
+      if (typeof orig === "function") {
+        w.background = orig;
+        delete w.__originalBackground;
+      }
+    }
   }
   function handleSeed(seed) {
     const w = window;
@@ -141,6 +165,9 @@
         break;
       case "ergon:seed":
         handleSeed(msg.seed);
+        break;
+      case "ergon:transparent":
+        handleTransparent(msg.enabled);
         break;
     }
   });

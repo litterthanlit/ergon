@@ -10,6 +10,7 @@ import type {
 } from "@/lib/types";
 
 let p5Instance: unknown = null;
+let transparentMode = false;
 const paramManager = createParamManager(handleSchema);
 
 (window as unknown as Record<string, unknown>).ergon = {
@@ -57,11 +58,41 @@ function handleLoad(code: string, initialParams: ParamValues): void {
     p5Instance = new (p5Constructor as new () => unknown)();
   }
 
+  // Re-apply transparent mode after p5 initializes (it resets globals)
+  if (transparentMode) {
+    setTimeout(() => handleTransparent(true), 50);
+  }
+
   sendReady();
 }
 
 function handleParams(values: ParamValues): void {
   paramManager.update(values);
+}
+
+function handleTransparent(enabled: boolean): void {
+  transparentMode = enabled;
+  const w = window as unknown as Record<string, (...args: unknown[]) => void>;
+
+  if (enabled) {
+    // Store original background function
+    if (w.background && !(w as Record<string, unknown>).__originalBackground) {
+      (w as Record<string, unknown>).__originalBackground = w.background;
+    }
+    // Replace background() with clear()
+    w.background = function() {
+      if (typeof w.clear === "function") {
+        w.clear();
+      }
+    };
+  } else {
+    // Restore original background
+    const orig = (w as Record<string, unknown>).__originalBackground;
+    if (typeof orig === "function") {
+      w.background = orig as (...args: unknown[]) => void;
+      delete (w as Record<string, unknown>).__originalBackground;
+    }
+  }
 }
 
 function handleSeed(seed: number): void {
@@ -109,6 +140,9 @@ window.addEventListener("message", (event: MessageEvent<ParentMessage>) => {
       break;
     case "ergon:seed":
       handleSeed(msg.seed);
+      break;
+    case "ergon:transparent":
+      handleTransparent(msg.enabled);
       break;
   }
 });
