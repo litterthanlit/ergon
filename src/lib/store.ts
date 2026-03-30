@@ -28,6 +28,18 @@ type StudioState = {
   status: SandboxStatus;
   error: string | null;
 
+  // Persistence
+  workId: string | null;
+  workTitle: string;
+  workSlug: string | null;
+  isSaving: boolean;
+  isPublishing: boolean;
+  setWorkId: (id: string) => void;
+  setWorkTitle: (title: string) => void;
+  setWorkSlug: (slug: string) => void;
+  setIsSaving: (saving: boolean) => void;
+  setIsPublishing: (publishing: boolean) => void;
+
   // UI
   editorOpen: boolean;
   isFullscreen: boolean;
@@ -67,6 +79,11 @@ export const useStudioStore = create<StudioState>((set) => ({
   status: "loading",
   error: null,
   seed: Math.floor(Math.random() * 999999),
+  workId: null,
+  workTitle: "Untitled",
+  workSlug: null,
+  isSaving: false,
+  isPublishing: false,
   editorOpen: false,
   isFullscreen: false,
   editorHeight: 300,
@@ -87,8 +104,17 @@ export const useStudioStore = create<StudioState>((set) => ({
       error: null,
       canUndo: false,
       canRedo: false,
+      workId: null,
+      workTitle: "Untitled",
+      workSlug: null,
     });
   },
+
+  setWorkId: (id) => set({ workId: id }),
+  setWorkTitle: (title) => set({ workTitle: title }),
+  setWorkSlug: (slug) => set({ workSlug: slug }),
+  setIsSaving: (saving) => set({ isSaving: saving }),
+  setIsPublishing: (publishing) => set({ isPublishing: publishing }),
 
   setCode: (code) => set({ code }),
 

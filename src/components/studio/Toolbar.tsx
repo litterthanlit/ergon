@@ -15,6 +15,10 @@ export function Toolbar() {
   const cycleAspect = useStudioStore((s) => s.cycleAspect);
   const undo = useStudioStore((s) => s.undo);
   const redo = useStudioStore((s) => s.redo);
+  const workId = useStudioStore((s) => s.workId);
+  const workSlug = useStudioStore((s) => s.workSlug);
+  const isSaving = useStudioStore((s) => s.isSaving);
+  const isPublishing = useStudioStore((s) => s.isPublishing);
 
   return (
     <div className="flex items-center justify-between px-5 h-11 bg-white border-b border-ergon-border shrink-0">
@@ -91,6 +95,33 @@ export function Toolbar() {
         >
           Code
         </button>
+
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("ergon:save"))}
+          disabled={isSaving}
+          className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface transition-colors disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save"}
+        </button>
+
+        {workId && !workSlug && (
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("ergon:publish"))}
+            disabled={isPublishing}
+            className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded transition-colors bg-ergon-red text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {isPublishing ? "Publishing..." : "Publish"}
+          </button>
+        )}
+
+        {workSlug && (
+          <button
+            onClick={() => window.open(`/work/${workSlug}`, "_blank")}
+            className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded text-emerald-600 hover:bg-emerald-50 transition-colors"
+          >
+            View
+          </button>
+        )}
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("ergon:export"))}

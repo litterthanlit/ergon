@@ -11,6 +11,7 @@ import { useStudioStore } from "@/lib/store";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { getTemplate } from "@/lib/templates/registry";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
+import { saveWork, publishWork } from "@/lib/actions/works";
 
 function parseErrorLine(error: string | null): number | null {
   if (!error) return null;
@@ -32,6 +33,12 @@ export function Studio() {
   const setTemplate = useStudioStore((s) => s.setTemplate);
   const editorHeight = useStudioStore((s) => s.editorHeight);
   const setEditorHeight = useStudioStore((s) => s.setEditorHeight);
+  const workId = useStudioStore((s) => s.workId);
+  const workTitle = useStudioStore((s) => s.workTitle);
+  const setWorkId = useStudioStore((s) => s.setWorkId);
+  const setWorkSlug = useStudioStore((s) => s.setWorkSlug);
+  const setIsSaving = useStudioStore((s) => s.setIsSaving);
+  const setIsPublishing = useStudioStore((s) => s.setIsPublishing);
 
   useKeyboardShortcuts();
 
@@ -70,11 +77,53 @@ export function Studio() {
     }
   }, [template.name]);
 
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const result = await saveWork({
+        id: workId ?? undefined,
+        title: workTitle,
+        code,
+        templateId: template.id,
+        params: values as Record<string, unknown>,
+      });
+      if (result.id) {
+        setWorkId(result.id);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [workId, workTitle, code, template.id, values, setWorkId, setIsSaving]);
+
+  const handlePublish = useCallback(async () => {
+    if (!workId) return;
+    setIsPublishing(true);
+    try {
+      const result = await publishWork(workId, workTitle);
+      if (result.slug) {
+        setWorkSlug(result.slug);
+      }
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [workId, workTitle, setWorkSlug, setIsPublishing]);
+
   useEffect(() => {
     function onExport() { handleExport(); }
     window.addEventListener("ergon:export", onExport);
     return () => window.removeEventListener("ergon:export", onExport);
   }, [handleExport]);
+
+  useEffect(() => {
+    function onSave() { handleSave(); }
+    function onPublish() { handlePublish(); }
+    window.addEventListener("ergon:save", onSave);
+    window.addEventListener("ergon:publish", onPublish);
+    return () => {
+      window.removeEventListener("ergon:save", onSave);
+      window.removeEventListener("ergon:publish", onPublish);
+    };
+  }, [handleSave, handlePublish]);
 
   return (
     <div className="h-screen w-screen bg-white flex flex-col overflow-hidden">
