@@ -93,6 +93,14 @@ function handleTransparent(enabled: boolean): void {
       delete (w as Record<string, unknown>).__originalBackground;
     }
   }
+
+  // Force redraw so noLoop() sketches re-render with updated background behavior
+  if (enabled) {
+    const win = window as unknown as Record<string, unknown>;
+    if (typeof win.redraw === "function") {
+      (win.redraw as () => void)();
+    }
+  }
 }
 
 function handleSeed(seed: number): void {

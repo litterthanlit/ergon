@@ -94,7 +94,14 @@ export function Canvas() {
     const bridge = createBridge({
       iframe,
       onSchema: () => {},
-      onReady: () => {},
+      onReady: () => {
+        // Send transparent AFTER p5 is fully initialized — fixes noLoop() sketches
+        const currentLayers = useStudioStore.getState().layers;
+        const layerIndex = currentLayers.findIndex((l: Layer) => l.id === layerId);
+        if (layerIndex > 0) {
+          bridge.setTransparent(true);
+        }
+      },
       onError: () => {},
     });
 
@@ -102,12 +109,6 @@ export function Canvas() {
 
     setTimeout(() => {
       bridge.load(layer.code, layer.values);
-      // Enable transparent mode for non-bottom layers so blend modes work
-      const currentLayers = useStudioStore.getState().layers;
-      const layerIndex = currentLayers.findIndex((l: Layer) => l.id === layerId);
-      if (layerIndex > 0) {
-        setTimeout(() => bridge.setTransparent(true), 150);
-      }
     }, 100);
   }, []);
 

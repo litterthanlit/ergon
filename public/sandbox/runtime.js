@@ -122,6 +122,12 @@
         delete w.__originalBackground;
       }
     }
+    if (enabled) {
+      const win = window;
+      if (typeof win.redraw === "function") {
+        win.redraw();
+      }
+    }
   }
   function handleSeed(seed) {
     const w = window;
