@@ -8,67 +8,69 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
-const darkTheme = EditorView.theme({
+const editorTheme = EditorView.theme({
   "&": {
     height: "100%",
-    fontSize: "13px",
-    backgroundColor: "#0a0a0a",
+    fontSize: "12.5px",
+    backgroundColor: "#0c0c0c",
   },
   ".cm-content": {
-    fontFamily: "var(--font-jetbrains), 'JetBrains Mono', monospace",
+    fontFamily: "var(--font-mono), 'IBM Plex Mono', monospace",
     caretColor: "#fff",
     padding: "16px 0",
+    lineHeight: "1.7",
   },
   ".cm-gutters": {
-    backgroundColor: "#0a0a0a",
-    color: "#333",
+    backgroundColor: "#0c0c0c",
+    color: "#2a2a2a",
     border: "none",
-    paddingLeft: "8px",
+    paddingLeft: "12px",
   },
   ".cm-activeLineGutter": {
     backgroundColor: "transparent",
-    color: "#555",
+    color: "#444",
   },
   ".cm-activeLine": {
-    backgroundColor: "#ffffff08",
+    backgroundColor: "#ffffff06",
   },
   ".cm-selectionBackground": {
-    backgroundColor: "#ffffff15 !important",
+    backgroundColor: "#ffffff12 !important",
   },
   "&.cm-focused .cm-selectionBackground": {
-    backgroundColor: "#ffffff20 !important",
+    backgroundColor: "#ffffff18 !important",
   },
   ".cm-cursor": {
     borderLeftColor: "#fff",
+    borderLeftWidth: "1.5px",
   },
   ".cm-matchingBracket": {
-    backgroundColor: "#ffffff15",
-    outline: "1px solid #ffffff30",
+    backgroundColor: "#ffffff10",
+    outline: "1px solid #ffffff25",
   },
   ".cm-line": {
-    padding: "0 16px",
+    padding: "0 20px",
   },
   ".cm-scroller": {
     overflow: "auto",
   },
   ".cm-errorLine": {
-    backgroundColor: "#ff000015",
-    borderLeft: "2px solid #ef4444",
+    backgroundColor: "#c4362c12",
+    borderLeft: "2px solid #c4362c",
   },
 }, { dark: true });
 
 const syntaxColors = EditorView.theme({
   ".cm-keyword": { color: "#c4362c" },
-  ".cm-string": { color: "#98c379" },
-  ".cm-number": { color: "#d19a66" },
-  ".cm-comment": { color: "#555" },
-  ".cm-variableName": { color: "#e5e5e5" },
-  ".cm-propertyName": { color: "#e5c07b" },
-  ".cm-operator": { color: "#888" },
-  ".cm-punctuation": { color: "#666" },
-  ".cm-typeName": { color: "#61afef" },
-  ".cm-function": { color: "#61afef" },
-  ".cm-bool": { color: "#d19a66" },
+  ".cm-string": { color: "#7dae6b" },
+  ".cm-number": { color: "#c89350" },
+  ".cm-comment": { color: "#3a3a3a", fontStyle: "italic" },
+  ".cm-variableName": { color: "#c8c8c8" },
+  ".cm-propertyName": { color: "#c89350" },
+  ".cm-operator": { color: "#6a6a6a" },
+  ".cm-punctuation": { color: "#4a4a4a" },
+  ".cm-typeName": { color: "#6a9fc8" },
+  ".cm-function": { color: "#d4d4d4" },
+  ".cm-bool": { color: "#c89350" },
 }, { dark: true });
 
 const setErrorLine = StateEffect.define<number | null>();
@@ -131,7 +133,7 @@ export function CodeEditor({ code, onChange, errorLine }: Props) {
           ...completionKeymap,
           ...searchKeymap,
         ]),
-        darkTheme,
+        editorTheme,
         syntaxColors,
         updateListener,
         EditorView.lineWrapping,

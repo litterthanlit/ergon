@@ -58,27 +58,27 @@ export function XYPadControl({ label, minX, maxX, minY, maxY, value, onChange }:
   const displayY = typeof value.y === "number" ? (Number.isInteger(value.y) ? value.y : value.y.toFixed(1)) : value.y;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <label className="text-[10px] font-medium text-neutral-500 uppercase tracking-[0.12em]">
+        <label className="text-[10px] font-medium text-ergon-subtle uppercase tracking-[0.14em]">
           {label}
         </label>
-        <span className="text-[10px] text-neutral-400 font-mono tabular-nums">
+        <span className="text-[10px] text-ergon-text font-mono tabular-nums">
           {displayX}, {displayY}
         </span>
       </div>
       <div
         ref={padRef}
         data-testid="xy-pad"
-        className="relative w-full aspect-square bg-neutral-900 rounded border border-neutral-800 cursor-crosshair select-none touch-none"
+        className="relative w-full aspect-square bg-ergon-surface rounded border border-ergon-border cursor-crosshair select-none touch-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
       >
         {/* Grid lines */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-neutral-800" />
-          <div className="absolute top-1/2 left-0 right-0 h-px bg-neutral-800" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-ergon-border" />
+          <div className="absolute top-1/2 left-0 right-0 h-px bg-ergon-border" />
         </div>
         {/* Crosshair */}
         <div
@@ -86,9 +86,9 @@ export function XYPadControl({ label, minX, maxX, minY, maxY, value, onChange }:
           className="absolute w-3 h-3 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
           style={{ left: `${percentX}%`, top: `${percentY}%` }}
         >
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white -translate-x-1/2" />
-          <div className="absolute top-1/2 left-0 right-0 h-px bg-white -translate-y-1/2" />
-          <div className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-ergon-text -translate-x-1/2" />
+          <div className="absolute top-1/2 left-0 right-0 h-px bg-ergon-text -translate-y-1/2" />
+          <div className="absolute left-1/2 top-1/2 w-1.5 h-1.5 bg-ergon-text rounded-full -translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
     </div>

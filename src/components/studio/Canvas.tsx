@@ -46,27 +46,23 @@ export function Canvas() {
     setupBridge();
   }, [setupBridge]);
 
-  // Reload sandbox when codeVersion changes (user pressed Run)
   useEffect(() => {
     if (codeVersion > 0 && bridgeRef.current) {
       const iframe = iframeRef.current;
       if (iframe) {
-        iframe.src = iframe.src; // triggers reload + onLoad
+        iframe.src = iframe.src;
       }
     }
   }, [codeVersion]);
 
-  // Send param updates without reload
   useEffect(() => {
     bridgeRef.current?.updateParams(values);
   }, [values]);
 
-  // Send seed updates without reload
   useEffect(() => {
     bridgeRef.current?.sendSeed(seed);
   }, [seed]);
 
-  // Cleanup
   useEffect(() => {
     return () => { bridgeRef.current?.destroy(); };
   }, []);
@@ -81,7 +77,7 @@ export function Canvas() {
           : "";
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-black">
+    <div className="w-full h-full flex items-center justify-center bg-ergon-surface">
       <div className={`${aspectClass ? aspectClass + " max-h-full max-w-full" : "w-full h-full"}`}>
         <iframe
           ref={iframeRef}
@@ -90,7 +86,7 @@ export function Canvas() {
           sandbox="allow-scripts"
           onLoad={handleIframeLoad}
           className="w-full h-full border-0"
-          style={{ background: "#000" }}
+          style={{ background: "#fafafa" }}
         />
       </div>
     </div>

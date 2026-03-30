@@ -70,7 +70,6 @@ export function Studio() {
     }
   }, [template.name]);
 
-  // Listen for export events from Toolbar
   useEffect(() => {
     function onExport() { handleExport(); }
     window.addEventListener("ergon:export", onExport);
@@ -78,19 +77,17 @@ export function Studio() {
   }, [handleExport]);
 
   return (
-    <div className="h-screen w-screen bg-black flex flex-col overflow-hidden">
-      {/* Toolbar */}
+    <div className="h-screen w-screen bg-white flex flex-col overflow-hidden">
       <Toolbar />
 
-      {/* Main area */}
       <div className="flex-1 flex min-h-0">
         {/* Canvas + Editor stack */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Canvas area */}
-          <div className="flex-1 relative min-h-0">
+          <div className="flex-1 relative min-h-0 bg-ergon-surface">
             <Canvas />
 
-            {/* Template switcher — pinned to bottom of canvas */}
+            {/* Template switcher */}
             <div className="absolute bottom-0 left-0 right-0 z-10">
               <TemplateSwitcher
                 activeId={template.id}
@@ -100,13 +97,13 @@ export function Studio() {
 
             {/* Error overlay */}
             {status === "error" && error && (
-              <div className="absolute bottom-12 left-4 right-4 bg-red-950/90 text-red-200 text-[11px] px-4 py-3 rounded font-mono backdrop-blur-sm z-20">
+              <div className="absolute bottom-12 left-4 right-4 bg-ergon-red/95 text-white text-[11px] px-4 py-3 rounded font-mono backdrop-blur-sm z-20">
                 {error}
               </div>
             )}
           </div>
 
-          {/* Code editor panel — resizable */}
+          {/* Code editor — stays dark for contrast */}
           {editorOpen && (
             <div className="animate-slide-up">
               <ResizeHandle onResize={handleResize} />
@@ -124,21 +121,21 @@ export function Studio() {
           )}
         </div>
 
-        {/* Parameter Panel — right sidebar */}
+        {/* Parameter Panel */}
         {!isFullscreen && (
-          <div className="w-72 bg-neutral-950 border-l border-neutral-900 flex flex-col shrink-0 animate-fade-in">
+          <div className="w-72 bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
             {/* Header */}
-            <div className="px-5 pt-4 pb-3 border-b border-neutral-900">
-              <h2 className="text-[11px] font-semibold text-white uppercase tracking-[0.15em]">
+            <div className="px-5 pt-5 pb-4 border-b border-ergon-border">
+              <h2 className="text-[11px] font-bold text-ergon-text uppercase tracking-[0.18em]">
                 {template.name}
               </h2>
-              <p className="text-[10px] text-neutral-600 mt-1 leading-relaxed">
+              <p className="text-[10px] text-ergon-muted mt-1.5 leading-relaxed">
                 {template.description}
               </p>
             </div>
 
             {/* Controls */}
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-5 py-5">
               <ParameterPanel
                 schema={schema}
                 values={values}
@@ -146,8 +143,8 @@ export function Studio() {
               />
             </div>
 
-            {/* Footer — status + shortcuts hint */}
-            <div className="px-5 py-3 border-t border-neutral-900">
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-ergon-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
@@ -155,11 +152,11 @@ export function Studio() {
                       status === "ready"
                         ? "bg-emerald-500"
                         : status === "error"
-                          ? "bg-red-500"
+                          ? "bg-ergon-red"
                           : "bg-amber-500 animate-pulse"
                     }`}
                   />
-                  <span className="text-[9px] text-neutral-600 uppercase tracking-[0.15em] font-medium">
+                  <span className="text-[9px] text-ergon-muted uppercase tracking-[0.18em] font-medium">
                     {status === "ready"
                       ? "Running"
                       : status === "error"
@@ -167,7 +164,7 @@ export function Studio() {
                         : "Loading"}
                   </span>
                 </div>
-                <span className="text-[9px] text-neutral-700">
+                <span className="text-[9px] text-ergon-muted/50 font-mono">
                   {editorOpen ? "⌘↵ Run" : "⌘E Code"}
                 </span>
               </div>

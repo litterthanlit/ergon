@@ -17,22 +17,22 @@ export function Toolbar() {
   const redo = useStudioStore((s) => s.redo);
 
   return (
-    <div className="flex items-center justify-between px-4 h-10 bg-neutral-950 border-b border-neutral-900 shrink-0">
+    <div className="flex items-center justify-between px-5 h-11 bg-white border-b border-ergon-border shrink-0">
       <div className="flex items-center gap-3">
-        <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-[0.2em]">
+        <span className="text-[10px] font-bold text-ergon-text uppercase tracking-[0.25em]">
           Ergon
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {/* Undo / Redo */}
         <button
           onClick={undo}
           disabled={!canUndo}
-          className="px-1.5 py-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 rounded transition-colors disabled:opacity-25 disabled:pointer-events-none"
+          className="px-1.5 py-1 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded transition-colors disabled:opacity-20 disabled:pointer-events-none"
           title="Undo (⌘Z)"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 5l-2-2 2-2" />
             <path d="M1 3h7a3 3 0 0 1 0 6H6" />
           </svg>
@@ -40,30 +40,30 @@ export function Toolbar() {
         <button
           onClick={redo}
           disabled={!canRedo}
-          className="px-1.5 py-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 rounded transition-colors disabled:opacity-25 disabled:pointer-events-none"
+          className="px-1.5 py-1 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded transition-colors disabled:opacity-20 disabled:pointer-events-none"
           title="Redo (⌘⇧Z)"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 5l2-2-2-2" />
             <path d="M11 3H4a3 3 0 0 0 0 6h2" />
           </svg>
         </button>
 
-        <div className="w-px h-4 bg-neutral-800 mx-1" />
+        <div className="w-px h-3.5 bg-ergon-border mx-2" />
 
         {/* Randomize */}
         <button
           onClick={randomize}
-          className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] rounded text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 transition-colors"
+          className="px-2 py-1 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded transition-colors"
           title="Randomize (Space)"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-            <rect x="0.5" y="0.5" width="11" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1" />
-            <circle cx="3.5" cy="3.5" r="1" />
-            <circle cx="8.5" cy="3.5" r="1" />
-            <circle cx="6" cy="6" r="1" />
-            <circle cx="3.5" cy="8.5" r="1" />
-            <circle cx="8.5" cy="8.5" r="1" />
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="currentColor">
+            <rect x="0.5" y="0.5" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1" />
+            <circle cx="3.5" cy="3.5" r="0.9" />
+            <circle cx="8.5" cy="3.5" r="0.9" />
+            <circle cx="6" cy="6" r="0.9" />
+            <circle cx="3.5" cy="8.5" r="0.9" />
+            <circle cx="8.5" cy="8.5" r="0.9" />
           </svg>
         </button>
 
@@ -72,9 +72,9 @@ export function Toolbar() {
           <button
             onClick={runCode}
             disabled={status === "loading"}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] rounded transition-colors bg-white text-neutral-950 hover:bg-neutral-200 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] rounded transition-colors bg-ergon-red text-white hover:opacity-90 disabled:opacity-50"
           >
-            <svg width="8" height="10" viewBox="0 0 8 10" fill="currentColor">
+            <svg width="7" height="9" viewBox="0 0 8 10" fill="currentColor">
               <path d="M0 0L8 5L0 10V0Z" />
             </svg>
             Run
@@ -83,10 +83,10 @@ export function Toolbar() {
 
         <button
           onClick={toggleEditor}
-          className={`px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] rounded transition-colors ${
+          className={`px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded transition-colors ${
             editorOpen
-              ? "bg-neutral-800 text-white"
-              : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900"
+              ? "bg-ergon-text text-white"
+              : "text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface"
           }`}
         >
           Code
@@ -94,17 +94,17 @@ export function Toolbar() {
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("ergon:export"))}
-          className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] rounded text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 transition-colors"
+          className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] rounded text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface transition-colors"
         >
           Export
         </button>
 
-        <div className="w-px h-4 bg-neutral-800 mx-1" />
+        <div className="w-px h-3.5 bg-ergon-border mx-2" />
 
         {/* Aspect ratio */}
         <button
           onClick={cycleAspect}
-          className="px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] rounded text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 transition-colors font-mono"
+          className="px-2 py-1 text-[10px] font-medium uppercase tracking-[0.08em] rounded text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface transition-colors font-mono"
         >
           {aspect === "free" ? "Free" : aspect}
         </button>
@@ -112,9 +112,9 @@ export function Toolbar() {
         {/* Fullscreen */}
         <button
           onClick={toggleFullscreen}
-          className="px-2 py-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900 rounded transition-colors"
+          className="px-1.5 py-1 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded transition-colors"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8" />
           </svg>
         </button>

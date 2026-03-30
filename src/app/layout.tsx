@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains",
+  variable: "--font-mono",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
         {children}
       </body>

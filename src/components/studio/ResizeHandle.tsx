@@ -37,12 +37,12 @@ export function ResizeHandle({ onResize }: Props) {
   return (
     <div
       data-testid="resize-handle"
-      className="h-2 bg-neutral-900 border-t border-neutral-800 cursor-row-resize flex items-center justify-center hover:bg-neutral-800 transition-colors shrink-0"
+      className="h-1.5 bg-neutral-900 cursor-row-resize flex items-center justify-center hover:bg-neutral-700 transition-colors shrink-0"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
-      <div className="w-8 h-0.5 bg-neutral-700 rounded-full" />
+      <div className="w-8 h-px bg-neutral-600 rounded-full" />
     </div>
   );
 }
