@@ -34,7 +34,7 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 2px;
+  height: 3px;
   background: #d4d4d4;
   border-radius: 0;
 }
@@ -55,7 +55,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 input[type="range"]::-moz-range-track {
-  height: 2px;
+  height: 3px;
   background: #d4d4d4;
   border-radius: 0;
 }

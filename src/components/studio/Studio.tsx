@@ -185,7 +185,7 @@ export function Studio() {
   }, [handleSave, handlePublish]);
 
   const tabClasses = (tab: SidebarTab) =>
-    `flex-1 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-center transition-colors cursor-pointer ${
+    `flex-1 py-4 text-xs font-semibold uppercase tracking-[0.1em] text-center transition-colors cursor-pointer ${
       sidebarTab === tab
         ? "text-ergon-text border-b-2 border-ergon-accent"
         : "text-ergon-muted hover:text-ergon-subtle border-b-2 border-transparent"
@@ -230,7 +230,7 @@ export function Studio() {
 
         {/* Sidebar */}
         {!isFullscreen && (
-          <div className="w-80 bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
+          <div className="w-[340px] bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
             {/* Tabs */}
             <div className="flex border-b border-ergon-border shrink-0">
               <button className={tabClasses("templates")} onClick={() => setSidebarTab("templates")}>
@@ -248,13 +248,13 @@ export function Studio() {
             <div className="flex-1 overflow-y-auto">
               {/* Templates tab */}
               {sidebarTab === "templates" && (
-                <div className="p-5">
+                <div className="p-6">
                   <p className="text-xs text-ergon-muted mb-4">
                     {compositionMode
                       ? "Select a template to add as a new layer."
                       : "Select a template to start creating."}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {templates.map((t) => (
                       <button
                         key={t.id}
@@ -277,7 +277,7 @@ export function Studio() {
 
               {/* Parameters tab */}
               {sidebarTab === "parameters" && (
-                <div className="p-5">
+                <div className="p-6">
                   <div className="mb-5">
                     <h3 className="text-sm font-bold text-ergon-text uppercase tracking-[0.1em]">
                       {compositionMode
@@ -311,7 +311,7 @@ export function Studio() {
 
               {/* Layers tab */}
               {sidebarTab === "layers" && (
-                <div className="p-5">
+                <div className="p-6">
                   {!compositionMode ? (
                     <div className="text-center py-8">
                       <p className="text-sm text-ergon-muted mb-4">
@@ -351,7 +351,7 @@ export function Studio() {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 border-t border-ergon-border shrink-0">
+            <div className="px-6 py-4 border-t border-ergon-border shrink-0">
               <span className="text-xs text-ergon-muted/60 font-mono">
                 {editorOpen ? "⌘↵ Run  ⌘E Close" : "⌘E Code  Space Shuffle"}
               </span>

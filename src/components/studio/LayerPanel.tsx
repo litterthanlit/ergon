@@ -41,7 +41,7 @@ export function LayerPanel({ onLayerSelect }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-ergon-subtle uppercase tracking-[0.12em]">
@@ -50,7 +50,7 @@ export function LayerPanel({ onLayerSelect }: Props) {
       </div>
 
       {/* Layer list — top layer first (reversed from array order) */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2.5">
         {[...layers].reverse().map((layer, reversedIndex) => {
           const actualIndex = layers.length - 1 - reversedIndex;
           return (

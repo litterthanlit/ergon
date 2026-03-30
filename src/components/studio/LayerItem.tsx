@@ -32,7 +32,7 @@ export function LayerItem({
     <div
       data-testid="layer-item"
       onClick={onSelect}
-      className={`px-3 py-2.5 border rounded cursor-pointer transition-colors ${
+      className={`px-4 py-3.5 border rounded-lg cursor-pointer transition-colors ${
         isActive
           ? "border-ergon-text bg-ergon-surface"
           : "border-ergon-border hover:border-ergon-muted"
@@ -70,7 +70,7 @@ export function LayerItem({
       </div>
 
       {/* Opacity — always visible */}
-      <div className="flex items-center gap-2 mt-1">
+      <div className="flex items-center gap-2 mt-2.5">
         <input
           type="range"
           min={0}
@@ -87,12 +87,12 @@ export function LayerItem({
       </div>
 
       {/* Blend mode — always visible as dropdown */}
-      <div className="mt-1.5">
+      <div className="mt-2">
         <select
           value={blendMode}
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-          className="w-full text-[11px] text-ergon-subtle bg-white border border-ergon-border rounded px-2 py-1 focus:outline-none focus:border-ergon-text"
+          className="w-full text-[11px] text-ergon-subtle bg-white border border-ergon-border rounded-md px-2.5 py-1.5 focus:outline-none focus:border-ergon-text"
         >
           {BLEND_MODES.map((mode) => (
             <option key={mode} value={mode}>
