@@ -23,7 +23,7 @@ let pg;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  pixelMode(1);
+  pixelDensity(1);
   colorMode(HSB, 360, 100, 100, 100);
   pg = createGraphics(floor(width / 2), floor(height / 2));
   pg.pixelDensity(1);

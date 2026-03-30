@@ -12,6 +12,7 @@ export function Canvas() {
   const code = useStudioStore((s) => s.code);
   const values = useStudioStore((s) => s.values);
   const codeVersion = useStudioStore((s) => s.codeVersion);
+  const templateId = useStudioStore((s) => s.template?.id);
   const seed = useStudioStore((s) => s.seed);
   const setSchema = useStudioStore((s) => s.setSchema);
   const setStatus = useStudioStore((s) => s.setStatus);
@@ -52,6 +53,7 @@ export function Canvas() {
     setupBridge();
   }, [setupBridge]);
 
+  // Reload sandbox when user presses Run (codeVersion changes)
   useEffect(() => {
     if (codeVersion > 0 && bridgeRef.current) {
       const iframe = iframeRef.current;
@@ -60,6 +62,13 @@ export function Canvas() {
       }
     }
   }, [codeVersion]);
+
+  // Reload sandbox when template changes
+  useEffect(() => {
+    if (bridgeRef.current && iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src;
+    }
+  }, [templateId]);
 
   useEffect(() => {
     bridgeRef.current?.updateParams(values);
