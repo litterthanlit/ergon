@@ -58,15 +58,21 @@ export function Canvas() {
     if (codeVersion > 0 && bridgeRef.current) {
       const iframe = iframeRef.current;
       if (iframe) {
-        iframe.src = iframe.src;
+        iframe.src = "/sandbox/index.html?" + Date.now();
       }
     }
   }, [codeVersion]);
 
-  // Reload sandbox when template changes
+  // Reload sandbox when template changes — send new code directly to bridge
+  // (iframe.src = iframe.src is unreliable for same-URL sandboxed iframes)
+  const prevTemplateId = useRef(templateId);
   useEffect(() => {
-    if (bridgeRef.current && iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
+    if (prevTemplateId.current !== templateId) {
+      prevTemplateId.current = templateId;
+      if (bridgeRef.current && iframeRef.current) {
+        // Force iframe reload with cache-busting param to get fresh p5 state
+        iframeRef.current.src = "/sandbox/index.html?" + Date.now();
+      }
     }
   }, [templateId]);
 
