@@ -108,7 +108,7 @@ export function Studio() {
 
           {/* Code editor panel — resizable */}
           {editorOpen && (
-            <>
+            <div className="animate-slide-up">
               <ResizeHandle onResize={handleResize} />
               <div
                 className="border-t border-neutral-800 bg-[#0a0a0a] shrink-0"
@@ -120,13 +120,13 @@ export function Studio() {
                   errorLine={parseErrorLine(error)}
                 />
               </div>
-            </>
+            </div>
           )}
         </div>
 
         {/* Parameter Panel — right sidebar */}
         {!isFullscreen && (
-          <div className="w-72 bg-neutral-950 border-l border-neutral-900 flex flex-col shrink-0">
+          <div className="w-72 bg-neutral-950 border-l border-neutral-900 flex flex-col shrink-0 animate-fade-in">
             {/* Header */}
             <div className="px-5 pt-4 pb-3 border-b border-neutral-900">
               <h2 className="text-[11px] font-semibold text-white uppercase tracking-[0.15em]">
