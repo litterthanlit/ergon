@@ -98,7 +98,7 @@ export function Toolbar() {
           <button
             onClick={runCode}
             disabled={status === "loading"}
-            className="flex items-center gap-2 px-4 h-9 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg transition-colors bg-ergon-red text-white hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 px-4 h-9 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg transition-colors bg-ergon-accent text-ergon-text hover:opacity-90 disabled:opacity-50 cursor-pointer"
           >
             <svg width="10" height="12" viewBox="0 0 8 10" fill="currentColor">
               <path d="M0 0L8 5L0 10V0Z" />

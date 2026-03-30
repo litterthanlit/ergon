@@ -147,7 +147,7 @@ export function Studio() {
   const tabClasses = (tab: SidebarTab) =>
     `flex-1 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-center transition-colors cursor-pointer ${
       sidebarTab === tab
-        ? "text-ergon-text border-b-2 border-ergon-text"
+        ? "text-ergon-text border-b-2 border-ergon-accent"
         : "text-ergon-muted hover:text-ergon-subtle border-b-2 border-transparent"
     }`;
 
