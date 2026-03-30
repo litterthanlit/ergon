@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import { createBridge, type Bridge } from "@/lib/bridge";
 import { useStudioStore } from "@/lib/store";
+import type { Layer } from "@/lib/layers";
 
 export function Canvas() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -16,6 +17,11 @@ export function Canvas() {
   const setStatus = useStudioStore((s) => s.setStatus);
   const setError = useStudioStore((s) => s.setError);
   const aspect = useStudioStore((s) => s.aspect);
+  const compositionMode = useStudioStore((s) => s.compositionMode);
+  const layers = useStudioStore((s) => s.layers);
+
+  const layerIframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
+  const layerBridgeRefs = useRef<Map<string, Bridge>>(new Map());
 
   const codeRef = useRef(code);
   codeRef.current = code;
@@ -67,6 +73,38 @@ export function Canvas() {
     return () => { bridgeRef.current?.destroy(); };
   }, []);
 
+  useEffect(() => {
+    if (!compositionMode) return;
+
+    layers.forEach((layer) => {
+      const bridge = layerBridgeRefs.current.get(layer.id);
+      if (bridge) {
+        bridge.updateParams(layer.values);
+      }
+    });
+  }, [compositionMode, layers]);
+
+  const handleLayerIframeLoad = useCallback((layerId: string, iframe: HTMLIFrameElement) => {
+    // Clean up old bridge
+    layerBridgeRefs.current.get(layerId)?.destroy();
+
+    const layer = useStudioStore.getState().layers.find((l: Layer) => l.id === layerId);
+    if (!layer) return;
+
+    const bridge = createBridge({
+      iframe,
+      onSchema: () => {},
+      onReady: () => {},
+      onError: () => {},
+    });
+
+    layerBridgeRefs.current.set(layerId, bridge);
+
+    setTimeout(() => {
+      bridge.load(layer.code, layer.values);
+    }, 100);
+  }, []);
+
   const aspectClass =
     aspect === "1:1"
       ? "aspect-square"
@@ -75,6 +113,33 @@ export function Canvas() {
         : aspect === "4:3"
           ? "aspect-[4/3]"
           : "";
+
+  if (compositionMode) {
+    return (
+      <div className="w-full h-full relative bg-ergon-surface">
+        {layers.map((layer) => (
+          <iframe
+            key={layer.id}
+            ref={(el) => {
+              if (el) layerIframeRefs.current.set(layer.id, el);
+            }}
+            title={`Layer: ${layer.name}`}
+            src="/sandbox/index.html"
+            sandbox="allow-scripts"
+            onLoad={(e) => handleLayerIframeLoad(layer.id, e.currentTarget)}
+            className="absolute inset-0 w-full h-full border-0"
+            style={{
+              background: "transparent",
+              opacity: layer.visible ? layer.opacity : 0,
+              mixBlendMode: layer.blendMode,
+              pointerEvents: "none",
+              zIndex: layers.indexOf(layer),
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex items-center justify-center bg-ergon-surface">
