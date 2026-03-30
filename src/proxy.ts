@@ -25,6 +25,11 @@ export async function proxy(request: NextRequest) {
     }
   );
 
+  // Skip auth check if Supabase isn't configured (dev mode)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project")) {
+    return response;
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
 
   if (request.nextUrl.pathname.startsWith("/studio") && !user) {
