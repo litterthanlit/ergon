@@ -4,6 +4,7 @@ import { getDefaultValues } from "./types";
 import type { Template } from "./templates/registry";
 import { drift } from "./templates/drift";
 import { createHistory, type History } from "./history";
+import { createLayer, type Layer, type BlendMode } from "./layers";
 
 type SandboxStatus = "loading" | "ready" | "error";
 
@@ -55,6 +56,21 @@ type StudioState = {
   canUndo: boolean;
   canRedo: boolean;
 
+  // Layers / Composition
+  compositionMode: boolean;
+  layers: Layer[];
+  activeLayerIndex: number;
+  toggleCompositionMode: () => void;
+  addLayer: (templateId: string, name: string, code: string, schema: ParamSchema | null, values: ParamValues) => void;
+  removeLayer: (layerId: string) => void;
+  setActiveLayer: (index: number) => void;
+  updateLayerVisibility: (layerId: string, visible: boolean) => void;
+  updateLayerOpacity: (layerId: string, opacity: number) => void;
+  updateLayerBlendMode: (layerId: string, blendMode: BlendMode) => void;
+  reorderLayers: (fromIndex: number, toIndex: number) => void;
+  updateLayerParams: (layerId: string, key: string, value: number | string | boolean | { x: number; y: number }) => void;
+  updateLayerCode: (layerId: string, code: string) => void;
+
   // Actions
   setTemplate: (template: Template) => void;
   setCode: (code: string) => void;
@@ -90,6 +106,83 @@ export const useStudioStore = create<StudioState>((set) => ({
   aspect: "free" as AspectRatio,
   canUndo: false,
   canRedo: false,
+  compositionMode: false,
+  layers: [],
+  activeLayerIndex: 0,
+
+  toggleCompositionMode: () =>
+    set((state) => {
+      if (!state.compositionMode) {
+        // Entering composition mode — create initial layer from current template
+        const initialLayer = createLayer(
+          state.template.id,
+          state.template.name,
+          state.code,
+          state.schema,
+          state.values
+        );
+        return { compositionMode: true, layers: [initialLayer], activeLayerIndex: 0 };
+      }
+      return { compositionMode: false };
+    }),
+
+  addLayer: (templateId, name, code, schema, values) =>
+    set((state) => ({
+      layers: [...state.layers, createLayer(templateId, name, code, schema, values)],
+      activeLayerIndex: state.layers.length,
+    })),
+
+  removeLayer: (layerId) =>
+    set((state) => {
+      const layers = state.layers.filter((l) => l.id !== layerId);
+      const activeLayerIndex = Math.min(state.activeLayerIndex, Math.max(0, layers.length - 1));
+      return { layers, activeLayerIndex };
+    }),
+
+  setActiveLayer: (index) => set({ activeLayerIndex: index }),
+
+  updateLayerVisibility: (layerId, visible) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, visible } : l
+      ),
+    })),
+
+  updateLayerOpacity: (layerId, opacity) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, opacity: Math.max(0, Math.min(1, opacity)) } : l
+      ),
+    })),
+
+  updateLayerBlendMode: (layerId, blendMode) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, blendMode } : l
+      ),
+    })),
+
+  reorderLayers: (fromIndex, toIndex) =>
+    set((state) => {
+      const layers = [...state.layers];
+      const [moved] = layers.splice(fromIndex, 1);
+      layers.splice(toIndex, 0, moved);
+      return { layers, activeLayerIndex: toIndex };
+    }),
+
+  updateLayerParams: (layerId, key, value) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, values: { ...l.values, [key]: value } } : l
+      ),
+    })),
+
+  updateLayerCode: (layerId, code) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, code } : l
+      ),
+    })),
 
   setTemplate: (template) => {
     const defaults = getDefaultValues(template.schema);
