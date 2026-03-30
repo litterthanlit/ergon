@@ -94,7 +94,7 @@ function draw() {
   pg.updatePixels();
 
   image(pg, 0, 0, width, height);
-  t += params.speed * 0.003;
+  t += params.speed * 0.012;
 }
 
 function windowResized() {
