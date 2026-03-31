@@ -192,7 +192,7 @@ export function Studio() {
     }`;
 
   return (
-    <div className="h-screen w-screen bg-ergon-surface flex flex-col overflow-hidden">
+    <div className="h-screen w-screen bg-ergon-surface flex flex-col overflow-hidden p-4">
       <Toolbar />
 
       <div className="flex-1 flex min-h-0">
