@@ -6,39 +6,88 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+export async function generateMetadata({ params }: Props) {
+  const { slug } = await params;
+  const { work } = await getPublishedWork(slug);
+  if (!work) return { title: "Not Found — Ergon" };
+  return {
+    title: `${work.title} — Ergon`,
+    description: `Generative artwork by ${work.profiles?.display_name || work.profiles?.username || "an artist"} on Ergon`,
+  };
+}
+
 export default async function WorkPage({ params }: Props) {
   const { slug } = await params;
-  const { work, error } = await getPublishedWork(slug);
+  const { work } = await getPublishedWork(slug);
+  if (!work) notFound();
 
-  if (error || !work) {
-    notFound();
-  }
+  const codeEncoded = encodeURIComponent(work.code);
+  const paramsEncoded = work.params
+    ? encodeURIComponent(JSON.stringify(work.params))
+    : "";
+  const sandboxUrl = `/sandbox/index.html#code=${codeEncoded}${paramsEncoded ? `&params=${paramsEncoded}` : ""}`;
 
-  const encodedCode = encodeURIComponent(work.code);
-  const encodedParams = encodeURIComponent(JSON.stringify(work.params ?? {}));
+  const artistName = work.profiles?.display_name || work.profiles?.username || "Anonymous";
+  const artistUsername = work.profiles?.username;
+  const createdDate = new Date(work.created_at).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return (
-    <div className="h-screen w-screen bg-white flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-5 h-10 border-b border-ergon-border shrink-0">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-[10px] font-bold text-ergon-text uppercase tracking-[0.25em] hover:opacity-70 transition-opacity">
-            Ergon
-          </Link>
-          <span className="text-[10px] text-ergon-muted">/</span>
-          <span className="text-[11px] font-medium text-ergon-text">{work.title}</span>
-        </div>
-        <Link href={`/artist/${work.profiles.username}`} className="text-[10px] text-ergon-muted hover:text-ergon-text transition-colors uppercase tracking-[0.12em]">
-          by {work.profiles.display_name || work.profiles.username}
+    <div className="h-screen w-screen bg-black flex flex-col overflow-hidden">
+      {/* Minimal top bar — fades on hover */}
+      <div className="absolute top-0 left-0 right-0 z-10 px-6 py-4 flex items-center justify-between opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-b from-black/40 to-transparent">
+        <Link
+          href="/"
+          className="text-xs font-bold text-white/70 uppercase tracking-[0.2em] hover:text-white transition-colors"
+        >
+          Ergon
+        </Link>
+        <Link
+          href="/studio"
+          className="text-xs font-medium text-white/50 uppercase tracking-[0.1em] hover:text-white transition-colors"
+        >
+          Open Studio
         </Link>
       </div>
-      <div className="flex-1 bg-ergon-surface">
+
+      {/* Canvas — full bleed */}
+      <div className="flex-1 relative">
         <iframe
           title={work.title}
-          src={`/sandbox/index.html#code=${encodedCode}&params=${encodedParams}`}
+          src={sandboxUrl}
           sandbox="allow-scripts"
-          className="w-full h-full border-0"
-          style={{ background: "#fafafa" }}
+          className="absolute inset-0 w-full h-full border-0"
+          style={{ background: "#000" }}
         />
+      </div>
+
+      {/* Bottom info bar — minimal metadata */}
+      <div className="bg-black px-8 py-5 flex items-end justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-white tracking-wide">
+            {work.title}
+          </h1>
+          <div className="flex items-center gap-3 mt-1.5">
+            {artistUsername ? (
+              <Link
+                href={`/artist/${artistUsername}`}
+                className="text-sm text-white/50 hover:text-white transition-colors"
+              >
+                {artistName}
+              </Link>
+            ) : (
+              <span className="text-sm text-white/50">{artistName}</span>
+            )}
+            <span className="text-white/20">·</span>
+            <span className="text-sm text-white/30">{createdDate}</span>
+          </div>
+        </div>
+        <div className="text-[10px] text-white/20 uppercase tracking-[0.15em] font-medium">
+          Made with Ergon
+        </div>
       </div>
     </div>
   );
