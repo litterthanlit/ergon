@@ -79,13 +79,12 @@ export const recipes: Recipe[] = [
     description: "Energetic, bright, rhythmic",
     mood: "dark",
     blocks: [
-      { blockId: "mesh", role: "shape", opacity: 0.6, blendMode: "normal" },
-      { blockId: "pulse", role: "motion", opacity: 0.5, blendMode: "screen" },
-      { blockId: "aurora", role: "color", opacity: 0.7, blendMode: "screen" },
-      { blockId: "glitch", role: "texture", opacity: 0.3, blendMode: "difference" },
+      { blockId: "mesh", role: "shape", opacity: 0.5, blendMode: "normal" },
+      { blockId: "aurora", role: "color", opacity: 0.9, blendMode: "screen", paramOverrides: { bands: 6, speed: 2.0, amplitude: 100 } },
+      { blockId: "particles", role: "motion", opacity: 0.5, blendMode: "screen", paramOverrides: { count: 150, gravity: 0.05, friction: 0.99, repel: false } },
     ],
     drivers: {
-      palette: ["#0a0a0a", "#ff006e", "#3a86ff", "#ffbe0b", "#8338ec"],
+      palette: ["#0a0a0a", "#ff2d6b", "#00d4ff", "#ffe03d", "#a855f7"],
       seed: 99,
       tempo: 1.5,
     },
@@ -96,14 +95,14 @@ export const recipes: Recipe[] = [
     description: "Pastel, organic, gentle",
     mood: "light",
     blocks: [
-      { blockId: "waves", role: "base", opacity: 0.6, blendMode: "normal" },
-      { blockId: "scatter", role: "shape", opacity: 0.7, blendMode: "normal" },
-      { blockId: "drift", role: "motion", opacity: 0.6, blendMode: "screen" },
+      { blockId: "scatter", role: "shape", opacity: 0.9, blendMode: "normal", paramOverrides: { count: 300, sizeMax: 80, opacity: 0.15, spacing: 20 } },
+      { blockId: "bloom", role: "color", opacity: 0.4, blendMode: "screen", paramOverrides: { petals: 16, layers: 4, curvature: 1.0, style: "Gradient" } },
+      { blockId: "drift", role: "motion", opacity: 0.35, blendMode: "screen", paramOverrides: { density: 500, speed: 0.5, trail: 40, weight: 0.8 } },
     ],
     drivers: {
-      palette: ["#f5f0eb", "#ffcdb2", "#b5838d", "#6d6875", "#e5989b"],
+      palette: ["#faf5ef", "#f4b8c1", "#c49dbc", "#7b6d8d", "#dba68a"],
       seed: 21,
-      tempo: 0.6,
+      tempo: 0.5,
     },
   },
 ];
