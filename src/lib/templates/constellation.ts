@@ -25,6 +25,7 @@ const params = ergon.params({
 });
 
 let pts = [];
+let t = 0;
 
 function scatter() {
   pts = [];
@@ -35,40 +36,57 @@ function scatter() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop();
   scatter();
 }
 
 function draw() {
+  t += 0.01;
   const pal = palettes[params.palette] || palettes.Night;
   background(pal.bg);
 
   // Draw lines first
-  stroke(pal.line);
   for (let i = 0; i < pts.length; i++) {
     for (let j = i + 1; j < pts.length; j++) {
-      const d = dist(pts[i].x, pts[i].y, pts[j].x, pts[j].y);
+      const dx = pts[i].x + sin(t * 0.5 + i) * 2 - (pts[j].x + sin(t * 0.5 + j) * 2);
+      const dy = pts[i].y + cos(t * 0.3 + i * 1.3) * 2 - (pts[j].y + cos(t * 0.3 + j * 1.3) * 2);
+      const d = sqrt(dx * dx + dy * dy);
       if (d < params.threshold) {
-        strokeWeight(map(d, 0, params.threshold, 1.0, 0.1));
-        line(pts[i].x, pts[i].y, pts[j].x, pts[j].y);
+        const alphaI = sin(t * 2 + i * 0.7) * 0.3 + 0.7;
+        const alphaJ = sin(t * 2 + j * 0.7) * 0.3 + 0.7;
+        const lineAlpha = (alphaI + alphaJ) * 0.5;
+        stroke(pal.line);
+        strokeWeight(map(d, 0, params.threshold, 1.0, 0.1) * lineAlpha);
+        const xi = pts[i].x + sin(t * 0.5 + i) * 2;
+        const yi = pts[i].y + cos(t * 0.3 + i * 1.3) * 2;
+        const xj = pts[j].x + sin(t * 0.5 + j) * 2;
+        const yj = pts[j].y + cos(t * 0.3 + j * 1.3) * 2;
+        line(xi, yi, xj, yj);
       }
     }
   }
 
   // Draw stars on top
   noStroke();
-  for (const p of pts) {
-    fill(pal.star);
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const alpha = sin(t * 2 + i * 0.7) * 0.3 + 0.7;
+    const px = p.x + sin(t * 0.5 + i) * 2;
+    const py = p.y + cos(t * 0.3 + i * 1.3) * 2;
     const sz = params.starSize * p.r;
-    circle(p.x, p.y, sz * 2);
+    const starCol = color(pal.star);
+    starCol.setAlpha(alpha * 255);
+    fill(starCol);
+    circle(px, py, sz * 2);
     // soft glow
-    fill(pal.star + '33');
-    circle(p.x, p.y, sz * 5);
+    const glowCol = color(pal.star);
+    glowCol.setAlpha(alpha * 0.2 * 255);
+    fill(glowCol);
+    circle(px, py, sz * 5);
   }
 }
 
-function windowResized() { resizeCanvas(windowWidth, windowHeight); scatter(); redraw(); }
-function mousePressed() { scatter(); redraw(); }
+function windowResized() { resizeCanvas(windowWidth, windowHeight); scatter(); }
+function mousePressed() { scatter(); }
 `;
 
 export const constellation: Template = {
