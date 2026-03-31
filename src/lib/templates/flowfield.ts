@@ -63,6 +63,9 @@ function initParticles() {
 }
 
 function draw() {
+  const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+  const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
   const alpha = map(params.fadeRate, 1, 40, 255, 6);
   background(10, 10, 20, alpha);
 
@@ -71,14 +74,14 @@ function draw() {
   }
   if (particles.length > params.density) particles.length = params.density;
 
-  const colors = palettes[params.palette] || palettes.Ink;
+  const colors = (sharedPalette && sharedPalette.length >= 3) ? sharedPalette : (palettes[params.palette] || palettes.Ink);
   strokeWeight(params.lineWeight);
 
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
     const angle = noise(p.x * params.noiseScale, p.y * params.noiseScale) * TWO_PI * 2;
-    const nx = p.x + cos(angle) * params.speed;
-    const ny = p.y + sin(angle) * params.speed;
+    const nx = p.x + cos(angle) * params.speed * sharedTempo;
+    const ny = p.y + sin(angle) * params.speed * sharedTempo;
 
     const c = colors[p.colorIdx % colors.length];
     stroke(c);
