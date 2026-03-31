@@ -30,6 +30,9 @@ let seed = 42;
 
 let t = 0;
 
+const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
 function drawPetal(cx, cy, angle, r, colorIdx, colors) {
   const ctrl = r * params.curvature;
   const sway = sin(t + angle) * 5;
@@ -65,10 +68,10 @@ function setup() {
 }
 
 function draw() {
-  t += 0.005;
+  t += 0.005 * sharedTempo;
   randomSeed(seed);
   background(12);
-  const colors = palettes[params.palette] || palettes.Cherry;
+  const colors = (sharedPalette && sharedPalette.length >= 3) ? sharedPalette : (palettes[params.palette] || palettes.Cherry);
   const cx = width / 2;
   const cy = height / 2;
   const maxR = min(width, height) * 0.38;

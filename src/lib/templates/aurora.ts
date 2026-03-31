@@ -42,6 +42,9 @@ const params = ergon.params({
 
 let t = 0;
 
+const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
 // Interpolate a color from the gradient stops at position t (0-1)
 function sampleGradient(stops, pos) {
   if (!stops || stops.length === 0) return [0, 255, 136];
@@ -87,12 +90,21 @@ function setup() {
 
 function draw() {
   background(5, 5, 20, 30);
-  t++;
+  t += sharedTempo;
   noStroke();
 
   for (let band = 0; band < params.bands; band++) {
-    const gradPos = band / max(params.bands - 1, 1);
-    const rgb = sampleGradient(params.gradient, gradPos);
+    // If shared palette available, use it for band colors
+    let bandColor;
+    if (sharedPalette && sharedPalette.length > 0) {
+      const idx = band % sharedPalette.length;
+      bandColor = sharedPalette[idx];
+    } else {
+      // existing gradient sampling logic
+      const gradPos = band / max(params.bands - 1, 1);
+      bandColor = sampleGradient(params.gradient, gradPos);
+    }
+    const rgb = Array.isArray(bandColor) ? bandColor : hexToRgb(bandColor);
     const r = rgb[0], g = rgb[1], b = rgb[2];
 
     for (let x = 0; x < width; x += 6) {
