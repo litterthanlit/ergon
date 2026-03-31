@@ -13,6 +13,11 @@ export async function generateMetadata({ params }: Props) {
   return {
     title: `${work.title} — Ergon`,
     description: `Generative artwork by ${work.profiles?.display_name || work.profiles?.username || "an artist"} on Ergon`,
+    openGraph: {
+      title: `${work.title} — Ergon`,
+      description: `Generative art on Ergon`,
+      type: "website",
+    },
   };
 }
 
@@ -36,25 +41,27 @@ export default async function WorkPage({ params }: Props) {
   });
 
   return (
-    <div className="h-screen w-screen bg-black flex flex-col overflow-hidden">
-      {/* Minimal top bar — fades on hover */}
-      <div className="absolute top-0 left-0 right-0 z-10 px-6 py-4 flex items-center justify-between opacity-0 hover:opacity-100 transition-opacity duration-300 bg-gradient-to-b from-black/40 to-transparent">
+    <div className="h-screen w-screen bg-black flex flex-col overflow-hidden" style={{ viewTransitionName: "work-page" }}>
+      {/* Top chrome — visible on hover */}
+      <div className="absolute top-0 left-0 right-0 z-10 px-8 py-5 flex items-center justify-between opacity-0 hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-black/60 to-transparent">
         <Link
           href="/"
-          className="text-xs font-bold text-white/70 uppercase tracking-[0.2em] hover:text-white transition-colors"
+          className="text-[11px] font-bold text-white/60 uppercase tracking-[0.25em] hover:text-white transition-colors"
         >
           Ergon
         </Link>
-        <Link
-          href="/studio"
-          className="text-xs font-medium text-white/50 uppercase tracking-[0.1em] hover:text-white transition-colors"
-        >
-          Open Studio
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/studio"
+            className="text-[11px] font-medium text-white/40 uppercase tracking-[0.12em] hover:text-white transition-colors"
+          >
+            Open Studio
+          </Link>
+        </div>
       </div>
 
-      {/* Canvas — full bleed */}
-      <div className="flex-1 relative">
+      {/* Full-bleed canvas */}
+      <div className="flex-1 relative" style={{ viewTransitionName: "work-canvas" }}>
         <iframe
           title={work.title}
           src={sandboxUrl}
@@ -64,30 +71,30 @@ export default async function WorkPage({ params }: Props) {
         />
       </div>
 
-      {/* Bottom info bar — minimal metadata */}
-      <div className="bg-black px-8 py-5 flex items-end justify-between">
+      {/* Bottom info — always visible, minimal */}
+      <div className="bg-black/90 backdrop-blur-sm px-10 py-6 flex items-end justify-between border-t border-white/5">
         <div>
-          <h1 className="text-lg font-bold text-white tracking-wide">
+          <h1 className="text-xl font-bold text-white tracking-[0.02em]" style={{ viewTransitionName: "work-title" }}>
             {work.title}
           </h1>
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-4 mt-2">
             {artistUsername ? (
               <Link
                 href={`/artist/${artistUsername}`}
-                className="text-sm text-white/50 hover:text-white transition-colors"
+                className="text-sm text-white/40 hover:text-white transition-colors duration-300"
               >
                 {artistName}
               </Link>
             ) : (
-              <span className="text-sm text-white/50">{artistName}</span>
+              <span className="text-sm text-white/40">{artistName}</span>
             )}
-            <span className="text-white/20">·</span>
-            <span className="text-sm text-white/30">{createdDate}</span>
+            <span className="text-white/15 text-xs">·</span>
+            <span className="text-sm text-white/25">{createdDate}</span>
           </div>
         </div>
-        <div className="text-[10px] text-white/20 uppercase tracking-[0.15em] font-medium">
+        <span className="text-[9px] text-white/15 uppercase tracking-[0.2em] font-semibold">
           Made with Ergon
-        </div>
+        </span>
       </div>
     </div>
   );
