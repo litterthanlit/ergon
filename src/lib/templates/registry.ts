@@ -55,3 +55,6 @@ export const templates: Template[] = [
 export function getTemplate(id: string): Template | undefined {
   return templates.find((t) => t.id === id);
 }
+
+// Backward compatibility — blocks are the new primary API
+export { blocks, getBlock, getBlocksByRole, type Block, type BlockRole } from "../blocks";
