@@ -85,16 +85,37 @@ export function Canvas() {
   }, [seed]);
 
   useEffect(() => {
-    return () => { bridgeRef.current?.destroy(); };
+    return () => {
+      bridgeRef.current?.destroy();
+      // Clean up all layer bridges
+      layerBridgeRefs.current.forEach((bridge) => bridge.destroy());
+      layerBridgeRefs.current.clear();
+    };
   }, []);
 
   useEffect(() => {
-    if (!compositionMode) return;
+    if (!compositionMode) {
+      // Clean up all layer bridges when exiting composition mode
+      layerBridgeRefs.current.forEach((bridge) => bridge.destroy());
+      layerBridgeRefs.current.clear();
+      layerIframeRefs.current.clear();
+      return;
+    }
 
     layers.forEach((layer) => {
       const bridge = layerBridgeRefs.current.get(layer.id);
       if (bridge) {
         bridge.updateParams(layer.values);
+      }
+    });
+
+    // Clean up bridges for removed layers
+    const currentLayerIds = new Set(layers.map((l) => l.id));
+    layerBridgeRefs.current.forEach((bridge, id) => {
+      if (!currentLayerIds.has(id)) {
+        bridge.destroy();
+        layerBridgeRefs.current.delete(id);
+        layerIframeRefs.current.delete(id);
       }
     });
   }, [compositionMode, layers]);
