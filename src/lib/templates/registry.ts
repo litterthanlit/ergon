@@ -29,6 +29,7 @@ import { flowfield } from "./flowfield";
 import { particles } from "./particles";
 import { contour } from "./contour";
 import { marble } from "./marble";
+import { glyphs } from "./glyphs";
 
 export const templates: Template[] = [
   drift,
@@ -48,6 +49,7 @@ export const templates: Template[] = [
   particles,
   contour,
   marble,
+  glyphs,
 ];
 
 export function getTemplate(id: string): Template | undefined {
