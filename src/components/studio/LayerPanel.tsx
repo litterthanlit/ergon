@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useStudioStore } from "@/lib/store";
-import { templates } from "@/lib/templates/registry";
+import { getBlock } from "@/lib/blocks";
 import { getDefaultValues } from "@/lib/types";
 import { LayerItem } from "./LayerItem";
+import { BlockPicker } from "./BlockPicker";
 import type { BlendMode } from "@/lib/layers";
 
 type Props = {
@@ -20,23 +21,32 @@ export function LayerPanel({ onLayerSelect }: Props) {
   const updateLayerVisibility = useStudioStore((s) => s.updateLayerVisibility);
   const updateLayerOpacity = useStudioStore((s) => s.updateLayerOpacity);
   const updateLayerBlendMode = useStudioStore((s) => s.updateLayerBlendMode);
+  const swapBlock = useStudioStore((s) => s.swapBlock);
+  const soloLayer = useStudioStore((s) => s.soloLayer);
+  const soloLayerId = useStudioStore((s) => s.soloLayerId);
 
   const [showPicker, setShowPicker] = useState(false);
+  const [swapTarget, setSwapTarget] = useState<string | null>(null);
 
-  const handleAddFromTemplate = (templateId: string) => {
-    const t = templates.find((tpl) => tpl.id === templateId);
-    if (t) {
-      addLayer(t.id, t.name, t.code, t.schema, getDefaultValues(t.schema));
-      // Apply composition hints from template
-      if (t.compositionHint) {
-        const newLayers = useStudioStore.getState().layers;
-        const newLayer = newLayers[newLayers.length - 1];
-        if (newLayer) {
-          updateLayerOpacity(newLayer.id, t.compositionHint.opacity);
-          updateLayerBlendMode(newLayer.id, t.compositionHint.blendMode as BlendMode);
-        }
+  const handleAddBlock = (blockId: string) => {
+    const block = getBlock(blockId);
+    if (block) {
+      addLayer(block.id, block.role, block.name, block.code, block.schema, getDefaultValues(block.schema));
+      // Apply block defaults
+      const newLayers = useStudioStore.getState().layers;
+      const newLayer = newLayers[newLayers.length - 1];
+      if (newLayer) {
+        updateLayerOpacity(newLayer.id, block.defaults.opacity);
+        updateLayerBlendMode(newLayer.id, block.defaults.blendMode as BlendMode);
       }
-      setShowPicker(false);
+    }
+    setShowPicker(false);
+  };
+
+  const handleSwapBlock = (blockId: string) => {
+    if (swapTarget) {
+      swapBlock(swapTarget, blockId);
+      setSwapTarget(null);
     }
   };
 
@@ -49,7 +59,7 @@ export function LayerPanel({ onLayerSelect }: Props) {
         </span>
       </div>
 
-      {/* Layer list — top layer first (reversed from array order) */}
+      {/* Layer list */}
       <div className="flex flex-col gap-2.5">
         {[...layers].reverse().map((layer, reversedIndex) => {
           const actualIndex = layers.length - 1 - reversedIndex;
@@ -57,10 +67,12 @@ export function LayerPanel({ onLayerSelect }: Props) {
             <LayerItem
               key={layer.id}
               name={layer.name}
+              role={layer.role}
               visible={layer.visible}
               opacity={layer.opacity}
               blendMode={layer.blendMode}
               isActive={actualIndex === activeLayerIndex}
+              isSoloed={soloLayerId === layer.id}
               onSelect={() => {
                 setActiveLayer(actualIndex);
                 onLayerSelect?.();
@@ -68,6 +80,8 @@ export function LayerPanel({ onLayerSelect }: Props) {
               onToggleVisibility={() => updateLayerVisibility(layer.id, !layer.visible)}
               onOpacityChange={(opacity) => updateLayerOpacity(layer.id, opacity)}
               onBlendModeChange={(mode: BlendMode) => updateLayerBlendMode(layer.id, mode)}
+              onSolo={() => soloLayer(layer.id)}
+              onSwap={() => setSwapTarget(layer.id)}
               onRemove={() => {
                 if (layers.length > 1) removeLayer(layer.id);
               }}
@@ -76,43 +90,29 @@ export function LayerPanel({ onLayerSelect }: Props) {
         })}
       </div>
 
-      {/* Add layer — inline template picker */}
-      {showPicker ? (
-        <div className="border border-ergon-border rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 bg-ergon-surface">
-            <span className="text-[11px] font-semibold text-ergon-subtle uppercase tracking-[0.1em]">
-              Choose template
-            </span>
-            <button
-              onClick={() => setShowPicker(false)}
-              className="text-[11px] text-ergon-muted hover:text-ergon-text cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {templates.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => handleAddFromTemplate(t.id)}
-                className="w-full px-3 py-2 text-left hover:bg-ergon-surface/50 transition-colors border-t border-ergon-border cursor-pointer"
-              >
-                <span className="text-sm font-medium text-ergon-text block">{t.name}</span>
-                <span className="text-[10px] text-ergon-muted block mt-0.5 line-clamp-1">
-                  {t.description}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
+      {/* Swap picker */}
+      {swapTarget && (
+        <BlockPicker
+          onSelect={handleSwapBlock}
+          onCancel={() => setSwapTarget(null)}
+          filterRole={layers.find((l) => l.id === swapTarget)?.role}
+        />
+      )}
+
+      {/* Add block picker */}
+      {showPicker && !swapTarget ? (
+        <BlockPicker
+          onSelect={handleAddBlock}
+          onCancel={() => setShowPicker(false)}
+        />
+      ) : !swapTarget ? (
         <button
           onClick={() => setShowPicker(true)}
           className="w-full py-2.5 text-sm font-medium text-ergon-subtle border border-dashed border-ergon-border rounded-lg hover:border-ergon-muted hover:bg-ergon-surface/50 transition-colors cursor-pointer"
         >
-          + Add layer
+          + Add block
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -7,13 +7,14 @@ import { CodeEditor } from "./CodeEditor";
 import { Toolbar } from "./Toolbar";
 import { ResizeHandle } from "./ResizeHandle";
 import { LayerPanel } from "./LayerPanel";
+import { RecipePicker } from "./RecipePicker";
+import { SharedDriversPanel } from "./SharedDriversPanel";
 import { useStudioStore } from "@/lib/store";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { getTemplate, templates } from "@/lib/templates/registry";
-import { getDefaultValues } from "@/lib/types";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
 import { compositeLayersToDataUrl, type CompositeLayer } from "@/lib/compositor";
 import { saveWork, publishWork } from "@/lib/actions/works";
+import { recipes } from "@/lib/recipes";
 
 function parseErrorLine(error: string | null): number | null {
   if (!error) return null;
@@ -21,7 +22,7 @@ function parseErrorLine(error: string | null): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-type SidebarTab = "templates" | "parameters" | "layers";
+type SidebarTab = "recipes" | "parameters" | "layers";
 
 export function Studio() {
   const schema = useStudioStore((s) => s.schema);
@@ -34,7 +35,6 @@ export function Studio() {
   const isFullscreen = useStudioStore((s) => s.isFullscreen);
   const setParamValue = useStudioStore((s) => s.setParamValue);
   const setCode = useStudioStore((s) => s.setCode);
-  const setTemplate = useStudioStore((s) => s.setTemplate);
   const editorHeight = useStudioStore((s) => s.editorHeight);
   const setEditorHeight = useStudioStore((s) => s.setEditorHeight);
   const workId = useStudioStore((s) => s.workId);
@@ -47,33 +47,27 @@ export function Studio() {
   const layers = useStudioStore((s) => s.layers);
   const activeLayerIndex = useStudioStore((s) => s.activeLayerIndex);
   const updateLayerParams = useStudioStore((s) => s.updateLayerParams);
-  const toggleCompositionMode = useStudioStore((s) => s.toggleCompositionMode);
-  const addLayer = useStudioStore((s) => s.addLayer);
+  const loadRecipe = useStudioStore((s) => s.loadRecipe);
 
-  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("parameters");
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("layers");
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useKeyboardShortcuts();
+
+  // Auto-load a random recipe on first mount (non-composition mode)
+  useEffect(() => {
+    if (!hasLoaded && !compositionMode) {
+      const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
+      loadRecipe(randomRecipe);
+      setHasLoaded(true);
+    }
+  }, [hasLoaded, compositionMode, loadRecipe]);
 
   const handleResize = useCallback(
     (deltaY: number) => {
       setEditorHeight(editorHeight + deltaY);
     },
     [editorHeight, setEditorHeight]
-  );
-
-  const handleTemplateSelect = useCallback(
-    (id: string) => {
-      const t = getTemplate(id);
-      if (t) {
-        if (compositionMode) {
-          addLayer(t.id, t.name, t.code, t.schema, getDefaultValues(t.schema));
-        } else {
-          setTemplate(t);
-        }
-        setSidebarTab("parameters");
-      }
-    },
-    [setTemplate, compositionMode, addLayer]
   );
 
   const handleExport = useCallback(() => {
@@ -233,8 +227,8 @@ export function Studio() {
             <div className="w-[380px] bg-white border-l border-ergon-border flex flex-col shrink-0">
               {/* Tabs */}
               <div className="flex border-b border-ergon-border shrink-0">
-                <button className={tabClasses("templates")} onClick={() => setSidebarTab("templates")}>
-                  Templates
+                <button className={tabClasses("recipes")} onClick={() => setSidebarTab("recipes")}>
+                  Recipes
                 </button>
                 <button className={tabClasses("parameters")} onClick={() => setSidebarTab("parameters")}>
                   Controls
@@ -246,38 +240,17 @@ export function Studio() {
 
               {/* Tab content */}
               <div className="flex-1 overflow-y-auto">
-                {/* Templates */}
-                {sidebarTab === "templates" && (
+                {/* Recipes */}
+                {sidebarTab === "recipes" && (
                   <div className="p-7">
-                    <p className="text-sm text-ergon-muted mb-5">
-                      {compositionMode
-                        ? "Select a template to add as a new layer."
-                        : "Select a template to start creating."}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {templates.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => handleTemplateSelect(t.id)}
-                          className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
-                            !compositionMode && template.id === t.id
-                              ? "border-ergon-text bg-ergon-surface"
-                              : "border-ergon-border hover:border-ergon-muted hover:bg-ergon-surface/50"
-                          }`}
-                        >
-                          <span className="text-sm font-semibold text-ergon-text block">{t.name}</span>
-                          <span className="text-xs text-ergon-muted mt-1.5 block leading-snug line-clamp-2">
-                            {t.description}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <RecipePicker />
                   </div>
                 )}
 
                 {/* Parameters */}
                 {sidebarTab === "parameters" && (
                   <div className="p-7">
+                    {compositionMode && <SharedDriversPanel />}
                     <div className="mb-7">
                       <h3 className="text-base font-bold text-ergon-text uppercase tracking-[0.06em]">
                         {compositionMode
@@ -312,40 +285,7 @@ export function Studio() {
                 {/* Layers */}
                 {sidebarTab === "layers" && (
                   <div className="p-7">
-                    {!compositionMode ? (
-                      <div className="text-center py-10">
-                        <p className="text-sm text-ergon-muted mb-5">
-                          Stack multiple sketches with blend modes.
-                        </p>
-                        <button
-                          onClick={() => {
-                            toggleCompositionMode();
-                            setSidebarTab("layers");
-                          }}
-                          className="px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] rounded-xl bg-ergon-text text-white hover:opacity-90 transition-opacity cursor-pointer"
-                        >
-                          Enable Layers
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between mb-5">
-                          <span className="text-sm font-semibold text-ergon-muted uppercase tracking-[0.08em]">
-                            {layers.length} Layer{layers.length !== 1 ? "s" : ""}
-                          </span>
-                          <button
-                            onClick={() => {
-                              toggleCompositionMode();
-                              setSidebarTab("parameters");
-                            }}
-                            className="text-sm text-ergon-muted hover:text-ergon-red transition-colors cursor-pointer"
-                          >
-                            Exit layers
-                          </button>
-                        </div>
-                        <LayerPanel onLayerSelect={() => setSidebarTab("parameters")} />
-                      </>
-                    )}
+                    <LayerPanel onLayerSelect={() => setSidebarTab("parameters")} />
                   </div>
                 )}
               </div>
