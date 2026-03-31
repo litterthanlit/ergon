@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useStudioStore } from "@/lib/store";
 
 export function Toolbar() {
@@ -13,16 +14,26 @@ export function Toolbar() {
   const randomize = useStudioStore((s) => s.randomize);
   const undo = useStudioStore((s) => s.undo);
   const redo = useStudioStore((s) => s.redo);
+  const workId = useStudioStore((s) => s.workId);
   const workSlug = useStudioStore((s) => s.workSlug);
+  const workTitle = useStudioStore((s) => s.workTitle);
+  const setWorkTitle = useStudioStore((s) => s.setWorkTitle);
   const isSaving = useStudioStore((s) => s.isSaving);
 
   return (
     <div className="flex items-center justify-between px-6 h-14 bg-white border-b border-ergon-border shrink-0">
-      {/* Left: Brand + Status */}
+      {/* Left: Brand + Title + Status */}
       <div className="flex items-center gap-4">
         <span className="text-sm font-bold text-ergon-text uppercase tracking-[0.2em]">
           Ergon
         </span>
+        <input
+          type="text"
+          value={workTitle}
+          onChange={(e) => setWorkTitle(e.target.value)}
+          placeholder="Untitled"
+          className="bg-transparent text-sm font-medium text-ergon-text placeholder:text-ergon-muted/40 border-none outline-none w-40 focus:border-b focus:border-ergon-accent"
+        />
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
@@ -133,13 +144,22 @@ export function Toolbar() {
           Export
         </button>
 
-        {workSlug && (
+        {workId && !workSlug && (
           <button
-            onClick={() => window.open(`/work/${workSlug}`, "_blank")}
-            className="px-4 h-9 text-sm font-medium uppercase tracking-[0.06em] rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
+            onClick={() => window.dispatchEvent(new CustomEvent("ergon:publish"))}
+            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-lg bg-ergon-accent text-ergon-text hover:brightness-110 transition-all cursor-pointer"
           >
-            View
+            Publish
           </button>
+        )}
+        {workSlug && (
+          <Link
+            href={`/work/${workSlug}`}
+            target="_blank"
+            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-lg bg-ergon-accent/20 text-ergon-accent hover:bg-ergon-accent/30 transition-all cursor-pointer"
+          >
+            View Live
+          </Link>
         )}
       </div>
     </div>
