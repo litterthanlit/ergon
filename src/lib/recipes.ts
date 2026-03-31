@@ -32,14 +32,14 @@ export const recipes: Recipe[] = [
     description: "Dark, atmospheric, glowing",
     mood: "dark",
     blocks: [
-      { blockId: "marble", role: "base", opacity: 1.0, blendMode: "normal" },
-      { blockId: "aurora", role: "color", opacity: 0.7, blendMode: "screen" },
-      { blockId: "particles", role: "motion", opacity: 0.6, blendMode: "screen" },
+      { blockId: "contour", role: "base", opacity: 1.0, blendMode: "normal", paramOverrides: { lines: 30, noiseScale: 0.003 } },
+      { blockId: "aurora", role: "color", opacity: 0.85, blendMode: "screen", paramOverrides: { bands: 5, amplitude: 120 } },
+      { blockId: "drift", role: "motion", opacity: 0.4, blendMode: "screen", paramOverrides: { density: 800, speed: 0.8, trail: 50, weight: 1.0 } },
     ],
     drivers: {
-      palette: ["#0a0a2e", "#00ff88", "#0088ff", "#8800ff", "#1a1a3e"],
+      palette: ["#0d1117", "#00ffa3", "#0088ff", "#cc44ff", "#001a33"],
       seed: 42,
-      tempo: 0.8,
+      tempo: 1.0,
     },
   },
   {
@@ -48,14 +48,13 @@ export const recipes: Recipe[] = [
     description: "Clean, geometric, editorial",
     mood: "light",
     blocks: [
-      { blockId: "terrain", role: "base", opacity: 1.0, blendMode: "normal" },
-      { blockId: "grid", role: "shape", opacity: 0.8, blendMode: "multiply" },
-      { blockId: "glyphs", role: "texture", opacity: 0.5, blendMode: "overlay" },
+      { blockId: "grid", role: "shape", opacity: 1.0, blendMode: "normal", paramOverrides: { columns: 16, rotation: 0, density: 0.9, shape: "Square", invert: false } },
+      { blockId: "drift", role: "motion", opacity: 0.25, blendMode: "multiply", paramOverrides: { density: 400, speed: 0.3, turbulence: 0.003, trail: 60, weight: 2.0 } },
     ],
     drivers: {
-      palette: ["#ffffff", "#000000", "#c4362c", "#2a5faa", "#f5f5f0"],
+      palette: ["#f5f5f0", "#1a1a1a", "#c4362c", "#2a5faa", "#e8b931"],
       seed: 7,
-      tempo: 0,
+      tempo: 0.3,
     },
   },
   {
@@ -65,13 +64,13 @@ export const recipes: Recipe[] = [
     mood: "dark",
     blocks: [
       { blockId: "contour", role: "base", opacity: 1.0, blendMode: "normal" },
-      { blockId: "flowfield", role: "motion", opacity: 0.5, blendMode: "screen" },
-      { blockId: "bloom", role: "color", opacity: 0.5, blendMode: "screen" },
+      { blockId: "flowfield", role: "motion", opacity: 0.7, blendMode: "screen", paramOverrides: { density: 600, speed: 1.5, noiseScale: 0.008, lineWeight: 1.5, fadeRate: 15 } },
+      { blockId: "bloom", role: "color", opacity: 0.3, blendMode: "screen", paramOverrides: { petals: 12, layers: 2, curvature: 0.4, style: "Lace" } },
     ],
     drivers: {
-      palette: ["#1a1a1a", "#2a2a2a", "#444444", "#888888", "#f5f5f0"],
+      palette: ["#0a0a0a", "#1a1a2e", "#4a4a6a", "#8888aa", "#e0ddd5"],
       seed: 13,
-      tempo: 1.2,
+      tempo: 1.0,
     },
   },
   {
