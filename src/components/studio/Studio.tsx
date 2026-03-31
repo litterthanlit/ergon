@@ -199,8 +199,8 @@ export function Studio() {
         {/* Canvas + Editor stack */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Canvas area — framed with padding */}
-          <div className="flex-1 relative min-h-0 p-5">
-            <div className="w-full h-full rounded-xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="flex-1 relative min-h-0 p-8">
+            <div className="w-full h-full rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)]">
               <Canvas />
             </div>
 
