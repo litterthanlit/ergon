@@ -18,12 +18,14 @@ const params = ergon.params({
   invert:   { type: 'boolean', default: false, label: 'Invert' },
 });
 
+let t = 0;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop();
 }
 
 function draw() {
+  t += 0.008;
   const bg = params.invert ? 0 : 255;
   const fg = params.invert ? 255 : 0;
   background(bg);
@@ -37,7 +39,7 @@ function draw() {
       if (random() > params.density) continue;
       push();
       translate(offsetX + x * size + size / 2, offsetY + y * size + size / 2);
-      rotate(random(-params.rotation, params.rotation) * PI / 180);
+      rotate(sin(t + x * 0.5 + y * 0.3) * params.rotation * PI / 180);
       if (params.shape === 'Circle') { ellipse(0, 0, size * 0.8); }
       else if (params.shape === 'Line') { rectMode(CENTER); rect(0, 0, size * 0.8, 2); }
       else { rectMode(CENTER); rect(0, 0, size * 0.75, size * 0.75); }

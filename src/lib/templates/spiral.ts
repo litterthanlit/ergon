@@ -33,11 +33,11 @@ const params = ergon.params({
 });
 
 let offsets = [];
+let t = 0;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   colorMode(HSB, 360, 100, 100, 100);
-  noLoop();
   initOffsets();
 }
 
@@ -49,6 +49,7 @@ function initOffsets() {
 }
 
 function draw() {
+  t += 0.003;
   background(0, 0, 8);
   const cx = width / 2;
   const cy = height / 2;
@@ -56,20 +57,20 @@ function draw() {
   const rotRad = radians(params.rotation);
 
   for (let arm = 0; arm < params.arms; arm++) {
-    const armAngle = (TWO_PI / params.arms) * arm + rotRad + (offsets[arm] || 0);
+    const armAngle = (TWO_PI / params.arms) * arm + rotRad + (offsets[arm] || 0) + t;
 
     for (let i = 0; i < params.points; i++) {
-      const t = i / params.points;
+      const pt = i / params.points;
       // Archimedean spiral: r grows linearly with angle
       const turns = 1 / params.tightness;
-      const angle = t * TWO_PI * turns + armAngle;
-      const r = maxR * t;
+      const angle = pt * TWO_PI * turns + armAngle;
+      const r = maxR * pt;
       const x = cx + cos(angle) * r;
       const y = cy + sin(angle) * r;
 
-      const hue = (t * params.hueShift + arm * (params.hueShift / params.arms)) % 360;
-      const sat = map(t, 0, 1, 60, 100);
-      const bri = map(t, 0, 1, 100, 70);
+      const hue = (pt * params.hueShift + arm * (params.hueShift / params.arms) + t * 20) % 360;
+      const sat = map(pt, 0, 1, 60, 100);
+      const bri = map(pt, 0, 1, 100, 70);
       fill(hue, sat, bri, 85);
       noStroke();
       circle(x, y, params.dotSize);
