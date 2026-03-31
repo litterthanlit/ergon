@@ -17,7 +17,7 @@ export function Toolbar() {
   const isSaving = useStudioStore((s) => s.isSaving);
 
   return (
-    <div className="flex items-center justify-between px-5 h-14 bg-white border-b border-ergon-border shrink-0">
+    <div className="flex items-center justify-between px-6 h-14 bg-white border-b border-ergon-border shrink-0">
       {/* Left: Brand + Status */}
       <div className="flex items-center gap-4">
         <span className="text-sm font-bold text-ergon-text uppercase tracking-[0.2em]">
@@ -93,7 +93,7 @@ export function Toolbar() {
       </div>
 
       {/* Right: Primary actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {editorOpen && (
           <button
             onClick={runCode}

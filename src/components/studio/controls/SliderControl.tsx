@@ -9,7 +9,7 @@ type Props = {
 
 export function SliderControl({ label, min, max, step = 1, value, onChange }: Props) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3.5">
       <div className="flex items-center justify-between">
         <label className="text-xs font-medium text-ergon-subtle uppercase tracking-[0.12em]">
           {label}
