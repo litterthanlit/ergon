@@ -125,7 +125,13 @@ export type TransparentMessage = {
   enabled: boolean;
 };
 
-export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage | SeedMessage | TransparentMessage;
+export type DriversMessage = {
+  type: "ergon:drivers";
+  palette: string[];
+  tempo: number;
+};
+
+export type ParentMessage = LoadCodeMessage | UpdateParamsMessage | RequestExportMessage | SeedMessage | TransparentMessage | DriversMessage;
 
 // --- Messages: Iframe → Parent ---
 

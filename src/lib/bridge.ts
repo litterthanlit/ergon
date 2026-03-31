@@ -15,6 +15,7 @@ export type Bridge = {
   requestExport: (scale?: number) => void;
   sendSeed: (seed: number) => void;
   setTransparent: (enabled: boolean) => void;
+  updateDrivers: (palette: string[], tempo: number) => void;
 };
 
 export function createBridge(callbacks: BridgeCallbacks): Bridge {
@@ -65,6 +66,9 @@ export function createBridge(callbacks: BridgeCallbacks): Bridge {
     },
     setTransparent(enabled: boolean) {
       sendToIframe({ type: "ergon:transparent", enabled });
+    },
+    updateDrivers(palette: string[], tempo: number) {
+      sendToIframe({ type: "ergon:drivers", palette, tempo });
     },
   };
 }

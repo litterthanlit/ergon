@@ -17,6 +17,8 @@ const paramManager = createParamManager(handleSchema);
   params: (schema: ParamSchema): ParamValues => {
     return paramManager.register(schema);
   },
+  palette: ["#1a1a1a", "#e8b931", "#c4362c", "#2a5faa", "#f5f5f0"],
+  tempo: 1.0,
 };
 
 function handleSchema(schema: ParamSchema): void {
@@ -111,6 +113,17 @@ function handleTransparent(enabled: boolean): void {
   }
 }
 
+function handleDrivers(palette: string[], tempo: number): void {
+  const w = window as unknown as Record<string, unknown>;
+  const ergon = w.ergon as Record<string, unknown>;
+  ergon.palette = palette;
+  ergon.tempo = tempo;
+  // Trigger redraw for noLoop sketches
+  if (typeof w.redraw === "function") {
+    (w.redraw as () => void)();
+  }
+}
+
 function handleSeed(seed: number): void {
   const w = window as unknown as Record<string, unknown>;
   if (typeof w.randomSeed === "function") {
@@ -159,6 +172,9 @@ window.addEventListener("message", (event: MessageEvent<ParentMessage>) => {
       break;
     case "ergon:transparent":
       handleTransparent(msg.enabled);
+      break;
+    case "ergon:drivers":
+      handleDrivers(msg.palette, msg.tempo);
       break;
   }
 });

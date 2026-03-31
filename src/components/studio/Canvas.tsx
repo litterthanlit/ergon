@@ -20,6 +20,7 @@ export function Canvas() {
   const aspect = useStudioStore((s) => s.aspect);
   const compositionMode = useStudioStore((s) => s.compositionMode);
   const layers = useStudioStore((s) => s.layers);
+  const sharedDrivers = useStudioStore((s) => s.sharedDrivers);
 
   const layerIframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
   const layerBridgeRefs = useRef<Map<string, Bridge>>(new Map());
@@ -85,6 +86,18 @@ export function Canvas() {
   }, [seed]);
 
   useEffect(() => {
+    if (!compositionMode) {
+      // Send to single bridge too
+      bridgeRef.current?.updateDrivers(sharedDrivers.palette, sharedDrivers.tempo);
+      return;
+    }
+    // Send to all layer bridges
+    layerBridgeRefs.current.forEach((bridge) => {
+      bridge.updateDrivers(sharedDrivers.palette, sharedDrivers.tempo);
+    });
+  }, [compositionMode, sharedDrivers]);
+
+  useEffect(() => {
     return () => {
       bridgeRef.current?.destroy();
       // Clean up all layer bridges
@@ -145,6 +158,11 @@ export function Canvas() {
 
     setTimeout(() => {
       bridge.load(layer.code, layer.values);
+      // Send shared drivers after load
+      const drivers = useStudioStore.getState().sharedDrivers;
+      setTimeout(() => {
+        bridge.updateDrivers(drivers.palette, drivers.tempo);
+      }, 50);
     }, 100);
   }, []);
 

@@ -1,5 +1,7 @@
 import type { ParamSchema, ParamValues } from "./types";
 
+export type BlockRole = "base" | "shape" | "color" | "motion" | "texture";
+
 export const BLEND_MODES = [
   "normal",
   "multiply",
@@ -21,6 +23,7 @@ export type BlendMode = (typeof BLEND_MODES)[number];
 export type Layer = {
   id: string;
   templateId: string;
+  role: BlockRole;
   name: string;
   code: string;
   schema: ParamSchema | null;
@@ -34,6 +37,7 @@ let nextId = 1;
 
 export function createLayer(
   templateId: string,
+  role: BlockRole,
   name: string,
   code: string,
   schema: ParamSchema | null = null,
@@ -42,6 +46,7 @@ export function createLayer(
   return {
     id: `layer-${nextId++}-${Date.now()}`,
     templateId,
+    role,
     name,
     code,
     schema,

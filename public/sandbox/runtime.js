@@ -62,7 +62,9 @@
   window.ergon = {
     params: (schema) => {
       return paramManager.register(schema);
-    }
+    },
+    palette: ["#1a1a1a", "#e8b931", "#c4362c", "#2a5faa", "#f5f5f0"],
+    tempo: 1
   };
   function handleSchema(schema) {
     const msg = { type: "ergon:schema", schema };
@@ -135,6 +137,15 @@
       }
     }
   }
+  function handleDrivers(palette, tempo) {
+    const w = window;
+    const ergon = w.ergon;
+    ergon.palette = palette;
+    ergon.tempo = tempo;
+    if (typeof w.redraw === "function") {
+      w.redraw();
+    }
+  }
   function handleSeed(seed) {
     const w = window;
     if (typeof w.randomSeed === "function") {
@@ -180,6 +191,9 @@
         break;
       case "ergon:transparent":
         handleTransparent(msg.enabled);
+        break;
+      case "ergon:drivers":
+        handleDrivers(msg.palette, msg.tempo);
         break;
     }
   });
