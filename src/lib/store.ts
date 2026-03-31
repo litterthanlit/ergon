@@ -5,6 +5,7 @@ import type { Template } from "./templates/registry";
 import { drift } from "./templates/drift";
 import { createHistory, type History } from "./history";
 import { createLayer, type Layer, type BlendMode, type BlockRole } from "./layers";
+import { getBlock } from "./blocks";
 
 type SandboxStatus = "loading" | "ready" | "error";
 
@@ -228,17 +229,15 @@ export const useStudioStore = create<StudioState>((set) => ({
 
   loadRecipe: (recipe) =>
     set(() => {
-      // Import getBlock dynamically to avoid circular deps
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { getBlock } = require("./blocks");
+      // getBlock imported at top of file
       const layers: Layer[] = recipe.blocks.map((rb) => {
         const block = getBlock(rb.blockId);
         if (!block) {
           return createLayer(rb.blockId, rb.role, rb.blockId, "", null, {});
         }
-        const values = {
+        const values: ParamValues = {
           ...getDefaultValues(block.schema),
-          ...(rb.paramOverrides || {}),
+          ...(rb.paramOverrides as ParamValues || {}),
         };
         const layer = createLayer(block.id, rb.role, block.name, block.code, block.schema, values);
         layer.opacity = rb.opacity;

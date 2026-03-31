@@ -335,6 +335,108 @@ This is additive, not destructive:
 - The plan assumes the current Canvas composition rendering (stacked iframes + CSS blend modes) stays
 - Shared drivers require a new runtime message type and globals
 
+## Implementation Clarifications
+
+These decisions are intended to reduce ambiguity during build and keep the first implementation aligned with product goals.
+
+### Recipe loading behavior
+
+- `loadRecipe(recipe)` should replace the entire current composition stack for v1
+- loading a recipe should also set `activeRecipe` and replace `sharedDrivers`
+- if the user has already made edits, it is acceptable in v1 to treat loading a recipe as starting a new composition rather than merging
+
+Rationale:
+
+- recipes are the starting point for a composition, not additive presets
+- replacement behavior is simpler, more predictable, and keeps the mental model clean
+
+### Block swapping behavior
+
+- `swapBlock(layerId, newBlockId)` should preserve the layer slot and role, but replace the block implementation
+- when swapping, prefer this value strategy:
+  - keep any param values whose keys exist in both old and new schemas and have compatible types
+  - use the new block defaults for anything else
+- keep the current layer visibility, opacity, and blend mode unless the product explicitly wants swap to re-apply block defaults
+
+Rationale:
+
+- swapping should feel playful and exploratory, not destructive
+- preserving compatible values reduces friction while still respecting the new block shape
+
+### Role strictness
+
+- for v1, role should be treated as strongly advisory rather than absolutely enforced
+- the default UI path should encourage adding/swapping within the same role
+- if needed later, cross-role swapping can be enabled intentionally as an advanced move
+
+Rationale:
+
+- the system should feel guided, not rigid
+- strong defaults matter more than hard constraints in the first version
+
+### Solo and visibility behavior
+
+- `soloLayer(layerId)` should temporarily mute all non-soloed layers without destroying the user's manual visibility choices
+- `unsoloAll()` should restore the previous visibility state exactly as it was before solo
+- if a layer was already hidden before solo, it should return to hidden after unsolo
+
+Rationale:
+
+- solo is an inspection tool, not a destructive visibility edit
+
+### Backward compatibility contract
+
+- existing template code should remain intact during the migration
+- `templates` should continue to export for backward compatibility during the transition
+- `blocks` should become the new primary registry API
+- any existing single-template workflows should continue to function until the new recipe-first flow fully replaces them
+
+Rationale:
+
+- this lets the architecture evolve without forcing a big-bang rewrite
+
+### Shared-driver-aware blocks for v1
+
+The first implementation should update the recipe-featured blocks first, not the entire catalog.
+
+Suggested initial set:
+
+- `aurora`
+- `particles`
+- `flowfield`
+- `drift`
+- `bloom`
+
+Behavior expectations:
+
+- blocks that support shared drivers should read from `ergon.palette` and `ergon.tempo`
+- blocks that do not yet support shared drivers should still work normally using their local params/defaults
+- palette changes should visibly affect the composition, even if only some blocks respond in v1
+
+Rationale:
+
+- this keeps scope tight while making the new system feel real immediately
+
+### First-run recipe selection
+
+- on first load, the app should auto-load a recipe instead of showing a blank canvas
+- for v1, a random recipe is acceptable
+- if a deterministic default is preferred later, switch to a curated default recipe rather than returning to a blank state
+
+Rationale:
+
+- “no blank canvas ever” should be treated as a product rule
+
+### Composition mode vs legacy mode
+
+- v1 can keep legacy single-template behavior in the codebase, but the primary studio experience should move to composition mode
+- new UI decisions should optimize for recipes, blocks, shared drivers, and multi-layer composition first
+- legacy template-only behavior should be treated as compatibility support, not the main product path
+
+Rationale:
+
+- this prevents the UI from becoming split-brain between two equally primary models
+
 ## Success Criteria
 
 After this plan ships:
