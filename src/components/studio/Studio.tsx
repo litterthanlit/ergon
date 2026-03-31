@@ -281,12 +281,12 @@ export function Studio() {
               {sidebarTab === "parameters" && (
                 <div className="p-7">
                   <div className="mb-5">
-                    <h3 className="text-sm font-bold text-ergon-text uppercase tracking-[0.1em]">
+                    <h3 className="text-base font-bold text-ergon-text uppercase tracking-[0.08em]">
                       {compositionMode
                         ? layers[activeLayerIndex]?.name ?? "No layer"
                         : template.name}
                     </h3>
-                    <p className="text-xs text-ergon-muted mt-1.5 leading-relaxed">
+                    <p className="text-sm text-ergon-muted mt-1.5 leading-relaxed">
                       {compositionMode
                         ? `Layer ${activeLayerIndex + 1} of ${layers.length}`
                         : template.description}

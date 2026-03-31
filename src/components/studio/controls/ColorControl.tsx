@@ -7,7 +7,7 @@ type Props = {
 export function ColorControl({ label, value, onChange }: Props) {
   return (
     <div className="flex items-center justify-between">
-      <label className="text-xs font-medium text-ergon-subtle uppercase tracking-[0.12em]">
+      <label className="text-[13px] font-semibold text-ergon-text uppercase tracking-[0.08em]">
         {label}
       </label>
       <input
