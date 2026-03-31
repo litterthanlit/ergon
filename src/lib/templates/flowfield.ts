@@ -3,7 +3,7 @@ import type { ParamSchema } from "@/lib/types";
 
 export const flowfieldSchema: ParamSchema = {
   density: {
-    type: "number", min: 50, max: 2000, default: 500, step: 1, label: "Density",
+    type: "number", min: 50, max: 2000, default: 300, step: 1, label: "Density",
   },
   speed: {
     type: "number", min: 0.5, max: 5, default: 2, step: 0.1, label: "Speed",
@@ -35,7 +35,7 @@ const palettes = {
 };
 
 const params = ergon.params({
-  density:    { type: 'number', min: 50, max: 2000, default: 500, step: 1, label: 'Density' },
+  density:    { type: 'number', min: 50, max: 2000, default: 300, step: 1, label: 'Density' },
   speed:      { type: 'number', min: 0.5, max: 5, default: 2, step: 0.1, label: 'Speed' },
   noiseScale: { type: 'number', min: 0.001, max: 0.02, default: 0.005, step: 0.001, label: 'Noise Scale' },
   lineWeight: { type: 'number', min: 0.5, max: 4, default: 1, step: 0.5, label: 'Line Weight' },

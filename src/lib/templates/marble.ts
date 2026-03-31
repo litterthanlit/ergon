@@ -2,7 +2,7 @@ import type { Template } from "./registry";
 import type { ParamSchema } from "@/lib/types";
 
 export const marbleSchema: ParamSchema = {
-  complexity: { type: "number", min: 1, max: 8, default: 4, step: 1, label: "Complexity" },
+  complexity: { type: "number", min: 1, max: 8, default: 3, step: 1, label: "Complexity" },
   scale: { type: "number", min: 0.001, max: 0.008, default: 0.003, step: 0.001, label: "Scale" },
   speed: { type: "number", min: 0, max: 2, default: 0.4, step: 0.1, label: "Speed" },
   saturation: { type: "number", min: 0, max: 100, default: 75, step: 5, label: "Saturation" },
@@ -11,7 +11,7 @@ export const marbleSchema: ParamSchema = {
 
 export const marbleCode = `
 const params = ergon.params({
-  complexity:  { type: 'number', min: 1, max: 8, default: 4, step: 1, label: 'Complexity' },
+  complexity:  { type: 'number', min: 1, max: 8, default: 3, step: 1, label: 'Complexity' },
   scale:       { type: 'number', min: 0.001, max: 0.008, default: 0.003, step: 0.001, label: 'Scale' },
   speed:       { type: 'number', min: 0, max: 2, default: 0.4, step: 0.1, label: 'Speed' },
   saturation:  { type: 'number', min: 0, max: 100, default: 75, step: 5, label: 'Saturation' },
@@ -25,7 +25,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
   colorMode(HSB, 360, 100, 100, 100);
-  pg = createGraphics(floor(width / 3), floor(height / 3));
+  pg = createGraphics(floor(width / 4), floor(height / 4));
   pg.pixelDensity(1);
   pg.colorMode(HSB, 360, 100, 100, 100);
 }
@@ -90,7 +90,12 @@ function hsb2rgb(h, s, b) {
   return [(r+m)*255, (g+m)*255, (bl+m)*255];
 }
 
+let skipFrame = false;
 function draw() {
+  if (params.complexity > 4) {
+    skipFrame = !skipFrame;
+    if (skipFrame) { t += params.speed * 0.05; return; }
+  }
   pg.loadPixels();
   const d = pg.pixels;
   const w = pg.width;
@@ -121,7 +126,7 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  pg = createGraphics(floor(width / 3), floor(height / 3));
+  pg = createGraphics(floor(width / 4), floor(height / 4));
   pg.pixelDensity(1);
   pg.colorMode(HSB, 360, 100, 100, 100);
 }

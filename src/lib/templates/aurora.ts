@@ -95,7 +95,7 @@ function draw() {
     const rgb = sampleGradient(params.gradient, gradPos);
     const r = rgb[0], g = rgb[1], b = rgb[2];
 
-    for (let x = 0; x < width; x += 4) {
+    for (let x = 0; x < width; x += 6) {
       const midY = bandY(x, band, t);
       const hw = params.amplitude * noise(x * 0.004 + band * 2.1, t * 0.01 * params.speed + 10);
       const alpha = map(noise(x * 0.008, t * 0.005 * params.speed + band * 1.1), 0, 1, 10, 80);
@@ -103,7 +103,7 @@ function draw() {
       for (let dy = -hw; dy <= hw; dy += 2) {
         const fade = 1 - abs(dy) / max(hw, 1);
         fill(r, g, b, alpha * fade * 0.7);
-        rect(x, midY + dy, 4, 2);
+        rect(x, midY + dy, 6, 2);
       }
     }
   }
