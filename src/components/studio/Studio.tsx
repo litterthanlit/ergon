@@ -232,7 +232,7 @@ export function Studio() {
 
         {/* Sidebar */}
         {!isFullscreen && (
-          <div className="w-[360px] bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
+          <div className="w-[380px] bg-white border-l border-ergon-border flex flex-col shrink-0 animate-fade-in">
             {/* Tabs */}
             <div className="flex border-b border-ergon-border shrink-0">
               <button className={tabClasses("templates")} onClick={() => setSidebarTab("templates")}>
