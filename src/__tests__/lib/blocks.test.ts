@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { blocks, getBlock, getBlocksByRole, BLOCK_ROLES, ROLE_LABELS } from "@/lib/blocks";
 
 describe("blocks registry", () => {
-  it("has 18 blocks", () => {
-    expect(blocks.length).toBe(18);
+  it("has 22 blocks", () => {
+    expect(blocks.length).toBe(22);
   });
 
   it("every block has required fields", () => {

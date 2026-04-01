@@ -46,6 +46,10 @@ import { particles } from "./templates/particles";
 import { contour } from "./templates/contour";
 import { marble } from "./templates/marble";
 import { glyphs } from "./templates/glyphs";
+import { sculpt } from "./templates/sculpt";
+import { fluid } from "./templates/fluid";
+import { organism } from "./templates/organism";
+import { terrain3d } from "./templates/terrain3d";
 
 // Helper to convert a template to a block
 function toBlock(
@@ -85,6 +89,10 @@ export const blocks: Block[] = [
   toBlock(contour, "base", { blendMode: "normal", opacity: 1.0 }, ["organic", "topographic", "minimal"]),
   toBlock(marble, "base", { blendMode: "normal", opacity: 1.0 }, ["organic", "noise", "warping"]),
   toBlock(glyphs, "texture", { blendMode: "overlay", opacity: 0.5 }, ["typography", "marks", "scattered"]),
+  toBlock(sculpt, "base", { blendMode: "normal", opacity: 1.0 }, ["3d", "organic", "clay", "deformable"]),
+  toBlock(fluid, "base", { blendMode: "normal", opacity: 1.0 }, ["3d", "liquid", "surface", "reflective"]),
+  toBlock(organism, "motion", { blendMode: "screen", opacity: 0.8 }, ["3d", "organic", "breathing", "connected"]),
+  toBlock(terrain3d, "base", { blendMode: "normal", opacity: 1.0 }, ["3d", "landscape", "sculptable", "heightmap"]),
 ];
 
 export function getBlock(id: string): Block | undefined {
