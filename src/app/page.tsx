@@ -26,6 +26,32 @@ const TEMPLATE_PALETTES: Record<string, [string, string, string]> = {
   terrain3d: ["#1a1a0a", "#2a2a1a", "#8ab661"],
 };
 
+// Each template gets a natural aspect ratio — tailored to the art style
+const TEMPLATE_ASPECTS: Record<string, string> = {
+  drift: "16/10",
+  grid: "1/1",
+  pulse: "4/3",
+  scatter: "3/2",
+  weave: "1/1",
+  flowfield: "16/9",
+  particles: "3/2",
+  spiral: "1/1",
+  aurora: "16/9",
+  waves: "16/10",
+  marble: "4/3",
+  bloom: "3/4",
+  glyphs: "4/5",
+  constellation: "16/9",
+  terrain: "16/10",
+  contour: "3/2",
+  glitch: "16/9",
+  mesh: "1/1",
+  sculpt: "4/3",
+  fluid: "16/9",
+  organism: "3/4",
+  terrain3d: "16/10",
+};
+
 function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -41,8 +67,10 @@ function getCardStyle(templateId: string, title: string): React.CSSProperties {
   const angle = hash % 360;
   const ox = (hash % 40) + 30;
   const oy = ((hash >> 4) % 40) + 30;
+  const aspect = TEMPLATE_ASPECTS[templateId] || "3/2";
   return {
-    background: `radial-gradient(circle at ${ox}% ${oy}%, ${palette[2]}18 0%, transparent 50%), linear-gradient(${angle}deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
+    aspectRatio: aspect,
+    background: `radial-gradient(circle at ${ox}% ${oy}%, ${palette[2]}20 0%, transparent 50%), linear-gradient(${angle}deg, ${palette[0]} 0%, ${palette[1]} 100%)`,
   };
 }
 
@@ -66,58 +94,57 @@ export default async function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-ergon-bg">
-      <header className="px-8 pt-10 pb-14 flex items-center justify-between">
+      {/* Header */}
+      <header className="px-16 pt-12 pb-20 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-ergon-text tracking-[-0.02em]">
+          <h1 className="text-lg font-medium text-ergon-text tracking-[-0.01em]">
             Ergon
           </h1>
-          <p className="text-xs text-ergon-muted mt-1 tracking-wide">
-            Generative art studio
-          </p>
         </div>
         <Link
           href="/studio"
-          className="px-4 py-2 text-xs font-medium text-ergon-text bg-ergon-elevated border border-ergon-border rounded-lg hover:bg-ergon-border/50 transition-colors"
+          className="text-xs text-ergon-muted hover:text-ergon-text transition-colors"
         >
           Open Studio
         </Link>
       </header>
 
-      <main className="px-8 pb-16">
+      {/* Gallery — 2 columns, 124px gap */}
+      <main className="px-16 pb-24">
         {works.length > 0 ? (
-          <>
-            <div className="mb-8">
-              <span className="text-[10px] font-medium text-ergon-muted uppercase tracking-[0.15em]">
-                Published
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {works.map((work: Record<string, unknown>) => (
-                <Link key={work.id as string} href={`/work/${work.slug}`} className="group block">
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "124px" }}>
+            {works.map((work: Record<string, unknown>) => {
+              const year = new Date(work.created_at as string).getFullYear();
+              return (
+                <Link
+                  key={work.id as string}
+                  href={`/work/${work.slug}`}
+                  className="group block"
+                >
+                  {/* Art — no rounding, no border, natural aspect ratio */}
                   <div
-                    className="aspect-[4/3] rounded-lg overflow-hidden border border-ergon-border/50 transition-all duration-200 group-hover:border-ergon-border group-hover:-translate-y-0.5"
+                    className="w-full overflow-hidden transition-opacity duration-300 group-hover:opacity-90"
                     style={getCardStyle(work.template_id as string, work.title as string)}
                   />
-                  <div className="mt-3">
-                    <h3 className="text-sm font-medium text-ergon-text group-hover:text-ergon-accent transition-colors">
+                  {/* Info bar — title left, attribution right */}
+                  <div className="flex items-baseline justify-between mt-4">
+                    <h3 className="text-sm font-medium text-ergon-text">
                       {work.title as string}
                     </h3>
-                    <p className="text-xs text-ergon-muted mt-0.5">
-                      {(work.profiles as Record<string, string>)?.display_name ||
-                       (work.profiles as Record<string, string>)?.username ||
-                       "Anonymous"}
-                    </p>
+                    <span className="text-[11px] text-ergon-muted tracking-wide">
+                      litt.works{" "}{year}
+                    </span>
                   </div>
                 </Link>
-              ))}
-            </div>
-          </>
+              );
+            })}
+          </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-28">
+          <div className="flex flex-col items-center justify-center py-32">
             <p className="text-sm text-ergon-muted mb-6">No works published yet.</p>
             <Link
               href="/studio"
-              className="px-5 py-2.5 text-xs font-medium text-ergon-text bg-ergon-elevated border border-ergon-border rounded-lg hover:bg-ergon-border/50 transition-colors"
+              className="text-xs text-ergon-muted hover:text-ergon-text transition-colors"
             >
               Start Creating
             </Link>
@@ -125,9 +152,10 @@ export default async function GalleryPage() {
         )}
       </main>
 
-      <footer className="px-8 py-6 border-t border-ergon-border/50">
-        <p className="text-[10px] text-ergon-muted/30 tracking-[0.1em]">
-          Ergon
+      {/* Footer */}
+      <footer className="px-16 py-8">
+        <p className="text-[10px] text-ergon-muted/20 tracking-[0.08em]">
+          litt.works
         </p>
       </footer>
     </div>
