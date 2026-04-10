@@ -212,7 +212,7 @@ export function Canvas() {
           sandbox="allow-scripts"
           onLoad={handleIframeLoad}
           className="w-full h-full border-0"
-          style={{ background: "#f5f5f0" }}
+          style={{ background: "#09090b" }}
         />
       </div>
     </div>

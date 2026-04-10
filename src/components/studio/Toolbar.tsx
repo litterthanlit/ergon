@@ -21,133 +21,116 @@ export function Toolbar() {
   const isSaving = useStudioStore((s) => s.isSaving);
 
   return (
-    <div className="flex items-center justify-between px-6 h-14 bg-white border-b border-ergon-border shrink-0">
-      {/* Left: Brand + Title + Status */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm font-bold text-ergon-text uppercase tracking-[0.2em]">
+    <div className="flex items-center justify-between px-4 h-12 bg-ergon-bg border-b border-ergon-border shrink-0">
+      {/* Left */}
+      <div className="flex items-center gap-3">
+        <span className="text-[11px] font-semibold text-ergon-muted uppercase tracking-[0.2em]">
           Ergon
         </span>
+        <div className="w-px h-4 bg-ergon-border" />
         <input
           type="text"
           value={workTitle}
           onChange={(e) => setWorkTitle(e.target.value)}
           placeholder="Untitled"
-          className="bg-transparent text-sm font-medium text-ergon-text placeholder:text-ergon-muted/40 border-none outline-none w-40 focus:border-b focus:border-ergon-accent"
+          className="bg-transparent text-sm font-medium text-ergon-text placeholder:text-ergon-muted/30 border-none outline-none w-36"
         />
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-2 h-2 rounded-full ${
-              status === "ready"
-                ? "bg-emerald-500"
-                : status === "error"
-                  ? "bg-ergon-red"
-                  : "bg-amber-500 animate-pulse"
-            }`}
-          />
-          <span className="text-xs text-ergon-muted font-medium">
-            {status === "ready" ? "Ready" : status === "error" ? "Error" : "Loading"}
-          </span>
-        </div>
+        <div
+          className={`w-1.5 h-1.5 rounded-full ${
+            status === "ready"
+              ? "bg-emerald-500"
+              : status === "error"
+                ? "bg-ergon-red"
+                : "bg-amber-500 animate-pulse"
+          }`}
+        />
       </div>
 
-      {/* Center: Icon tools */}
-      <div className="flex items-center gap-1">
+      {/* Center */}
+      <div className="flex items-center gap-0.5">
         <button
           onClick={undo}
           disabled={!canUndo}
-          className="p-2.5 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded-lg transition-colors disabled:opacity-20 disabled:pointer-events-none cursor-pointer"
-          title="Undo (⌘Z)"
+          className="p-2 text-ergon-muted hover:text-ergon-text rounded-md transition-colors disabled:opacity-20 cursor-pointer"
+          title="Undo"
         >
-          <svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M3 5l-2-2 2-2" />
-            <path d="M1 3h7a3 3 0 0 1 0 6H6" />
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M3 5l-2-2 2-2" /><path d="M1 3h7a3 3 0 0 1 0 6H6" />
           </svg>
         </button>
         <button
           onClick={redo}
           disabled={!canRedo}
-          className="p-2.5 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded-lg transition-colors disabled:opacity-20 disabled:pointer-events-none cursor-pointer"
-          title="Redo (⌘⇧Z)"
+          className="p-2 text-ergon-muted hover:text-ergon-text rounded-md transition-colors disabled:opacity-20 cursor-pointer"
+          title="Redo"
         >
-          <svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M9 5l2-2-2-2" />
-            <path d="M11 3H4a3 3 0 0 0 0 6h2" />
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M9 5l2-2-2-2" /><path d="M11 3H4a3 3 0 0 0 0 6h2" />
           </svg>
         </button>
-
-        <div className="w-px h-5 bg-ergon-border mx-1.5" />
-
+        <div className="w-px h-4 bg-ergon-border mx-1" />
         <button
           onClick={randomize}
-          className="p-2.5 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded-lg transition-colors cursor-pointer"
-          title="Randomize (Space)"
+          className="p-2 text-ergon-muted hover:text-ergon-text rounded-md transition-colors cursor-pointer"
+          title="Randomize"
         >
-          <svg width="18" height="18" viewBox="0 0 12 12" fill="currentColor">
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor">
             <rect x="0.5" y="0.5" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1" />
-            <circle cx="3.5" cy="3.5" r="0.9" />
-            <circle cx="8.5" cy="3.5" r="0.9" />
-            <circle cx="6" cy="6" r="0.9" />
-            <circle cx="3.5" cy="8.5" r="0.9" />
-            <circle cx="8.5" cy="8.5" r="0.9" />
+            <circle cx="3.5" cy="3.5" r="0.8" /><circle cx="8.5" cy="3.5" r="0.8" />
+            <circle cx="6" cy="6" r="0.8" />
+            <circle cx="3.5" cy="8.5" r="0.8" /><circle cx="8.5" cy="8.5" r="0.8" />
           </svg>
         </button>
-
         <button
           onClick={toggleFullscreen}
-          className="p-2.5 text-ergon-muted hover:text-ergon-text hover:bg-ergon-surface rounded-lg transition-colors cursor-pointer"
-          title="Fullscreen (F)"
+          className="p-2 text-ergon-muted hover:text-ergon-text rounded-md transition-colors cursor-pointer"
+          title="Fullscreen"
         >
-          <svg width="18" height="18" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8" />
           </svg>
         </button>
       </div>
 
-      {/* Right: Primary actions */}
-      <div className="flex items-center gap-1.5">
+      {/* Right */}
+      <div className="flex items-center gap-1">
         {editorOpen && (
           <button
             onClick={runCode}
             disabled={status === "loading"}
-            className="flex items-center gap-2 px-4 h-9 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg transition-colors bg-ergon-accent text-ergon-text hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-1.5 px-3 h-7 text-[11px] font-semibold uppercase tracking-[0.06em] rounded-md bg-ergon-accent text-ergon-bg hover:brightness-110 disabled:opacity-50 cursor-pointer transition-all"
           >
-            <svg width="10" height="12" viewBox="0 0 8 10" fill="currentColor">
-              <path d="M0 0L8 5L0 10V0Z" />
-            </svg>
+            <svg width="8" height="10" viewBox="0 0 8 10" fill="currentColor"><path d="M0 0L8 5L0 10V0Z" /></svg>
             Run
           </button>
         )}
-
         <button
           onClick={toggleEditor}
-          className={`px-4 h-9 text-sm font-medium uppercase tracking-[0.06em] rounded-lg transition-colors cursor-pointer ${
+          className={`px-3 h-7 text-[11px] font-medium uppercase tracking-[0.06em] rounded-md transition-colors cursor-pointer ${
             editorOpen
-              ? "bg-ergon-text text-white"
-              : "text-ergon-subtle hover:text-ergon-text hover:bg-ergon-surface"
+              ? "bg-ergon-text text-ergon-bg"
+              : "text-ergon-muted hover:text-ergon-text"
           }`}
         >
           Code
         </button>
-
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("ergon:save"))}
           disabled={isSaving}
-          className="px-4 h-9 text-sm font-medium uppercase tracking-[0.06em] rounded-lg text-ergon-subtle hover:text-ergon-text hover:bg-ergon-surface transition-colors disabled:opacity-50 cursor-pointer"
+          className="px-3 h-7 text-[11px] font-medium uppercase tracking-[0.06em] rounded-md text-ergon-muted hover:text-ergon-text transition-colors disabled:opacity-50 cursor-pointer"
         >
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? "..." : "Save"}
         </button>
-
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("ergon:export"))}
-          className="px-4 h-9 text-sm font-medium uppercase tracking-[0.06em] rounded-lg text-ergon-subtle hover:text-ergon-text hover:bg-ergon-surface transition-colors cursor-pointer"
+          className="px-3 h-7 text-[11px] font-medium uppercase tracking-[0.06em] rounded-md text-ergon-muted hover:text-ergon-text transition-colors cursor-pointer"
         >
           Export
         </button>
-
         {workId && !workSlug && (
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("ergon:publish"))}
-            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-lg bg-ergon-accent text-ergon-text hover:brightness-110 transition-all cursor-pointer"
+            className="px-3 h-7 text-[11px] font-semibold uppercase tracking-[0.06em] rounded-md bg-ergon-accent text-ergon-bg hover:brightness-110 transition-all cursor-pointer"
           >
             Publish
           </button>
@@ -156,9 +139,9 @@ export function Toolbar() {
           <Link
             href={`/work/${workSlug}`}
             target="_blank"
-            className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-lg bg-ergon-accent/20 text-ergon-accent hover:bg-ergon-accent/30 transition-all cursor-pointer"
+            className="px-3 h-7 flex items-center text-[11px] font-medium uppercase tracking-[0.06em] rounded-md text-ergon-accent hover:bg-ergon-accent/10 transition-all cursor-pointer"
           >
-            View Live
+            View
           </Link>
         )}
       </div>

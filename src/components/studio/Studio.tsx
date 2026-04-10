@@ -54,7 +54,6 @@ export function Studio() {
 
   useKeyboardShortcuts();
 
-  // Auto-load a random recipe on first mount (non-composition mode)
   useEffect(() => {
     if (!hasLoaded && !compositionMode) {
       const randomRecipe = recipes[Math.floor(Math.random() * recipes.length)];
@@ -64,85 +63,43 @@ export function Studio() {
   }, [hasLoaded, compositionMode, loadRecipe]);
 
   const handleResize = useCallback(
-    (deltaY: number) => {
-      setEditorHeight(editorHeight + deltaY);
-    },
+    (deltaY: number) => { setEditorHeight(editorHeight + deltaY); },
     [editorHeight, setEditorHeight]
   );
 
   const handleExport = useCallback(() => {
     const filename = exportFilename(template.name, "png");
-
     if (compositionMode && layers.length > 0) {
       try {
         const compositeLayers: CompositeLayer[] = [];
-        let maxWidth = 0;
-        let maxHeight = 0;
-
+        let maxWidth = 0, maxHeight = 0;
         for (const layer of layers) {
-          const iframe = document.querySelector<HTMLIFrameElement>(
-            `iframe[title="Layer: ${layer.name}"]`
-          );
+          const iframe = document.querySelector<HTMLIFrameElement>(`iframe[title="Layer: ${layer.name}"]`);
           if (!iframe) continue;
-
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-          const canvas = iframeDoc?.querySelector("canvas");
+          const canvas = (iframe.contentDocument || iframe.contentWindow?.document)?.querySelector("canvas");
           if (!canvas) continue;
-
           maxWidth = Math.max(maxWidth, canvas.width);
           maxHeight = Math.max(maxHeight, canvas.height);
-
-          compositeLayers.push({
-            canvas,
-            opacity: layer.opacity,
-            blendMode: layer.blendMode,
-            visible: layer.visible,
-          });
+          compositeLayers.push({ canvas, opacity: layer.opacity, blendMode: layer.blendMode, visible: layer.visible });
         }
-
-        if (compositeLayers.length > 0) {
-          const dataUrl = compositeLayersToDataUrl(compositeLayers, maxWidth, maxHeight);
-          downloadDataUrl(dataUrl, filename);
-        }
-      } catch {
-        console.warn("Cannot access layer canvases for composition export.");
-      }
+        if (compositeLayers.length > 0) downloadDataUrl(compositeLayersToDataUrl(compositeLayers, maxWidth, maxHeight), filename);
+      } catch { console.warn("Cannot access layer canvases."); }
       return;
     }
-
-    const iframe = document.querySelector<HTMLIFrameElement>(
-      'iframe[title="Ergon Sandbox"]'
-    );
+    const iframe = document.querySelector<HTMLIFrameElement>('iframe[title="Ergon Sandbox"]');
     if (!iframe) return;
-
     try {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      const canvas = iframeDoc?.querySelector("canvas");
-      if (canvas) {
-        const dataUrl = canvas.toDataURL("image/png");
-        downloadDataUrl(dataUrl, filename);
-      }
-    } catch {
-      console.warn("Cannot access iframe canvas directly.");
-    }
+      const canvas = (iframe.contentDocument || iframe.contentWindow?.document)?.querySelector("canvas");
+      if (canvas) downloadDataUrl(canvas.toDataURL("image/png"), filename);
+    } catch { console.warn("Cannot access canvas."); }
   }, [template.name, compositionMode, layers]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const result = await saveWork({
-        id: workId ?? undefined,
-        title: workTitle,
-        code,
-        templateId: template.id,
-        params: values as Record<string, unknown>,
-      });
-      if (result.id) {
-        setWorkId(result.id);
-      }
-    } finally {
-      setIsSaving(false);
-    }
+      const result = await saveWork({ id: workId ?? undefined, title: workTitle, code, templateId: template.id, params: values as Record<string, unknown> });
+      if (result.id) setWorkId(result.id);
+    } finally { setIsSaving(false); }
   }, [workId, workTitle, code, template.id, values, setWorkId, setIsSaving]);
 
   const handlePublish = useCallback(async () => {
@@ -150,155 +107,111 @@ export function Studio() {
     setIsPublishing(true);
     try {
       const result = await publishWork(workId, workTitle);
-      if (result.slug) {
-        setWorkSlug(result.slug);
-      }
-    } finally {
-      setIsPublishing(false);
-    }
+      if (result.slug) setWorkSlug(result.slug);
+    } finally { setIsPublishing(false); }
   }, [workId, workTitle, setWorkSlug, setIsPublishing]);
 
   useEffect(() => {
-    function onExport() { handleExport(); }
+    const onExport = () => handleExport();
     window.addEventListener("ergon:export", onExport);
     return () => window.removeEventListener("ergon:export", onExport);
   }, [handleExport]);
 
   useEffect(() => {
-    function onSave() { handleSave(); }
-    function onPublish() { handlePublish(); }
+    const onSave = () => handleSave();
+    const onPublish = () => handlePublish();
     window.addEventListener("ergon:save", onSave);
     window.addEventListener("ergon:publish", onPublish);
-    return () => {
-      window.removeEventListener("ergon:save", onSave);
-      window.removeEventListener("ergon:publish", onPublish);
-    };
+    return () => { window.removeEventListener("ergon:save", onSave); window.removeEventListener("ergon:publish", onPublish); };
   }, [handleSave, handlePublish]);
 
   const tabClasses = (tab: SidebarTab) =>
-    `flex-1 py-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-center transition-colors cursor-pointer ${
+    `flex-1 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-center transition-colors cursor-pointer ${
       sidebarTab === tab
-        ? "text-ergon-text border-b-2 border-ergon-accent"
-        : "text-ergon-muted hover:text-ergon-subtle border-b-2 border-transparent"
+        ? "text-ergon-text border-b border-ergon-text"
+        : "text-ergon-muted hover:text-ergon-subtle border-b border-transparent"
     }`;
 
   return (
-    <div className="h-screen w-screen bg-ergon-surface p-6 flex flex-col gap-0 overflow-hidden">
-      {/* Floating card — contains everything */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.03)] overflow-hidden min-h-0">
-        {/* Toolbar */}
-        <Toolbar />
+    <div className="h-screen w-screen bg-ergon-bg flex flex-col overflow-hidden">
+      <Toolbar />
 
-        {/* Main content */}
-        <div className="flex-1 flex min-h-0">
-          {/* Canvas + Editor */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Canvas */}
-            <div className="flex-1 relative min-h-0 bg-ergon-surface/50">
-              <Canvas />
-
-              {status === "error" && error && (
-                <div className="absolute bottom-6 left-6 right-6 bg-ergon-red/95 text-white text-sm px-5 py-3 rounded-lg font-mono backdrop-blur-sm z-20">
-                  {error}
-                </div>
-              )}
-            </div>
-
-            {/* Code editor */}
-            {editorOpen && (
-              <div className="animate-slide-up">
-                <ResizeHandle onResize={handleResize} />
-                <div
-                  className="border-t border-neutral-800 bg-[#0a0a0a] shrink-0"
-                  style={{ height: editorHeight }}
-                >
-                  <CodeEditor
-                    code={code}
-                    onChange={setCode}
-                    errorLine={parseErrorLine(error)}
-                  />
-                </div>
+      <div className="flex-1 flex min-h-0">
+        {/* Canvas */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 relative min-h-0">
+            <Canvas />
+            {status === "error" && error && (
+              <div className="absolute bottom-4 left-4 right-4 bg-ergon-red/90 text-white text-xs px-4 py-2.5 rounded-md font-mono backdrop-blur-sm z-20">
+                {error}
               </div>
             )}
           </div>
 
-          {/* Sidebar */}
-          {!isFullscreen && (
-            <div className="w-[380px] bg-white border-l border-ergon-border flex flex-col shrink-0">
-              {/* Tabs */}
-              <div className="flex border-b border-ergon-border shrink-0">
-                <button className={tabClasses("recipes")} onClick={() => setSidebarTab("recipes")}>
-                  Recipes
-                </button>
-                <button className={tabClasses("parameters")} onClick={() => setSidebarTab("parameters")}>
-                  Controls
-                </button>
-                <button className={tabClasses("layers")} onClick={() => setSidebarTab("layers")}>
-                  Layers
-                </button>
-              </div>
-
-              {/* Tab content */}
-              <div className="flex-1 overflow-y-auto">
-                {/* Recipes */}
-                {sidebarTab === "recipes" && (
-                  <div className="p-7">
-                    <RecipePicker />
-                  </div>
-                )}
-
-                {/* Parameters */}
-                {sidebarTab === "parameters" && (
-                  <div className="p-7">
-                    {compositionMode && <SharedDriversPanel />}
-                    <div className="mb-7">
-                      <h3 className="text-base font-bold text-ergon-text uppercase tracking-[0.06em]">
-                        {compositionMode
-                          ? layers[activeLayerIndex]?.name ?? "No layer"
-                          : template.name}
-                      </h3>
-                      <p className="text-sm text-ergon-muted mt-2 leading-relaxed">
-                        {compositionMode
-                          ? `Layer ${activeLayerIndex + 1} of ${layers.length}`
-                          : template.description}
-                      </p>
-                    </div>
-                    {compositionMode ? (
-                      <ParameterPanel
-                        schema={layers[activeLayerIndex]?.schema ?? null}
-                        values={layers[activeLayerIndex]?.values ?? {}}
-                        onChange={(key, value) => {
-                          const layer = layers[activeLayerIndex];
-                          if (layer) updateLayerParams(layer.id, key, value);
-                        }}
-                      />
-                    ) : (
-                      <ParameterPanel
-                        schema={schema}
-                        values={values}
-                        onChange={setParamValue}
-                      />
-                    )}
-                  </div>
-                )}
-
-                {/* Layers */}
-                {sidebarTab === "layers" && (
-                  <div className="p-7">
-                    <LayerPanel onLayerSelect={() => setSidebarTab("parameters")} />
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-7 py-4 border-t border-ergon-border shrink-0">
-                <span className="text-sm text-ergon-muted/50 font-mono">
-                  {editorOpen ? "⌘↵ Run  ⌘E Close" : "⌘E Code  Space Shuffle"}
-                </span>
+          {editorOpen && (
+            <div className="animate-slide-up">
+              <ResizeHandle onResize={handleResize} />
+              <div className="border-t border-ergon-border bg-ergon-bg shrink-0" style={{ height: editorHeight }}>
+                <CodeEditor code={code} onChange={setCode} errorLine={parseErrorLine(error)} />
               </div>
             </div>
           )}
         </div>
+
+        {/* Sidebar */}
+        {!isFullscreen && (
+          <div className="w-[320px] bg-ergon-surface border-l border-ergon-border flex flex-col shrink-0">
+            <div className="flex border-b border-ergon-border shrink-0">
+              <button className={tabClasses("recipes")} onClick={() => setSidebarTab("recipes")}>Recipes</button>
+              <button className={tabClasses("parameters")} onClick={() => setSidebarTab("parameters")}>Controls</button>
+              <button className={tabClasses("layers")} onClick={() => setSidebarTab("layers")}>Layers</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {sidebarTab === "recipes" && (
+                <div className="p-5"><RecipePicker /></div>
+              )}
+
+              {sidebarTab === "parameters" && (
+                <div className="p-5">
+                  {compositionMode && <SharedDriversPanel />}
+                  <div className="mb-5">
+                    <h3 className="text-sm font-semibold text-ergon-text uppercase tracking-[0.06em]">
+                      {compositionMode ? layers[activeLayerIndex]?.name ?? "No layer" : template.name}
+                    </h3>
+                    <p className="text-xs text-ergon-muted mt-1.5 leading-relaxed">
+                      {compositionMode ? `Layer ${activeLayerIndex + 1} of ${layers.length}` : template.description}
+                    </p>
+                  </div>
+                  {compositionMode ? (
+                    <ParameterPanel
+                      schema={layers[activeLayerIndex]?.schema ?? null}
+                      values={layers[activeLayerIndex]?.values ?? {}}
+                      onChange={(key, value) => {
+                        const layer = layers[activeLayerIndex];
+                        if (layer) updateLayerParams(layer.id, key, value);
+                      }}
+                    />
+                  ) : (
+                    <ParameterPanel schema={schema} values={values} onChange={setParamValue} />
+                  )}
+                </div>
+              )}
+
+              {sidebarTab === "layers" && (
+                <div className="p-5">
+                  <LayerPanel onLayerSelect={() => setSidebarTab("parameters")} />
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 py-3 border-t border-ergon-border shrink-0">
+              <span className="text-[10px] text-ergon-muted/40 font-mono">
+                {editorOpen ? "⌘↵ Run  ⌘E Close" : "⌘E Code  Space Shuffle"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

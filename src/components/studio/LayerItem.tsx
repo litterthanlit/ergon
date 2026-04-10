@@ -41,17 +41,17 @@ export function LayerItem({
     <div
       data-testid="layer-item"
       onClick={onSelect}
-      className={`px-4 py-3.5 border rounded-xl cursor-pointer transition-all ${
+      className={`px-3.5 py-3 border rounded-lg cursor-pointer transition-all ${
         isSoloed
-          ? "border-ergon-accent bg-ergon-surface ring-1 ring-ergon-accent/30"
+          ? "border-ergon-accent/50 bg-ergon-accent/5"
           : isActive
-            ? "border-ergon-text bg-ergon-surface"
-            : "border-ergon-border hover:border-ergon-muted"
+            ? "border-ergon-border bg-ergon-elevated"
+            : "border-transparent hover:border-ergon-border hover:bg-ergon-elevated/50"
       } ${!visible && !isSoloed ? "opacity-30" : ""}`}
     >
       {/* Top row: role badge + name + actions */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-[9px] font-bold uppercase tracking-[0.1em] text-ergon-muted bg-ergon-surface px-1.5 py-0.5 rounded shrink-0">
+        <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-ergon-muted bg-ergon-bg px-1.5 py-0.5 rounded shrink-0">
           {ROLE_LABELS[role]}
         </span>
         <span className="text-sm font-medium text-ergon-text truncate flex-1">
@@ -135,7 +135,7 @@ export function LayerItem({
           value={blendMode}
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-          className="w-full text-[11px] text-ergon-subtle bg-white border border-ergon-border rounded-md px-2.5 py-1.5 focus:outline-none focus:border-ergon-text"
+          className="w-full text-[11px] text-ergon-subtle bg-ergon-bg border border-ergon-border rounded-md px-2.5 py-1.5 focus:outline-none focus:border-ergon-muted"
         >
           {BLEND_MODES.map((mode) => (
             <option key={mode} value={mode}>{mode}</option>

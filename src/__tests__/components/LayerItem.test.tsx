@@ -5,14 +5,18 @@ import { LayerItem } from "@/components/studio/LayerItem";
 describe("LayerItem", () => {
   const defaultProps = {
     name: "Drift",
+    role: "motion" as const,
     visible: true,
     opacity: 0.8,
     blendMode: "normal" as const,
     isActive: false,
+    isSoloed: false,
     onSelect: vi.fn(),
     onToggleVisibility: vi.fn(),
     onOpacityChange: vi.fn(),
     onBlendModeChange: vi.fn(),
+    onSolo: vi.fn(),
+    onSwap: vi.fn(),
     onRemove: vi.fn(),
   };
 
@@ -23,7 +27,7 @@ describe("LayerItem", () => {
 
   it("shows active state", () => {
     const { container } = render(<LayerItem {...defaultProps} isActive={true} />);
-    expect(container.querySelector("[data-testid='layer-item']")?.className).toContain("border-ergon-text");
+    expect(container.querySelector("[data-testid='layer-item']")?.className).toContain("bg-ergon-elevated");
   });
 
   it("shows opacity value", () => {
