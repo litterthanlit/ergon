@@ -31,6 +31,7 @@ export function DotGrid() {
 
   return (
     <div ref={containerRef} className="absolute inset-0 z-10">
+      <style>{`g.cursor-pointer:hover circle:nth-child(2) { opacity: 0.15 !important; }`}</style>
       <svg width={dimensions.width} height={dimensions.height} className="absolute inset-0">
         {/* Edges */}
         {edges.map((edge, i) => {
@@ -54,7 +55,7 @@ export function DotGrid() {
 
         {/* Connection line from selected to cursor would go here */}
 
-        {/* Dots */}
+        {/* Dots — invisible large hit target + visible small dot */}
         {points.map((point) => {
           const isSelected = selectedPoint === point.id;
           const isConnected = edges.some(
@@ -62,25 +63,43 @@ export function DotGrid() {
           );
 
           return (
-            <circle
-              key={point.id}
-              cx={point.worldX}
-              cy={point.worldY}
-              r={isSelected ? 6 : isConnected ? 4 : 2.5}
-              fill={
-                isSelected
-                  ? palette[0]
-                  : isConnected
-                    ? "#ffffff"
-                    : "#333333"
-              }
-              opacity={isSelected ? 1 : isConnected ? 0.9 : 0.3}
-              className="cursor-pointer transition-all duration-150"
-              onClick={() => selectPoint(point.id)}
-              style={{ filter: isSelected ? `drop-shadow(0 0 8px ${palette[0]})` : undefined }}
-            >
-              <title>{point.id}</title>
-            </circle>
+            <g key={point.id} onClick={() => selectPoint(point.id)} className="cursor-pointer">
+              {/* Large invisible hit target */}
+              <circle
+                cx={point.worldX}
+                cy={point.worldY}
+                r={18}
+                fill="transparent"
+              />
+              {/* Hover ring */}
+              <circle
+                cx={point.worldX}
+                cy={point.worldY}
+                r={10}
+                fill="transparent"
+                stroke={isSelected ? palette[0] : "#ffffff"}
+                strokeWidth={1}
+                opacity={0}
+                className="transition-opacity duration-150"
+                style={{ opacity: isSelected ? 0.3 : undefined }}
+              />
+              {/* Visible dot */}
+              <circle
+                cx={point.worldX}
+                cy={point.worldY}
+                r={isSelected ? 5 : isConnected ? 3.5 : 2}
+                fill={
+                  isSelected
+                    ? palette[0]
+                    : isConnected
+                      ? "#ffffff"
+                      : "#444444"
+                }
+                opacity={isSelected ? 1 : isConnected ? 0.9 : 0.4}
+                className="transition-all duration-150"
+                style={{ filter: isSelected ? `drop-shadow(0 0 8px ${palette[0]})` : undefined }}
+              />
+            </g>
           );
         })}
       </svg>

@@ -139,6 +139,36 @@ export function MeshRenderer() {
         }
       }
 
+      // Stripe effect — vertical color bands cascading from edges
+      ctx.filter = "none";
+      for (let i = 0; i < edges.length; i++) {
+        const edge = edges[i];
+        const from = pos.get(edge.from);
+        const to = pos.get(edge.to);
+        if (!from || !to) continue;
+
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        const colorIdx = i % palette.length;
+        const stripeCount = 8 + i * 3;
+        const spread = Math.abs(to.x - from.x) + 30;
+
+        for (let s = 0; s < stripeCount; s++) {
+          const offset = (s - stripeCount / 2) * (spread / stripeCount);
+          const x = midX + offset;
+          const wave = Math.sin(t * pulseSpeed + s * 0.4 + i) * 15;
+          const stripeH = 40 + Math.sin(t * 0.5 + s * 0.7) * 20;
+
+          ctx.beginPath();
+          ctx.moveTo(x + wave, midY - stripeH);
+          ctx.lineTo(x + wave, midY + stripeH);
+          ctx.strokeStyle = palette[(colorIdx + s) % palette.length];
+          ctx.lineWidth = spread / stripeCount * 0.7;
+          ctx.globalAlpha = 0.08 + Math.sin(t + s * 0.3) * 0.04;
+          ctx.stroke();
+        }
+      }
+
       ctx.globalAlpha = 1;
       ctx.filter = "none";
 
