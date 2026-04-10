@@ -2,7 +2,7 @@
 
 import { DotGrid } from "./DotGrid";
 import { MeshRenderer } from "./MeshRenderer";
-import { useCreatorStore } from "@/lib/creator-store";
+import { useCreatorStore, RENDER_MODES, type RenderMode } from "@/lib/creator-store";
 
 const PALETTES = [
   ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
@@ -14,6 +14,8 @@ const PALETTES = [
 
 export function CreatorPage() {
   const edges = useCreatorStore((s) => s.edges);
+  const renderMode = useCreatorStore((s) => s.renderMode);
+  const setRenderMode = useCreatorStore((s) => s.setRenderMode);
   const breathe = useCreatorStore((s) => s.breathe);
   const pulseSpeed = useCreatorStore((s) => s.pulseSpeed);
   const tempo = useCreatorStore((s) => s.tempo);
@@ -46,7 +48,26 @@ export function CreatorPage() {
       {/* Bottom controls — minimal floating bar */}
       <div className="absolute bottom-0 left-0 right-0 z-30">
         <div className="flex items-center justify-center pb-6">
-          <div className="flex items-center gap-6 bg-[#111113]/90 backdrop-blur-md border border-[#27272a] rounded-xl px-6 py-3">
+          <div className="flex items-center gap-5 bg-[#111113]/90 backdrop-blur-md border border-[#27272a] rounded-xl px-5 py-3">
+            {/* Render mode selector */}
+            <div className="flex items-center gap-1">
+              {RENDER_MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setRenderMode(mode.id as RenderMode)}
+                  className={`px-2.5 py-1 text-[10px] rounded-md transition-all cursor-pointer ${
+                    renderMode === mode.id
+                      ? "bg-white/10 text-white font-medium"
+                      : "text-[#71717a] hover:text-white"
+                  }`}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-[#27272a]" />
+
             {/* Breathe */}
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Breathe</span>

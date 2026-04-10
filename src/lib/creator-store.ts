@@ -13,6 +13,17 @@ export type Edge = {
   to: string;
 };
 
+export type RenderMode = "net" | "stars" | "stripes" | "flow" | "pulse" | "scatter";
+
+export const RENDER_MODES: { id: RenderMode; label: string }[] = [
+  { id: "net", label: "Net" },
+  { id: "stars", label: "Stars" },
+  { id: "stripes", label: "Stripes" },
+  { id: "flow", label: "Flow" },
+  { id: "pulse", label: "Pulse" },
+  { id: "scatter", label: "Scatter" },
+];
+
 type CreatorState = {
   // Grid
   gridCols: number;
@@ -22,6 +33,7 @@ type CreatorState = {
   selectedPoint: string | null;
 
   // Animation
+  renderMode: RenderMode;
   breathe: number;
   pulseSpeed: number;
   extrudeDepth: number;
@@ -38,6 +50,7 @@ type CreatorState = {
   addEdge: (from: string, to: string) => void;
   removeLastEdge: () => void;
   clearAll: () => void;
+  setRenderMode: (mode: RenderMode) => void;
   setBreathe: (v: number) => void;
   setPulseSpeed: (v: number) => void;
   setExtrudeDepth: (v: number) => void;
@@ -59,6 +72,7 @@ export const useCreatorStore = create<CreatorState>((set) => ({
   edges: [],
   selectedPoint: null,
 
+  renderMode: "net" as RenderMode,
   breathe: 8,
   pulseSpeed: 1.0,
   extrudeDepth: 0,
@@ -119,6 +133,7 @@ export const useCreatorStore = create<CreatorState>((set) => ({
     })),
 
   clearAll: () => set({ edges: [], selectedPoint: null }),
+  setRenderMode: (mode) => set({ renderMode: mode }),
 
   setBreathe: (v) => set({ breathe: v }),
   setPulseSpeed: (v) => set({ pulseSpeed: v }),
