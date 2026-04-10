@@ -177,7 +177,7 @@ export function Canvas() {
 
   if (compositionMode) {
     return (
-      <div className="w-full h-full relative bg-ergon-bg">
+      <div className="w-full h-full relative bg-ergon-surface">
         {layers.map((layer) => (
           <iframe
             key={layer.id}
@@ -203,7 +203,7 @@ export function Canvas() {
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-ergon-bg">
+    <div className="w-full h-full flex items-center justify-center bg-ergon-surface">
       <div className={`${aspectClass ? aspectClass + " max-h-full max-w-full" : "w-full h-full"}`}>
         <iframe
           ref={iframeRef}
