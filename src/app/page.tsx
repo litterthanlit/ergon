@@ -38,10 +38,10 @@ export default function HomePage() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-3">
             <Link
-              href="/studio"
+              href="/create"
               className="px-5 h-10 inline-flex items-center text-[13px] font-medium text-ergon-bg bg-ergon-text rounded-lg hover:bg-ergon-subtle transition-colors"
             >
-              Open Studio
+              Start Creating
             </Link>
             <Link
               href="/signup"
