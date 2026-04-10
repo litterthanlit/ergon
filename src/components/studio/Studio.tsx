@@ -141,6 +141,12 @@ export function Studio() {
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 relative min-h-0">
             <Canvas />
+            {/* litt.works watermark */}
+            <div className="absolute top-4 left-5 z-10 pointer-events-none">
+              <span className="text-[11px] font-medium text-white/25 tracking-[0.08em]">
+                litt.works
+              </span>
+            </div>
             {status === "error" && error && (
               <div className="absolute bottom-4 left-4 right-4 bg-ergon-red/90 text-white text-xs px-4 py-2.5 rounded-md font-mono backdrop-blur-sm z-20">
                 {error}
