@@ -111,7 +111,7 @@ describe("store recipe actions", () => {
     const recipe = recipes[0];
     useStudioStore.getState().loadRecipe(recipe);
     const layers = useStudioStore.getState().layers;
-    useStudioStore.getState().soloLayer(layers[1].id);
+    useStudioStore.getState().soloLayer(layers[0].id);
     useStudioStore.getState().unsoloAll();
     const state = useStudioStore.getState();
     expect(state.soloLayerId).toBeNull();

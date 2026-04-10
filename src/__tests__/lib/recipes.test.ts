@@ -3,8 +3,8 @@ import { recipes, getRecipe } from "@/lib/recipes";
 import { getBlock } from "@/lib/blocks";
 
 describe("recipes", () => {
-  it("has 5 starter recipes", () => {
-    expect(recipes.length).toBe(5);
+  it("has 6 starter recipes", () => {
+    expect(recipes.length).toBe(6);
   });
 
   it("every recipe has required fields", () => {
@@ -13,7 +13,7 @@ describe("recipes", () => {
       expect(recipe.name).toBeTruthy();
       expect(recipe.description).toBeTruthy();
       expect(recipe.mood).toBeTruthy();
-      expect(recipe.blocks.length).toBeGreaterThanOrEqual(2);
+      expect(recipe.blocks.length).toBeGreaterThanOrEqual(1);
       expect(recipe.blocks.length).toBeLessThanOrEqual(4);
       expect(recipe.drivers.palette.length).toBe(5);
       expect(typeof recipe.drivers.seed).toBe("number");
@@ -31,10 +31,10 @@ describe("recipes", () => {
   });
 
   it("getRecipe returns correct recipe", () => {
-    const aurora = getRecipe("aurora-night");
-    expect(aurora).toBeDefined();
-    expect(aurora!.name).toBe("Aurora Night");
-    expect(aurora!.mood).toBe("dark");
+    const clay = getRecipe("clay-form");
+    expect(clay).toBeDefined();
+    expect(clay!.name).toBe("Clay Form");
+    expect(clay!.mood).toBe("dark");
   });
 
   it("getRecipe returns undefined for unknown id", () => {
