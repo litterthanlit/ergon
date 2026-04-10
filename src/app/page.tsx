@@ -53,9 +53,10 @@ export default function HomePage() {
         </div>
 
         {/* Subtle feature list */}
-        <div className="mt-20 flex items-center gap-8">
-          {["3D sculpting", "Composition layers", "Shared drivers", "One-click publish"].map((feature) => (
-            <span key={feature} className="text-[11px] text-ergon-muted/50 tracking-wide">
+        <div className="mt-32 flex items-center gap-12">
+          {["3D sculpting", "Composition layers", "Shared drivers", "One-click publish"].map((feature, i) => (
+            <span key={feature} className="text-[11px] text-ergon-muted/40 tracking-wide flex items-center gap-12">
+              {i > 0 && <span className="text-ergon-border">·</span>}
               {feature}
             </span>
           ))}
