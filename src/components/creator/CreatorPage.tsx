@@ -1,7 +1,7 @@
 "use client";
 
 import { DotGrid } from "./DotGrid";
-import { MeshRenderer } from "./MeshRenderer";
+import { ThreeRenderer } from "./ThreeRenderer";
 import { useCreatorStore, RENDER_MODES, type RenderMode } from "@/lib/creator-store";
 
 const PALETTES = [
@@ -24,6 +24,8 @@ export function CreatorPage() {
   const setPulseSpeed = useCreatorStore((s) => s.setPulseSpeed);
   const setTempo = useCreatorStore((s) => s.setTempo);
   const setPalette = useCreatorStore((s) => s.setPalette);
+  const postFX = useCreatorStore((s) => s.postFX);
+  const togglePostFX = useCreatorStore((s) => s.togglePostFX);
   const clearAll = useCreatorStore((s) => s.clearAll);
   const removeLastEdge = useCreatorStore((s) => s.removeLastEdge);
   const randomizeSeed = useCreatorStore((s) => s.randomizeSeed);
@@ -32,7 +34,7 @@ export function CreatorPage() {
     <div className="h-screen w-screen bg-[#09090b] flex flex-col overflow-hidden">
       {/* Canvas area — full screen */}
       <div className="flex-1 relative">
-        <MeshRenderer />
+        <ThreeRenderer />
         <DotGrid />
 
         {/* Hint — only when no edges */}
@@ -124,6 +126,35 @@ export function CreatorPage() {
                     boxShadow: palette[0] === pal[0] ? `0 0 0 2px ${pal[0]}40` : undefined,
                   }}
                 />
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-[#27272a]" />
+
+            {/* FX toggles */}
+            <div className="flex items-center gap-1">
+              {(
+                [
+                  ["bloom", "BLM"],
+                  ["chromatic", "CHR"],
+                  ["vignette", "VIG"],
+                  ["dof", "DOF"],
+                  ["grain", "GRN"],
+                  ["toneMapping", "TMP"],
+                  ["motionBlur", "MBL"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => togglePostFX(key)}
+                  className={`px-1.5 py-1 text-[10px] rounded transition-all cursor-pointer ${
+                    postFX[key]
+                      ? "text-white bg-white/10"
+                      : "text-[#71717a] hover:text-white"
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
             </div>
 

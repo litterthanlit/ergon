@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { useCreatorStore, type RenderMode } from "@/lib/creator-store";
+import { useCreatorStore } from "@/lib/creator-store";
 
 function noise2d(x: number, y: number, s: number): number {
   const n = Math.sin(x * 12.9898 + y * 78.233 + s) * 43758.5453;
@@ -280,7 +280,7 @@ export function MeshRenderer() {
 
       const pos = getPositions();
 
-      switch (renderMode as RenderMode) {
+      switch (renderMode as string) {
         case "net": renderNet(pos, w, h); break;
         case "stars": renderStars(pos, w, h); break;
         case "stripes": renderStripes(pos); break;

@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 
@@ -62,7 +62,7 @@ export function CameraRig() {
 
   return (
     <>
-      <perspectiveCamera
+      <PerspectiveCamera
         makeDefault
         position={[0, 0, 500]}
         fov={60}
