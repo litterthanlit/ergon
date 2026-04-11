@@ -27,35 +27,50 @@ const params = ergon.params({
   palette: { type: 'select', options: ['Watercolor', 'Warm', 'Cool', 'Pastel', 'Neon', 'Mono'], default: 'Watercolor', label: 'Palette' },
 });
 
-function setup() { createCanvas(windowWidth, windowHeight); noLoop(); }
+let circles = [];
+let t = 0;
 
-function draw() {
-  background(252);
-  noStroke();
+function generate() {
   const colors = palettes[params.palette] || palettes.Watercolor;
-  const placed = [];
+  circles = [];
   let attempts = 0;
-  while (placed.length < params.count && attempts < params.count * 10) {
+  while (circles.length < params.count && attempts < params.count * 10) {
     const x = random(width), y = random(height);
     const r = random(10, params.sizeMax);
     let tooClose = false;
     if (params.spacing > 0) {
-      for (const p of placed) {
+      for (const p of circles) {
         if (dist(x, y, p.x, p.y) < (r + p.r) / 2 + params.spacing) { tooClose = true; break; }
       }
     }
     if (!tooClose) {
-      const c = color(colors[floor(random(colors.length))]);
-      c.setAlpha(params.opacity * 255);
-      fill(c);
-      ellipse(x, y, r);
-      placed.push({ x, y, r });
+      circles.push({ x, y, r, i: circles.length, colorIdx: floor(random(colors.length)) });
     }
     attempts++;
   }
 }
-function windowResized() { resizeCanvas(windowWidth, windowHeight); redraw(); }
-function mousePressed() { noiseSeed(millis()); redraw(); }
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  generate();
+}
+
+function draw() {
+  t += 0.008;
+  background(252);
+  noStroke();
+  const colors = palettes[params.palette] || palettes.Watercolor;
+  for (const circle of circles) {
+    const c = color(colors[circle.colorIdx]);
+    c.setAlpha(params.opacity * 255);
+    fill(c);
+    const animR = circle.r + sin(t + circle.i * 0.5) * 3;
+    const animX = circle.x + sin(t * 0.5 + circle.i) * 2;
+    ellipse(animX, circle.y, animR);
+  }
+}
+function windowResized() { resizeCanvas(windowWidth, windowHeight); generate(); }
+function mousePressed() { noiseSeed(millis()); generate(); }
 `;
 
 export const scatter: Template = {

@@ -35,6 +35,9 @@ const palettes = {
   Rose:    ['#ffccd5', '#ff8fa3', '#ff758f', '#c9184a', '#590d22'],
 };
 
+const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
 const params = ergon.params({
   density:    { type: 'number', min: 100, max: 8000, default: 2000, step: 100, label: 'Density' },
   speed:      { type: 'number', min: 0.2, max: 5.0, default: 1.0, step: 0.1, label: 'Speed' },
@@ -69,15 +72,15 @@ function draw() {
     particles.length = params.density;
   }
 
-  const colors = palettes[params.palette] || palettes.Arctic;
+  const colors = (sharedPalette && sharedPalette.length >= 3) ? sharedPalette : (palettes[params.palette] || palettes.Arctic);
   noStroke();
 
   for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
     const angle = noise(p.x * params.turbulence, p.y * params.turbulence) * TWO_PI * 2;
 
-    p.x += cos(angle) * params.speed;
-    p.y += sin(angle) * params.speed;
+    p.x += cos(angle) * params.speed * sharedTempo;
+    p.y += sin(angle) * params.speed * sharedTempo;
 
     const colorIdx = floor(map(noise(p.x * 0.005, p.y * 0.005), 0, 1, 0, colors.length));
     const c = colors[constrain(colorIdx, 0, colors.length - 1)];

@@ -30,6 +30,10 @@ import { particles } from "./particles";
 import { contour } from "./contour";
 import { marble } from "./marble";
 import { glyphs } from "./glyphs";
+import { sculpt } from "./sculpt";
+import { fluid } from "./fluid";
+import { organism } from "./organism";
+import { terrain3d } from "./terrain3d";
 
 export const templates: Template[] = [
   drift,
@@ -50,8 +54,15 @@ export const templates: Template[] = [
   contour,
   marble,
   glyphs,
+  sculpt,
+  fluid,
+  organism,
+  terrain3d,
 ];
 
 export function getTemplate(id: string): Template | undefined {
   return templates.find((t) => t.id === id);
 }
+
+// Backward compatibility — blocks are the new primary API
+export { blocks, getBlock, getBlocksByRole, type Block, type BlockRole } from "../blocks";

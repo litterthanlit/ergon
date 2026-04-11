@@ -90,7 +90,7 @@ export function ParameterPanel({ schema, values, onChange }: Props) {
     return <div className="flex flex-col gap-4" />;
   }
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-8">
       {Object.entries(schema).map(([key, def]) => renderControl(key, def, values[key], onChange))}
     </div>
   );

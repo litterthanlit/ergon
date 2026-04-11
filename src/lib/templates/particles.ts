@@ -23,6 +23,9 @@ export const particlesSchema: ParamSchema = {
 };
 
 export const particlesCode = `
+const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
 const params = ergon.params({
   count:      { type: 'number', min: 10, max: 300, default: 100, step: 1, label: 'Count' },
   gravity:    { type: 'number', min: 0, max: 2, default: 0.1, step: 0.05, label: 'Gravity' },
@@ -31,6 +34,22 @@ const params = ergon.params({
   trailColor: { type: 'color', default: '#1a1a1a', label: 'Trail Color' },
   repel:      { type: 'boolean', default: false, label: 'Repel' },
 });
+
+function hexToHue(hex) {
+  const r = parseInt(hex.slice(1,3), 16) / 255;
+  const g = parseInt(hex.slice(3,5), 16) / 255;
+  const b = parseInt(hex.slice(5,7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  if (max === min) return 0;
+  let h;
+  if (max === r) h = (g - b) / (max - min);
+  else if (max === g) h = 2 + (b - r) / (max - min);
+  else h = 4 + (r - g) / (max - min);
+  h = ((h * 60) + 360) % 360;
+  return h;
+}
+
+const paletteHues = sharedPalette ? sharedPalette.map(hexToHue) : null;
 
 let particles = [];
 
@@ -41,7 +60,7 @@ function makeParticle() {
     vx: random(-2, 2),
     vy: random(-2, 2),
     size: random(params.sizeRange.min, params.sizeRange.max),
-    hue: random(360),
+    hue: paletteHues ? paletteHues[floor(random(paletteHues.length))] : random(360),
   };
 }
 
@@ -91,8 +110,8 @@ function draw() {
     p.vx *= params.friction;
     p.vy *= params.friction;
 
-    p.x += p.vx;
-    p.y += p.vy;
+    p.x += p.vx * sharedTempo;
+    p.y += p.vy * sharedTempo;
 
     // Wrap edges
     if (p.x < 0) p.x = width;

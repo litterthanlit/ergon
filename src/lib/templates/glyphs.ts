@@ -26,9 +26,10 @@ const params = ergon.params({
   palette:   { type: 'select', options: ['Matrix', 'Pastel', 'Neon', 'Mono', 'Warm'], default: 'Matrix', label: 'Palette' },
 });
 
+let t = 0;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop();
 }
 
 function isInsideMask(col, row, cols, rows, shape) {
@@ -50,7 +51,8 @@ function isInsideMask(col, row, cols, rows, shape) {
 }
 
 function draw() {
-  background(0);
+  t += 0.005;
+  background(0, 20);
   noFill();
   const colors = palettes[params.palette] || palettes.Matrix;
   const cellW = width / params.columns;
@@ -58,14 +60,16 @@ function draw() {
   const offsetX = (width - params.columns * cellW) / 2;
   const offsetY = (height - rows * cellW) / 2;
   const halfGlyph = params.glyphSize / 2;
+  const colorOffset = floor(t * 10) % colors.length;
 
   for (let col = 0; col < params.columns; col++) {
     for (let row = 0; row < rows; row++) {
+      if (random() > 0.8) continue;
       if (!isInsideMask(col, row, params.columns, rows, params.shape)) continue;
       if (random() > params.density) continue;
       const cx = offsetX + col * cellW + cellW / 2;
       const cy = offsetY + row * cellW + cellW / 2;
-      const baseColor = colors[floor(random(colors.length))];
+      const baseColor = colors[(floor(random(colors.length)) + colorOffset) % colors.length];
       const c = color(baseColor);
       const alpha = random(160, 255);
       stroke(red(c), green(c), blue(c), alpha);
@@ -79,7 +83,7 @@ function draw() {
 }
 
 function windowResized() { resizeCanvas(windowWidth, windowHeight); redraw(); }
-function mousePressed() { noiseSeed(millis()); redraw(); }
+function mousePressed() { noiseSeed(millis()); background(0); }
 `;
 
 export const glyphs: Template = {

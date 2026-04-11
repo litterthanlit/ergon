@@ -4,11 +4,35 @@ import { getDefaultValues } from "./types";
 import type { Template } from "./templates/registry";
 import { drift } from "./templates/drift";
 import { createHistory, type History } from "./history";
-import { createLayer, type Layer, type BlendMode } from "./layers";
+import { createLayer, type Layer, type BlendMode, type BlockRole } from "./layers";
+import { getBlock } from "./blocks";
 
 type SandboxStatus = "loading" | "ready" | "error";
 
 type AspectRatio = "free" | "1:1" | "16:9" | "4:3";
+
+type SharedDrivers = {
+  palette: string[];
+  seed: number;
+  tempo: number;
+};
+
+type RecipeBlock = {
+  blockId: string;
+  role: BlockRole;
+  opacity: number;
+  blendMode: BlendMode;
+  paramOverrides?: Partial<ParamValues>;
+};
+
+type Recipe = {
+  id: string;
+  name: string;
+  description: string;
+  mood: string;
+  blocks: RecipeBlock[];
+  drivers: SharedDrivers;
+};
 
 let paramHistory: History = createHistory(getDefaultValues(drift.schema));
 
@@ -60,8 +84,12 @@ type StudioState = {
   compositionMode: boolean;
   layers: Layer[];
   activeLayerIndex: number;
+  sharedDrivers: SharedDrivers;
+  activeRecipe: Recipe | null;
+  soloLayerId: string | null;
+  presoloVisibility: Record<string, boolean>;
   toggleCompositionMode: () => void;
-  addLayer: (templateId: string, name: string, code: string, schema: ParamSchema | null, values: ParamValues) => void;
+  addLayer: (templateId: string, role: BlockRole, name: string, code: string, schema: ParamSchema | null, values: ParamValues) => void;
   removeLayer: (layerId: string) => void;
   setActiveLayer: (index: number) => void;
   updateLayerVisibility: (layerId: string, visible: boolean) => void;
@@ -70,6 +98,11 @@ type StudioState = {
   reorderLayers: (fromIndex: number, toIndex: number) => void;
   updateLayerParams: (layerId: string, key: string, value: ParamValue) => void;
   updateLayerCode: (layerId: string, code: string) => void;
+  setSharedDrivers: (partial: Partial<SharedDrivers>) => void;
+  loadRecipe: (recipe: Recipe) => void;
+  swapBlock: (layerId: string, newBlockId: string) => void;
+  soloLayer: (layerId: string) => void;
+  unsoloAll: () => void;
 
   // Actions
   setTemplate: (template: Template) => void;
@@ -109,6 +142,10 @@ export const useStudioStore = create<StudioState>((set) => ({
   compositionMode: false,
   layers: [],
   activeLayerIndex: 0,
+  sharedDrivers: { palette: ["#1a1a1a", "#e8b931", "#c4362c", "#2a5faa", "#f5f5f0"], seed: 42, tempo: 1.0 },
+  activeRecipe: null,
+  soloLayerId: null,
+  presoloVisibility: {},
 
   toggleCompositionMode: () =>
     set((state) => {
@@ -116,6 +153,7 @@ export const useStudioStore = create<StudioState>((set) => ({
         // Entering composition mode — create initial layer from current template
         const initialLayer = createLayer(
           state.template.id,
+          "base",  // default role for legacy behavior
           state.template.name,
           state.code,
           state.schema,
@@ -126,9 +164,9 @@ export const useStudioStore = create<StudioState>((set) => ({
       return { compositionMode: false };
     }),
 
-  addLayer: (templateId, name, code, schema, values) =>
+  addLayer: (templateId, role, name, code, schema, values) =>
     set((state) => ({
-      layers: [...state.layers, createLayer(templateId, name, code, schema, values)],
+      layers: [...state.layers, createLayer(templateId, role, name, code, schema, values)],
       activeLayerIndex: state.layers.length,
     })),
 
@@ -182,6 +220,111 @@ export const useStudioStore = create<StudioState>((set) => ({
       layers: state.layers.map((l) =>
         l.id === layerId ? { ...l, code } : l
       ),
+    })),
+
+  setSharedDrivers: (partial) =>
+    set((state) => ({
+      sharedDrivers: { ...state.sharedDrivers, ...partial },
+    })),
+
+  loadRecipe: (recipe) =>
+    set(() => {
+      // getBlock imported at top of file
+      const layers: Layer[] = recipe.blocks.map((rb) => {
+        const block = getBlock(rb.blockId);
+        if (!block) {
+          return createLayer(rb.blockId, rb.role, rb.blockId, "", null, {});
+        }
+        const values: ParamValues = {
+          ...getDefaultValues(block.schema),
+          ...(rb.paramOverrides as ParamValues || {}),
+        };
+        const layer = createLayer(block.id, rb.role, block.name, block.code, block.schema, values);
+        layer.opacity = rb.opacity;
+        layer.blendMode = rb.blendMode;
+        return layer;
+      });
+      return {
+        compositionMode: true,
+        layers,
+        activeLayerIndex: 0,
+        activeRecipe: recipe,
+        sharedDrivers: { ...recipe.drivers },
+        soloLayerId: null,
+        presoloVisibility: {},
+        status: "loading" as SandboxStatus,
+        error: null,
+      };
+    }),
+
+  swapBlock: (layerId, newBlockId) =>
+    set((state) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getBlock } = require("./blocks");
+      const block = getBlock(newBlockId);
+      if (!block) return state;
+
+      const layers = state.layers.map((layer) => {
+        if (layer.id !== layerId) return layer;
+        // Preserve compatible param values
+        const newDefaults = getDefaultValues(block.schema);
+        const mergedValues: ParamValues = { ...newDefaults };
+        if (layer.schema && block.schema) {
+          for (const key of Object.keys(block.schema)) {
+            if (key in layer.values && layer.schema[key]?.type === block.schema[key]?.type) {
+              mergedValues[key] = layer.values[key];
+            }
+          }
+        }
+        return {
+          ...layer,
+          templateId: block.id,
+          name: block.name,
+          code: block.code,
+          schema: block.schema,
+          values: mergedValues,
+          // Keep existing visibility, opacity, blendMode per plan
+        };
+      });
+      return { layers, status: "loading" as SandboxStatus };
+    }),
+
+  soloLayer: (layerId) =>
+    set((state) => {
+      if (state.soloLayerId === layerId) {
+        // Already soloed — unsolo
+        return {
+          soloLayerId: null,
+          layers: state.layers.map((l) => ({
+            ...l,
+            visible: state.presoloVisibility[l.id] ?? l.visible,
+          })),
+          presoloVisibility: {},
+        };
+      }
+      // Save current visibility state, then solo
+      const presoloVisibility: Record<string, boolean> = {};
+      state.layers.forEach((l) => {
+        presoloVisibility[l.id] = l.visible;
+      });
+      return {
+        soloLayerId: layerId,
+        presoloVisibility,
+        layers: state.layers.map((l) => ({
+          ...l,
+          visible: l.id === layerId,
+        })),
+      };
+    }),
+
+  unsoloAll: () =>
+    set((state) => ({
+      soloLayerId: null,
+      layers: state.layers.map((l) => ({
+        ...l,
+        visible: state.presoloVisibility[l.id] ?? l.visible,
+      })),
+      presoloVisibility: {},
     })),
 
   setTemplate: (template) => {

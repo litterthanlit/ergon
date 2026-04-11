@@ -3,7 +3,20 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "glsl-loader",
+      transform(code, id) {
+        if (/\.(glsl|vert|frag)$/.test(id)) {
+          return {
+            code: `export default ${JSON.stringify(code)};`,
+            map: null,
+          };
+        }
+      },
+    },
+  ],
   test: {
     environment: "happy-dom",
     globals: true,

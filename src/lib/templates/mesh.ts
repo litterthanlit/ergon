@@ -27,6 +27,7 @@ const params = ergon.params({
 });
 
 let nSeed = 0;
+let t = 0;
 
 function buildGrid() {
   const rows = floor(params.cols * (height / width));
@@ -38,8 +39,8 @@ function buildGrid() {
     for (let c = 0; c <= params.cols; c++) {
       const bx = c * cw;
       const by = r * ch;
-      const dx = noise(c * 0.3 + nSeed, r * 0.3) * 2 - 1;
-      const dy = noise(c * 0.3 + nSeed + 100, r * 0.3) * 2 - 1;
+      const dx = noise(c * 0.3 + nSeed, r * 0.3, t) * 2 - 1;
+      const dy = noise(c * 0.3 + nSeed + 100, r * 0.3, t) * 2 - 1;
       row.push({ x: bx + dx * params.displacement, y: by + dy * params.displacement });
     }
     pts.push(row);
@@ -49,10 +50,10 @@ function buildGrid() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop();
 }
 
 function draw() {
+  t += 0.005;
   const pal = palettes[params.palette] || palettes.Steel;
   background(pal.bg);
 

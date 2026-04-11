@@ -25,29 +25,33 @@ const params = ergon.params({
   palette:   { type: 'select', options: ['Mondrian', 'Pastel', 'Mono', 'Earth'], default: 'Mondrian', label: 'Palette' },
 });
 
-function setup() { createCanvas(windowWidth, windowHeight); noLoop(); }
+let t = 0;
+
+function setup() { createCanvas(windowWidth, windowHeight); }
 
 function subdivide(x, y, w, h, depth) {
   const colors = palettes[params.palette] || palettes.Mondrian;
   if (depth === 0 || w < 20 || h < 20) {
-    if (random() < params.colorFill) { fill(colors[floor(random(colors.length))]); }
+    const colorOffset = floor(t * 5) % colors.length;
+    if (random() < params.colorFill) { fill(colors[(floor(random(colors.length)) + colorOffset) % colors.length]); }
     else { fill(255); }
     noStroke();
     rect(x + params.gap / 2, y + params.gap / 2, w - params.gap, h - params.gap);
     return;
   }
+  const breathe = sin(t + depth * 0.5) * 0.05;
   if (random() < params.splitBias) {
-    const split = random(0.3, 0.7) * w;
+    const split = (random(0.3, 0.7) + breathe) * w;
     subdivide(x, y, split, h, depth - 1);
     subdivide(x + split, y, w - split, h, depth - 1);
   } else {
-    const split = random(0.3, 0.7) * h;
+    const split = (random(0.3, 0.7) + breathe) * h;
     subdivide(x, y, w, split, depth - 1);
     subdivide(x, y + split, w, h - split, depth - 1);
   }
 }
 
-function draw() { background(255); subdivide(0, 0, width, height, params.depth); }
+function draw() { t += 0.003; background(255); subdivide(0, 0, width, height, params.depth); }
 function windowResized() { resizeCanvas(windowWidth, windowHeight); redraw(); }
 function mousePressed() { noiseSeed(millis()); redraw(); }
 `;

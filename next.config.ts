@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    rules: {
+      "*.glsl": { type: "raw" },
+      "*.vert": { type: "raw" },
+      "*.frag": { type: "raw" },
+    },
+  },
 };
 
 export default nextConfig;

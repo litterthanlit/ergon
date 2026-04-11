@@ -28,16 +28,22 @@ const params = ergon.params({
 
 let seed = 42;
 
+let t = 0;
+
+const sharedPalette = (typeof ergon !== 'undefined' && ergon.palette) ? ergon.palette : null;
+const sharedTempo = (typeof ergon !== 'undefined' && ergon.tempo !== undefined) ? ergon.tempo : 1;
+
 function drawPetal(cx, cy, angle, r, colorIdx, colors) {
   const ctrl = r * params.curvature;
+  const sway = sin(t + angle) * 5;
   const x1 = cx + cos(angle - 0.5) * r;
   const y1 = cy + sin(angle - 0.5) * r;
   const x2 = cx + cos(angle + 0.5) * r;
   const y2 = cy + sin(angle + 0.5) * r;
-  const cpx = cx + cos(angle) * r * 1.6 + cos(angle + HALF_PI) * ctrl;
-  const cpy = cy + sin(angle) * r * 1.6 + sin(angle + HALF_PI) * ctrl;
-  const cpx2 = cx + cos(angle) * r * 1.6 - cos(angle + HALF_PI) * ctrl;
-  const cpy2 = cy + sin(angle) * r * 1.6 - sin(angle + HALF_PI) * ctrl;
+  const cpx = cx + cos(angle) * r * 1.6 + cos(angle + HALF_PI) * (ctrl + sway);
+  const cpy = cy + sin(angle) * r * 1.6 + sin(angle + HALF_PI) * (ctrl + sway);
+  const cpx2 = cx + cos(angle) * r * 1.6 - cos(angle + HALF_PI) * (ctrl + sway);
+  const cpy2 = cy + sin(angle) * r * 1.6 - sin(angle + HALF_PI) * (ctrl + sway);
 
   const c = colors[colorIdx % colors.length];
   if (params.style === 'Outline' || params.style === 'Lace') {
@@ -59,16 +65,21 @@ function drawPetal(cx, cy, angle, r, colorIdx, colors) {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  noLoop();
 }
 
 function draw() {
+  t += 0.005 * sharedTempo;
   randomSeed(seed);
   background(12);
-  const colors = palettes[params.palette] || palettes.Cherry;
+  const colors = (sharedPalette && sharedPalette.length >= 3) ? sharedPalette : (palettes[params.palette] || palettes.Cherry);
   const cx = width / 2;
   const cy = height / 2;
   const maxR = min(width, height) * 0.38;
+
+  push();
+  translate(cx, cy);
+  rotate(sin(t * 0.3) * 0.05);
+  translate(-cx, -cy);
 
   for (let layer = params.layers; layer >= 1; layer--) {
     const r = (maxR / params.layers) * layer;
@@ -83,10 +94,12 @@ function draw() {
   noStroke();
   fill(colors[0]);
   circle(cx, cy, maxR * 0.12);
+
+  pop();
 }
 
-function windowResized() { resizeCanvas(windowWidth, windowHeight); redraw(); }
-function mousePressed() { seed = millis(); redraw(); }
+function windowResized() { resizeCanvas(windowWidth, windowHeight); }
+function mousePressed() { seed = millis(); }
 `;
 
 export const bloom: Template = {

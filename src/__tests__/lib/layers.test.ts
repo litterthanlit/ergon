@@ -8,7 +8,7 @@ import {
 
 describe("layers", () => {
   it("createLayer returns a layer with defaults", () => {
-    const layer = createLayer("drift", "Drift", "const params = ergon.params({});");
+    const layer = createLayer("drift", "base", "Drift", "const params = ergon.params({});");
     expect(layer.id).toBeTruthy();
     expect(layer.templateId).toBe("drift");
     expect(layer.name).toBe("Drift");
@@ -19,8 +19,8 @@ describe("layers", () => {
   });
 
   it("createLayer generates unique ids", () => {
-    const a = createLayer("drift", "Drift", "code");
-    const b = createLayer("grid", "Grid", "code");
+    const a = createLayer("drift", "base", "Drift", "code");
+    const b = createLayer("grid", "shape", "Grid", "code");
     expect(a.id).not.toBe(b.id);
   });
 
