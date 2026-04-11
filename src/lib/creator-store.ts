@@ -13,37 +13,51 @@ export type Edge = {
   to: string;
 };
 
-export type RenderMode = "net" | "stars" | "stripes" | "flow" | "pulse" | "scatter";
+export type RenderMode = "fluid" | "nebula" | "crystal" | "mycelium" | "plasma" | "erosion" | "flow";
 
 export const RENDER_MODES: { id: RenderMode; label: string }[] = [
-  { id: "net", label: "Net" },
-  { id: "stars", label: "Stars" },
-  { id: "stripes", label: "Stripes" },
+  { id: "fluid", label: "Fluid" },
+  { id: "nebula", label: "Nebula" },
+  { id: "crystal", label: "Crystal" },
+  { id: "mycelium", label: "Mycelium" },
+  { id: "plasma", label: "Plasma" },
+  { id: "erosion", label: "Erosion" },
   { id: "flow", label: "Flow" },
-  { id: "pulse", label: "Pulse" },
-  { id: "scatter", label: "Scatter" },
 ];
 
+export type PostFX = {
+  bloom: boolean;
+  chromatic: boolean;
+  vignette: boolean;
+  dof: boolean;
+  grain: boolean;
+  toneMapping: boolean;
+  motionBlur: boolean;
+};
+
+export type ImagePlane = {
+  id: string;
+  url: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: number;
+};
+
 type CreatorState = {
-  // Grid
   gridCols: number;
   gridRows: number;
   points: GridPoint[];
   edges: Edge[];
   selectedPoint: string | null;
-
-  // Animation
   renderMode: RenderMode;
   breathe: number;
   pulseSpeed: number;
   extrudeDepth: number;
-
-  // Drivers
   palette: string[];
   tempo: number;
   seed: number;
-
-  // Actions
+  postFX: PostFX;
+  imagePlanes: ImagePlane[];
   initGrid: (cols: number, rows: number, width: number, height: number) => void;
   selectPoint: (id: string) => void;
   clearSelection: () => void;
@@ -57,6 +71,10 @@ type CreatorState = {
   setPalette: (colors: string[]) => void;
   setTempo: (v: number) => void;
   randomizeSeed: () => void;
+  togglePostFX: (effect: keyof PostFX) => void;
+  addImagePlane: (url: string, position: [number, number, number]) => void;
+  removeImagePlane: (id: string) => void;
+  updateImagePlane: (id: string, transform: Partial<Pick<ImagePlane, "position" | "rotation" | "scale">>) => void;
 };
 
 function hasEdge(edges: Edge[], from: string, to: string): boolean {
@@ -65,21 +83,31 @@ function hasEdge(edges: Edge[], from: string, to: string): boolean {
   );
 }
 
+let planeIdCounter = 0;
+
 export const useCreatorStore = create<CreatorState>((set) => ({
   gridCols: 16,
   gridRows: 10,
   points: [],
   edges: [],
   selectedPoint: null,
-
-  renderMode: "net" as RenderMode,
+  renderMode: "fluid" as RenderMode,
   breathe: 8,
   pulseSpeed: 1.0,
   extrudeDepth: 0,
-
   palette: ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
   tempo: 1.0,
   seed: Math.floor(Math.random() * 10000),
+  postFX: {
+    bloom: false,
+    chromatic: false,
+    vignette: false,
+    dof: false,
+    grain: false,
+    toneMapping: false,
+    motionBlur: false,
+  },
+  imagePlanes: [],
 
   initGrid: (cols, rows, width, height) => {
     const spacingX = width / (cols + 1);
@@ -101,22 +129,12 @@ export const useCreatorStore = create<CreatorState>((set) => ({
 
   selectPoint: (id) =>
     set((state) => {
-      if (!state.selectedPoint) {
-        return { selectedPoint: id };
-      }
-      if (state.selectedPoint === id) {
-        return { selectedPoint: null };
-      }
-      // Create edge
+      if (!state.selectedPoint) return { selectedPoint: id };
+      if (state.selectedPoint === id) return { selectedPoint: null };
       const from = state.selectedPoint;
       const to = id;
-      if (hasEdge(state.edges, from, to)) {
-        return { selectedPoint: id };
-      }
-      return {
-        edges: [...state.edges, { from, to }],
-        selectedPoint: id, // Keep selected so you can chain connections
-      };
+      if (hasEdge(state.edges, from, to)) return { selectedPoint: id };
+      return { edges: [...state.edges, { from, to }], selectedPoint: id };
     }),
 
   clearSelection: () => set({ selectedPoint: null }),
@@ -127,18 +145,43 @@ export const useCreatorStore = create<CreatorState>((set) => ({
       return { edges: [...state.edges, { from, to }] };
     }),
 
-  removeLastEdge: () =>
-    set((state) => ({
-      edges: state.edges.slice(0, -1),
-    })),
-
-  clearAll: () => set({ edges: [], selectedPoint: null }),
+  removeLastEdge: () => set((state) => ({ edges: state.edges.slice(0, -1) })),
+  clearAll: () => set({ edges: [], selectedPoint: null, imagePlanes: [] }),
   setRenderMode: (mode) => set({ renderMode: mode }),
-
   setBreathe: (v) => set({ breathe: v }),
   setPulseSpeed: (v) => set({ pulseSpeed: v }),
   setExtrudeDepth: (v) => set({ extrudeDepth: v }),
   setPalette: (colors) => set({ palette: colors }),
   setTempo: (v) => set({ tempo: v }),
   randomizeSeed: () => set({ seed: Math.floor(Math.random() * 10000) }),
+
+  togglePostFX: (effect) =>
+    set((state) => ({
+      postFX: { ...state.postFX, [effect]: !state.postFX[effect] },
+    })),
+
+  addImagePlane: (url, position) =>
+    set((state) => {
+      if (state.imagePlanes.length >= 10) return state;
+      const plane: ImagePlane = {
+        id: `plane-${++planeIdCounter}`,
+        url,
+        position,
+        rotation: [0, 0, 0],
+        scale: 1,
+      };
+      return { imagePlanes: [...state.imagePlanes, plane] };
+    }),
+
+  removeImagePlane: (id) =>
+    set((state) => ({
+      imagePlanes: state.imagePlanes.filter((p) => p.id !== id),
+    })),
+
+  updateImagePlane: (id, transform) =>
+    set((state) => ({
+      imagePlanes: state.imagePlanes.map((p) =>
+        p.id === id ? { ...p, ...transform } : p
+      ),
+    })),
 }));
