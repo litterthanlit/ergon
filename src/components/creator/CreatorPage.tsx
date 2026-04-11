@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { ThreeRenderer } from "./ThreeRenderer";
-import { useCreatorStore, RENDER_MODES, MESH_PRESETS, type RenderMode, type MeshPreset } from "@/lib/creator-store";
+import { useCreatorStore, RENDER_MODES, MESH_PRESETS, type RenderMode, type MeshPreset, type PostFX } from "@/lib/creator-store";
 
 const PALETTES = [
   ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
@@ -10,6 +10,16 @@ const PALETTES = [
   ["#c4a882", "#8b6f47", "#d4c4b0", "#3a2a1a", "#ffffff"],
   ["#ef4444", "#f97316", "#eab308", "#22c55e", "#ffffff"],
   ["#e0ddd5", "#8888aa", "#4a4a6a", "#1a1a2e", "#ffffff"],
+];
+
+const FX_ITEMS: { key: keyof PostFX; label: string }[] = [
+  { key: "bloom", label: "Bloom" },
+  { key: "chromatic", label: "Chromatic" },
+  { key: "vignette", label: "Vignette" },
+  { key: "dof", label: "Depth of Field" },
+  { key: "grain", label: "Film Grain" },
+  { key: "toneMapping", label: "Tone Map" },
+  { key: "motionBlur", label: "Motion Blur" },
 ];
 
 export function CreatorPage() {
@@ -30,7 +40,6 @@ export function CreatorPage() {
   const togglePostFX = useCreatorStore((s) => s.togglePostFX);
   const randomizeSeed = useCreatorStore((s) => s.randomizeSeed);
 
-  // Load default preset on mount — art appears immediately
   useEffect(() => {
     if (edges.length === 0) {
       setPreset("constellation");
@@ -38,105 +47,123 @@ export function CreatorPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="h-screen w-screen bg-[#09090b] flex flex-col overflow-hidden">
-      {/* Canvas area — full screen */}
+    <div className="h-screen w-screen bg-[#09090b] flex overflow-hidden">
+      {/* Canvas — takes all remaining space */}
       <div className="flex-1 relative">
         <ThreeRenderer />
       </div>
 
-      {/* Bottom controls — minimal floating bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-30">
-        <div className="flex items-center justify-center pb-6">
-          <div className="flex items-center gap-5 bg-[#111113]/90 backdrop-blur-md border border-[#27272a] rounded-xl px-5 py-3">
-            {/* Mesh preset selector */}
-            <div className="flex items-center gap-1">
+      {/* Right panel */}
+      <div className="w-[240px] shrink-0 h-full overflow-y-auto border-l border-[#27272a] bg-[#111113]/80 backdrop-blur-xl">
+        <div className="flex flex-col gap-6 p-5">
+
+          {/* FORM — mesh presets */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Form</h3>
+            <div className="flex flex-col gap-0.5">
               {MESH_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => setPreset(preset.id as MeshPreset)}
-                  className={`px-2 py-1 text-[10px] rounded-md transition-all cursor-pointer ${
+                  className={`text-left px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer ${
                     activePreset === preset.id
                       ? "bg-white/10 text-white font-medium"
-                      : "text-[#71717a] hover:text-white"
+                      : "text-[#a1a1aa] hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {preset.label}
                 </button>
               ))}
             </div>
+          </section>
 
-            <div className="w-px h-5 bg-[#27272a]" />
+          <div className="h-px bg-[#27272a]" />
 
-            {/* Render mode selector */}
-            <div className="flex items-center gap-1">
+          {/* MODE — shader modes */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Mode</h3>
+            <div className="flex flex-col gap-0.5">
               {RENDER_MODES.map((mode) => (
                 <button
                   key={mode.id}
                   onClick={() => setRenderMode(mode.id as RenderMode)}
-                  className={`px-2.5 py-1 text-[10px] rounded-md transition-all cursor-pointer ${
+                  className={`text-left px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer ${
                     renderMode === mode.id
                       ? "bg-white/10 text-white font-medium"
-                      : "text-[#71717a] hover:text-white"
+                      : "text-[#a1a1aa] hover:text-white hover:bg-white/5"
                   }`}
                 >
                   {mode.label}
                 </button>
               ))}
             </div>
+          </section>
 
-            <div className="w-px h-5 bg-[#27272a]" />
+          <div className="h-px bg-[#27272a]" />
 
-            {/* Breathe */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Breathe</span>
-              <input
-                type="range"
-                min={0}
-                max={30}
-                step={1}
-                value={breathe}
-                onChange={(e) => setBreathe(Number(e.target.value))}
-                className="w-20"
-              />
+          {/* PARAMETERS — sliders */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Parameters</h3>
+            <div className="flex flex-col gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] text-[#a1a1aa]">Breathe</span>
+                  <span className="text-[10px] text-[#71717a] tabular-nums">{breathe}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={30}
+                  step={1}
+                  value={breathe}
+                  onChange={(e) => setBreathe(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] text-[#a1a1aa]">Pulse</span>
+                  <span className="text-[10px] text-[#71717a] tabular-nums">{pulseSpeed.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={3}
+                  step={0.1}
+                  value={pulseSpeed}
+                  onChange={(e) => setPulseSpeed(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] text-[#a1a1aa]">Energy</span>
+                  <span className="text-[10px] text-[#71717a] tabular-nums">{tempo.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={3}
+                  step={0.1}
+                  value={tempo}
+                  onChange={(e) => setTempo(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
             </div>
+          </section>
 
-            {/* Pulse */}
+          <div className="h-px bg-[#27272a]" />
+
+          {/* PALETTE */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Palette</h3>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Pulse</span>
-              <input
-                type="range"
-                min={0}
-                max={3}
-                step={0.1}
-                value={pulseSpeed}
-                onChange={(e) => setPulseSpeed(Number(e.target.value))}
-                className="w-20"
-              />
-            </div>
-
-            {/* Tempo */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#71717a] uppercase tracking-wider">Energy</span>
-              <input
-                type="range"
-                min={0}
-                max={3}
-                step={0.1}
-                value={tempo}
-                onChange={(e) => setTempo(Number(e.target.value))}
-                className="w-20"
-              />
-            </div>
-
-            <div className="w-px h-5 bg-[#27272a]" />
-
-            {/* Palette swatches */}
-            <div className="flex items-center gap-1.5">
               {PALETTES.map((pal, i) => (
                 <button
                   key={i}
                   onClick={() => setPalette(pal)}
-                  className="w-4 h-4 rounded-full border border-white/10 transition-transform hover:scale-125 cursor-pointer"
+                  className="w-6 h-6 rounded-full border border-white/10 transition-transform hover:scale-110 cursor-pointer"
                   style={{
                     background: `linear-gradient(135deg, ${pal[0]}, ${pal[1]})`,
                     boxShadow: palette[0] === pal[0] ? `0 0 0 2px ${pal[0]}40` : undefined,
@@ -144,46 +171,45 @@ export function CreatorPage() {
                 />
               ))}
             </div>
+          </section>
 
-            <div className="w-px h-5 bg-[#27272a]" />
+          <div className="h-px bg-[#27272a]" />
 
-            {/* FX toggles */}
-            <div className="flex items-center gap-1">
-              {(
-                [
-                  ["bloom", "BLM"],
-                  ["chromatic", "CHR"],
-                  ["vignette", "VIG"],
-                  ["dof", "DOF"],
-                  ["grain", "GRN"],
-                  ["toneMapping", "TMP"],
-                  ["motionBlur", "MBL"],
-                ] as const
-              ).map(([key, label]) => (
+          {/* FX — post-processing toggles */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Effects</h3>
+            <div className="flex flex-col gap-0.5">
+              {FX_ITEMS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => togglePostFX(key)}
-                  className={`px-1.5 py-1 text-[10px] rounded transition-all cursor-pointer ${
+                  className={`flex items-center justify-between px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer ${
                     postFX[key]
-                      ? "text-white bg-white/10"
-                      : "text-[#71717a] hover:text-white"
+                      ? "bg-white/10 text-white"
+                      : "text-[#a1a1aa] hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <span className={`text-[10px] ${postFX[key] ? "text-[#00ffa3]" : "text-[#3f3f46]"}`}>
+                    {postFX[key] ? "ON" : "OFF"}
+                  </span>
                 </button>
               ))}
             </div>
+          </section>
 
-            <div className="w-px h-5 bg-[#27272a]" />
+          <div className="h-px bg-[#27272a]" />
 
-            {/* Actions */}
+          {/* ACTIONS */}
+          <section>
             <button
               onClick={randomizeSeed}
-              className="text-[10px] text-[#71717a] hover:text-white uppercase tracking-wider transition-colors cursor-pointer"
+              className="w-full px-3 py-2 text-[11px] text-[#a1a1aa] hover:text-white uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md hover:bg-white/5 text-center"
             >
               Shuffle
             </button>
-          </div>
+          </section>
+
         </div>
       </div>
     </div>
