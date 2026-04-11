@@ -9,6 +9,18 @@ import { useQuality } from "./AdaptiveQuality";
 import coreGlsl from "./shaders/core.glsl";
 import fluidVert from "./shaders/fluid.vert";
 import fluidFrag from "./shaders/fluid.frag";
+import nebulaVert from "./shaders/nebula.vert";
+import nebulaFrag from "./shaders/nebula.frag";
+import crystalVert from "./shaders/crystal.vert";
+import crystalFrag from "./shaders/crystal.frag";
+import myceliumVert from "./shaders/mycelium.vert";
+import myceliumFrag from "./shaders/mycelium.frag";
+import plasmaVert from "./shaders/plasma.vert";
+import plasmaFrag from "./shaders/plasma.frag";
+import erosionVert from "./shaders/erosion.vert";
+import erosionFrag from "./shaders/erosion.frag";
+import flowVert from "./shaders/flow.vert";
+import flowFrag from "./shaders/flow.frag";
 
 // ---------------------------------------------------------------------------
 // Shader builder — prepend shared core library to each mode shader
@@ -18,15 +30,14 @@ function buildShader(mode: string, core: string): string {
   return core + "\n" + mode;
 }
 
-// All modes use fluid shaders as placeholder until Tasks 10-15 replace them
 const SHADERS: Record<RenderMode, { vert: string; frag: string }> = {
   fluid:    { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  nebula:   { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  crystal:  { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  mycelium: { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  plasma:   { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  erosion:  { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  flow:     { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
+  nebula:   { vert: buildShader(nebulaVert, coreGlsl), frag: buildShader(nebulaFrag, coreGlsl) },
+  crystal:  { vert: buildShader(crystalVert, coreGlsl), frag: buildShader(crystalFrag, coreGlsl) },
+  mycelium: { vert: buildShader(myceliumVert, coreGlsl), frag: buildShader(myceliumFrag, coreGlsl) },
+  plasma:   { vert: buildShader(plasmaVert, coreGlsl), frag: buildShader(plasmaFrag, coreGlsl) },
+  erosion:  { vert: buildShader(erosionVert, coreGlsl), frag: buildShader(erosionFrag, coreGlsl) },
+  flow:     { vert: buildShader(flowVert, coreGlsl), frag: buildShader(flowFrag, coreGlsl) },
 };
 
 // ---------------------------------------------------------------------------
@@ -129,6 +140,39 @@ export function MeshGraph() {
   // Current shader pair
   const shaderPair = SHADERS[renderMode];
 
+  // Flow mode particle data
+  const flowParticles = useMemo(() => {
+    if (renderMode !== "flow" || edges.length === 0) return null;
+    const particlesPerEdge = Math.floor(2000 * _quality.particleMultiplier);
+    const totalParticles = edges.length * particlesPerEdge;
+    const positions = new Float32Array(totalParticles * 3);
+    const velocities = new Float32Array(totalParticles * 3);
+    const progress = new Float32Array(totalParticles);
+    let idx = 0;
+    for (const edge of edges) {
+      const from = pointMap.get(edge.from);
+      const to = pointMap.get(edge.to);
+      if (!from || !to) continue;
+      const [fx, fy] = toPosition(from.worldX, from.worldY);
+      const [tx, ty] = toPosition(to.worldX, to.worldY);
+      const dx = tx - fx;
+      const dy = ty - fy;
+      for (let p = 0; p < particlesPerEdge; p++) {
+        const t = p / particlesPerEdge;
+        const i3 = idx * 3;
+        positions[i3] = fx + dx * t + (Math.random() - 0.5) * 10;
+        positions[i3 + 1] = fy + dy * t + (Math.random() - 0.5) * 10;
+        positions[i3 + 2] = (Math.random() - 0.5) * 20;
+        velocities[i3] = dx * 0.01;
+        velocities[i3 + 1] = dy * 0.01;
+        velocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
+        progress[idx] = Math.random();
+        idx++;
+      }
+    }
+    return { positions: positions.slice(0, idx * 3), velocities: velocities.slice(0, idx * 3), progress: progress.slice(0, idx), count: idx };
+  }, [renderMode, edges, pointMap, toPosition, _quality.particleMultiplier]);
+
   // Edge line geometry — flat Float32Array of pairs
   const edgePositions = useMemo(() => {
     const arr: number[] = [];
@@ -143,12 +187,47 @@ export function MeshGraph() {
     return new Float32Array(arr);
   }, [edges, pointMap, toPosition]);
 
+  // Flow mode renders particles instead of spheres
+  if (renderMode === "flow" && flowParticles) {
+    return (
+      <group>
+        <points>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" args={[flowParticles.positions, 3]} />
+            <bufferAttribute attach="attributes-aVelocity" args={[flowParticles.velocities, 3]} />
+            <bufferAttribute attach="attributes-aProgress" args={[flowParticles.progress, 1]} />
+          </bufferGeometry>
+          <shaderMaterial
+            vertexShader={shaderPair.vert}
+            fragmentShader={shaderPair.frag}
+            uniforms={uniforms.current}
+            transparent
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </points>
+        {edgePositions.length > 0 && (
+          <lineSegments>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" args={[edgePositions, 3]} />
+            </bufferGeometry>
+            <lineBasicMaterial color="#ffffff" transparent opacity={0.08} depthWrite={false} blending={THREE.AdditiveBlending} />
+          </lineSegments>
+        )}
+      </group>
+    );
+  }
+
   return (
     <group>
-      {/* Shader spheres at connected vertices */}
+      {/* Shader geometry at connected vertices */}
       {connectedPositions.map(({ id, position }) => (
         <mesh key={id} position={position}>
-          <sphereGeometry args={[8, 32, 32]} />
+          {renderMode === "crystal" ? (
+            <icosahedronGeometry args={[10, 1]} />
+          ) : (
+            <sphereGeometry args={[8, 32, 32]} />
+          )}
           <shaderMaterial
             vertexShader={shaderPair.vert}
             fragmentShader={shaderPair.frag}
@@ -160,22 +239,13 @@ export function MeshGraph() {
         </mesh>
       ))}
 
-      {/* Edge lines between connected vertices */}
+      {/* Edge lines */}
       {edgePositions.length > 0 && (
         <lineSegments>
           <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              args={[edgePositions, 3]}
-            />
+            <bufferAttribute attach="attributes-position" args={[edgePositions, 3]} />
           </bufferGeometry>
-          <lineBasicMaterial
-            color="#ffffff"
-            transparent
-            opacity={0.15}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
+          <lineBasicMaterial color="#ffffff" transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
         </lineSegments>
       )}
     </group>
