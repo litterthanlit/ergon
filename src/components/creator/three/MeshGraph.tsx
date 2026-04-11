@@ -1,59 +1,135 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { useCreatorStore, type RenderMode } from "@/lib/creator-store";
+import { useCreatorStore } from "@/lib/creator-store";
 import { useQuality } from "./AdaptiveQuality";
 
-import coreGlsl from "./shaders/core.glsl";
-import fluidVert from "./shaders/fluid.vert";
-import fluidFrag from "./shaders/fluid.frag";
-import nebulaVert from "./shaders/nebula.vert";
-import nebulaFrag from "./shaders/nebula.frag";
-import crystalVert from "./shaders/crystal.vert";
-import crystalFrag from "./shaders/crystal.frag";
-import myceliumVert from "./shaders/mycelium.vert";
-import myceliumFrag from "./shaders/mycelium.frag";
-import plasmaVert from "./shaders/plasma.vert";
-import plasmaFrag from "./shaders/plasma.frag";
-import erosionVert from "./shaders/erosion.vert";
-import erosionFrag from "./shaders/erosion.frag";
-import flowVert from "./shaders/flow.vert";
-import flowFrag from "./shaders/flow.frag";
-
 // ---------------------------------------------------------------------------
-// Shader builder — prepend shared core library to each mode shader
+// Deterministic pseudo-random from seed
 // ---------------------------------------------------------------------------
 
-function buildShader(mode: string, core: string): string {
-  return core + "\n" + mode;
+function seeded(seed: number, i: number): number {
+  const x = Math.sin(seed * 12.9898 + i * 78.233) * 43758.5453;
+  return x - Math.floor(x);
 }
 
-const SHADERS: Record<RenderMode, { vert: string; frag: string }> = {
-  fluid:    { vert: buildShader(fluidVert, coreGlsl), frag: buildShader(fluidFrag, coreGlsl) },
-  nebula:   { vert: buildShader(nebulaVert, coreGlsl), frag: buildShader(nebulaFrag, coreGlsl) },
-  crystal:  { vert: buildShader(crystalVert, coreGlsl), frag: buildShader(crystalFrag, coreGlsl) },
-  mycelium: { vert: buildShader(myceliumVert, coreGlsl), frag: buildShader(myceliumFrag, coreGlsl) },
-  plasma:   { vert: buildShader(plasmaVert, coreGlsl), frag: buildShader(plasmaFrag, coreGlsl) },
-  erosion:  { vert: buildShader(erosionVert, coreGlsl), frag: buildShader(erosionFrag, coreGlsl) },
-  flow:     { vert: buildShader(flowVert, coreGlsl), frag: buildShader(flowFrag, coreGlsl) },
+// Power-law distribution: mostly small, occasional large
+function powerRadius(rand: number, min: number, max: number, power: number): number {
+  return min + (max - min) * Math.pow(rand, power);
+}
+
+// ---------------------------------------------------------------------------
+// Generate sphere instances: positions, scales, colors for InstancedMesh
+// ---------------------------------------------------------------------------
+
+type SphereData = {
+  matrices: THREE.Matrix4[];
+  colors: THREE.Color[];
+  count: number;
 };
 
-// ---------------------------------------------------------------------------
-// Hex colour → THREE.Vector3 (sRGB)
-// ---------------------------------------------------------------------------
+function generateSpheres(
+  vertexPositions: [number, number, number][],
+  edgePositions: { from: [number, number, number]; to: [number, number, number] }[],
+  palette: string[],
+  seed: number,
+  spheresPerVertex: number,
+  spheresPerEdge: number,
+): SphereData {
+  const matrices: THREE.Matrix4[] = [];
+  const colors: THREE.Color[] = [];
+  const tmpMatrix = new THREE.Matrix4();
+  const tmpPos = new THREE.Vector3();
+  const tmpQuat = new THREE.Quaternion();
+  const tmpScale = new THREE.Vector3();
 
-function hexToVec3(hex: string): THREE.Vector3 {
-  const c = new THREE.Color(hex);
-  return new THREE.Vector3(c.r, c.g, c.b);
+  let idx = 0;
+
+  // Spheres clustered at vertices
+  for (let v = 0; v < vertexPositions.length; v++) {
+    const [vx, vy, vz] = vertexPositions[v];
+
+    for (let s = 0; s < spheresPerVertex; s++) {
+      const r0 = seeded(seed, idx * 7 + 0);
+      const r1 = seeded(seed, idx * 7 + 1);
+      const r2 = seeded(seed, idx * 7 + 2);
+      const r3 = seeded(seed, idx * 7 + 3);
+      const r4 = seeded(seed, idx * 7 + 4);
+
+      // Scatter around vertex — gaussian-ish via Box-Muller approximation
+      const spread = 25 + seeded(seed, v * 100) * 20;
+      const ox = (r0 - 0.5) * spread * 2;
+      const oy = (r1 - 0.5) * spread * 2;
+      const oz = (r2 - 0.5) * spread * 1.5;
+
+      // Power-law size: exponent 2.5 means mostly small
+      const radius = powerRadius(r3, 0.8, 12, 2.5);
+
+      // A few hero spheres (top 5%)
+      const heroRadius = r4 > 0.95 ? powerRadius(r4, 15, 30, 1.0) : radius;
+
+      tmpPos.set(vx + ox, vy + oy, vz + oz);
+      tmpQuat.identity();
+      tmpScale.set(heroRadius, heroRadius, heroRadius);
+      tmpMatrix.compose(tmpPos, tmpQuat, tmpScale);
+      matrices.push(tmpMatrix.clone());
+
+      // Color from palette with slight variation
+      const colorIdx = Math.floor(r0 * palette.length) % palette.length;
+      const col = new THREE.Color(palette[colorIdx]);
+      // Slight brightness variation
+      col.multiplyScalar(0.7 + r1 * 0.6);
+      colors.push(col);
+
+      idx++;
+    }
+  }
+
+  // Spheres scattered along edges
+  for (let e = 0; e < edgePositions.length; e++) {
+    const { from, to } = edgePositions[e];
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const dz = to[2] - from[2];
+
+    for (let s = 0; s < spheresPerEdge; s++) {
+      const t = seeded(seed, idx * 7 + 0);
+      const r1 = seeded(seed, idx * 7 + 1);
+      const r2 = seeded(seed, idx * 7 + 2);
+      const r3 = seeded(seed, idx * 7 + 3);
+
+      const x = from[0] + dx * t + (r1 - 0.5) * 15;
+      const y = from[1] + dy * t + (r2 - 0.5) * 15;
+      const z = from[2] + dz * t + (seeded(seed, idx * 7 + 4) - 0.5) * 10;
+
+      const radius = powerRadius(r3, 0.5, 5, 2.0);
+
+      tmpPos.set(x, y, z);
+      tmpQuat.identity();
+      tmpScale.set(radius, radius, radius);
+      tmpMatrix.compose(tmpPos, tmpQuat, tmpScale);
+      matrices.push(tmpMatrix.clone());
+
+      const colorIdx = Math.floor(seeded(seed, idx * 3) * palette.length) % palette.length;
+      colors.push(new THREE.Color(palette[colorIdx]).multiplyScalar(0.6 + r1 * 0.5));
+
+      idx++;
+    }
+  }
+
+  return { matrices, colors, count: matrices.length };
 }
 
 // ---------------------------------------------------------------------------
-// MeshGraph — renders connected vertices as shader spheres + edge lines
+// MeshGraph — dense sphere clusters with PBR materials
 // ---------------------------------------------------------------------------
 
 export function MeshGraph() {
+  const instanceRef = useRef<THREE.InstancedMesh>(null);
+
   const points = useCreatorStore((s) => s.points);
   const edges = useCreatorStore((s) => s.edges);
   const renderMode = useCreatorStore((s) => s.renderMode);
@@ -64,33 +140,16 @@ export function MeshGraph() {
   const seed = useCreatorStore((s) => s.seed);
 
   const { viewport } = useThree();
-  const _quality = useQuality();
+  const quality = useQuality();
 
-  // Collect IDs of connected vertices (only vertices with at least one edge)
-  const connectedIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const e of edges) {
-      ids.add(e.from);
-      ids.add(e.to);
-    }
-    return ids;
-  }, [edges]);
-
-  // Map point ID → point for quick lookup
   const pointMap = useMemo(() => {
     const map = new Map<string, (typeof points)[number]>();
     for (const p of points) map.set(p.id, p);
     return map;
   }, [points]);
 
-  // Convert screen-space worldX/worldY to 3D positions
   const toPosition = useMemo(() => {
-    const w = viewport.width > 0 ? viewport.width : 1;
-    const h = viewport.height > 0 ? viewport.height : 1;
-    // Use a fixed mapping scale so objects spread across the view
     return (worldX: number, worldY: number): [number, number, number] => {
-      // viewport.width/height give the frustum size in world units at z=0
-      // worldX/worldY are pixel coords from the grid init
       const winW = typeof window !== "undefined" ? window.innerWidth : 1;
       const winH = typeof window !== "undefined" ? window.innerHeight : 1;
       const x = (worldX / winW - 0.5) * 500;
@@ -99,153 +158,226 @@ export function MeshGraph() {
     };
   }, [viewport.width, viewport.height]);
 
-  // Connected vertex positions
-  const connectedPositions = useMemo(() => {
-    const result: { id: string; position: [number, number, number] }[] = [];
+  // Collect connected vertex positions
+  const vertexPositions = useMemo(() => {
+    const connectedIds = new Set<string>();
+    for (const e of edges) {
+      connectedIds.add(e.from);
+      connectedIds.add(e.to);
+    }
+    const positions: [number, number, number][] = [];
     connectedIds.forEach((id) => {
       const pt = pointMap.get(id);
-      if (pt) result.push({ id: pt.id, position: toPosition(pt.worldX, pt.worldY) });
+      if (pt) positions.push(toPosition(pt.worldX, pt.worldY));
     });
-    return result;
-  }, [connectedIds, pointMap, toPosition]);
-
-  // Palette as Vector3 array
-  const paletteVec3 = useMemo(
-    () => palette.slice(0, 5).map(hexToVec3),
-    [palette],
-  );
-
-  // Shared shader uniforms (one set, shared by ref across all sphere materials)
-  const uniforms = useRef({
-    uTime: { value: 0 },
-    uBreathe: { value: breathe },
-    uPulseSpeed: { value: pulseSpeed },
-    uTempo: { value: tempo },
-    uSeed: { value: seed },
-    uPalette: { value: paletteVec3 },
-  });
-
-  // Keep uniforms in sync with store values each render
-  uniforms.current.uBreathe.value = breathe;
-  uniforms.current.uPulseSpeed.value = pulseSpeed;
-  uniforms.current.uTempo.value = tempo;
-  uniforms.current.uSeed.value = seed;
-  uniforms.current.uPalette.value = paletteVec3;
-
-  // Advance time
-  useFrame(() => {
-    uniforms.current.uTime.value += 0.016 * tempo;
-  });
-
-  // Current shader pair
-  const shaderPair = SHADERS[renderMode];
-
-  // Flow mode particle data
-  const flowParticles = useMemo(() => {
-    if (renderMode !== "flow" || edges.length === 0) return null;
-    const particlesPerEdge = Math.floor(2000 * _quality.particleMultiplier);
-    const totalParticles = edges.length * particlesPerEdge;
-    const positions = new Float32Array(totalParticles * 3);
-    const velocities = new Float32Array(totalParticles * 3);
-    const progress = new Float32Array(totalParticles);
-    let idx = 0;
-    for (const edge of edges) {
-      const from = pointMap.get(edge.from);
-      const to = pointMap.get(edge.to);
-      if (!from || !to) continue;
-      const [fx, fy] = toPosition(from.worldX, from.worldY);
-      const [tx, ty] = toPosition(to.worldX, to.worldY);
-      const dx = tx - fx;
-      const dy = ty - fy;
-      for (let p = 0; p < particlesPerEdge; p++) {
-        const t = p / particlesPerEdge;
-        const i3 = idx * 3;
-        positions[i3] = fx + dx * t + (Math.random() - 0.5) * 10;
-        positions[i3 + 1] = fy + dy * t + (Math.random() - 0.5) * 10;
-        positions[i3 + 2] = (Math.random() - 0.5) * 20;
-        velocities[i3] = dx * 0.01;
-        velocities[i3 + 1] = dy * 0.01;
-        velocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
-        progress[idx] = Math.random();
-        idx++;
-      }
-    }
-    return { positions: positions.slice(0, idx * 3), velocities: velocities.slice(0, idx * 3), progress: progress.slice(0, idx), count: idx };
-  }, [renderMode, edges, pointMap, toPosition, _quality.particleMultiplier]);
-
-  // Edge line geometry — flat Float32Array of pairs
-  const edgePositions = useMemo(() => {
-    const arr: number[] = [];
-    for (const e of edges) {
-      const fromPt = pointMap.get(e.from);
-      const toPt = pointMap.get(e.to);
-      if (!fromPt || !toPt) continue;
-      const [fx, fy, fz] = toPosition(fromPt.worldX, fromPt.worldY);
-      const [tx, ty, tz] = toPosition(toPt.worldX, toPt.worldY);
-      arr.push(fx, fy, fz, tx, ty, tz);
-    }
-    return new Float32Array(arr);
+    return positions;
   }, [edges, pointMap, toPosition]);
 
-  // Flow mode renders particles instead of spheres
-  if (renderMode === "flow" && flowParticles) {
-    return (
-      <group>
-        <points>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[flowParticles.positions, 3]} />
-            <bufferAttribute attach="attributes-aVelocity" args={[flowParticles.velocities, 3]} />
-            <bufferAttribute attach="attributes-aProgress" args={[flowParticles.progress, 1]} />
-          </bufferGeometry>
-          <shaderMaterial
-            vertexShader={shaderPair.vert}
-            fragmentShader={shaderPair.frag}
-            uniforms={uniforms.current}
-            transparent
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </points>
-        {edgePositions.length > 0 && (
-          <lineSegments>
-            <bufferGeometry>
-              <bufferAttribute attach="attributes-position" args={[edgePositions, 3]} />
-            </bufferGeometry>
-            <lineBasicMaterial color="#ffffff" transparent opacity={0.08} depthWrite={false} blending={THREE.AdditiveBlending} />
-          </lineSegments>
-        )}
-      </group>
-    );
-  }
+  // Edge pairs as 3D positions
+  const edgePairs = useMemo(() => {
+    return edges.map((e) => {
+      const from = pointMap.get(e.from);
+      const to = pointMap.get(e.to);
+      if (!from || !to) return null;
+      return {
+        from: toPosition(from.worldX, from.worldY),
+        to: toPosition(to.worldX, to.worldY),
+      };
+    }).filter(Boolean) as { from: [number, number, number]; to: [number, number, number] }[];
+  }, [edges, pointMap, toPosition]);
+
+  // Edge line geometry for thin white connections
+  const edgeLineArray = useMemo(() => {
+    const arr: number[] = [];
+    for (const ep of edgePairs) {
+      arr.push(ep.from[0], ep.from[1], ep.from[2], ep.to[0], ep.to[1], ep.to[2]);
+    }
+    return new Float32Array(arr);
+  }, [edgePairs]);
+
+  // Sphere counts scale with quality
+  const spheresPerVertex = Math.floor(40 * quality.particleMultiplier);
+  const spheresPerEdge = Math.floor(12 * quality.particleMultiplier);
+
+  // Generate all sphere data
+  const sphereData = useMemo(() => {
+    if (vertexPositions.length === 0) return null;
+    return generateSpheres(vertexPositions, edgePairs, palette, seed, spheresPerVertex, spheresPerEdge);
+  }, [vertexPositions, edgePairs, palette, seed, spheresPerVertex, spheresPerEdge]);
+
+  // Apply instance matrices and colors
+  useEffect(() => {
+    if (!instanceRef.current || !sphereData) return;
+    const mesh = instanceRef.current;
+    for (let i = 0; i < sphereData.count; i++) {
+      mesh.setMatrixAt(i, sphereData.matrices[i]);
+      mesh.setColorAt(i, sphereData.colors[i]);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.count = sphereData.count;
+  }, [sphereData]);
+
+  // Breathing animation — gently pulse all spheres
+  const baseMatrices = useRef<THREE.Matrix4[]>([]);
+  useEffect(() => {
+    if (sphereData) {
+      baseMatrices.current = sphereData.matrices.map((m) => m.clone());
+    }
+  }, [sphereData]);
+
+  const timeRef = useRef(0);
+  useFrame((_state, delta) => {
+    if (!instanceRef.current || !sphereData || baseMatrices.current.length === 0) return;
+    timeRef.current += delta * tempo;
+    const t = timeRef.current;
+    const mesh = instanceRef.current;
+    const tmpPos = new THREE.Vector3();
+    const tmpQuat = new THREE.Quaternion();
+    const tmpScale = new THREE.Vector3();
+
+    for (let i = 0; i < sphereData.count; i++) {
+      baseMatrices.current[i].decompose(tmpPos, tmpQuat, tmpScale);
+
+      // Breathing: scale pulsation
+      const phase = seeded(seed, i * 13) * Math.PI * 2;
+      const breatheFactor = 1.0 + Math.sin(t * pulseSpeed + phase) * breathe * 0.01;
+
+      // Subtle position drift
+      const drift = Math.sin(t * 0.5 + i * 0.1) * breathe * 0.15;
+      tmpPos.y += drift;
+
+      tmpScale.multiplyScalar(breatheFactor);
+      mesh.setMatrixAt(i, new THREE.Matrix4().compose(tmpPos, tmpQuat, tmpScale));
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  });
+
+  // Material varies by render mode
+  const material = useMemo(() => {
+    const base: THREE.MeshPhysicalMaterialParameters = {
+      roughness: 0.15,
+      metalness: 0.3,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1,
+      envMapIntensity: 1.5,
+      transparent: true,
+      opacity: 0.92,
+    };
+
+    switch (renderMode) {
+      case "fluid":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.05,
+          metalness: 0.1,
+          transmission: 0.3,
+          thickness: 2.0,
+          ior: 1.5,
+          color: new THREE.Color(palette[1]),
+          emissive: new THREE.Color(palette[0]),
+          emissiveIntensity: 0.15,
+        });
+      case "nebula":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.4,
+          metalness: 0.0,
+          emissive: new THREE.Color(palette[0]),
+          emissiveIntensity: 0.5,
+          transparent: true,
+          opacity: 0.7,
+          color: new THREE.Color(palette[1]),
+        });
+      case "crystal":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.0,
+          metalness: 0.0,
+          transmission: 0.9,
+          thickness: 3.0,
+          ior: 2.4,
+          clearcoat: 1.0,
+          iridescence: 1.0,
+          iridescenceIOR: 1.3,
+          color: new THREE.Color("#ffffff"),
+        });
+      case "mycelium":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.6,
+          metalness: 0.0,
+          emissive: new THREE.Color(palette[0]),
+          emissiveIntensity: 0.8,
+          color: new THREE.Color(palette[0]),
+          transparent: true,
+          opacity: 0.85,
+        });
+      case "plasma":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.1,
+          metalness: 0.8,
+          emissive: new THREE.Color(palette[1]),
+          emissiveIntensity: 1.0,
+          color: new THREE.Color(palette[2]),
+        });
+      case "erosion":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.8,
+          metalness: 0.2,
+          clearcoat: 0.3,
+          color: new THREE.Color(palette[0]),
+          emissive: new THREE.Color(palette[1]),
+          emissiveIntensity: 0.1,
+          opacity: 0.95,
+        });
+      case "flow":
+        return new THREE.MeshPhysicalMaterial({
+          ...base,
+          roughness: 0.05,
+          metalness: 0.5,
+          emissive: new THREE.Color(palette[0]),
+          emissiveIntensity: 0.4,
+          color: new THREE.Color(palette[1]),
+        });
+      default:
+        return new THREE.MeshPhysicalMaterial(base);
+    }
+  }, [renderMode, palette]);
+
+  const maxInstances = spheresPerVertex * 50 + spheresPerEdge * 50; // generous buffer
+
+  if (vertexPositions.length === 0) return null;
 
   return (
     <group>
-      {/* Shader geometry at connected vertices */}
-      {connectedPositions.map(({ id, position }) => (
-        <mesh key={id} position={position}>
-          {renderMode === "crystal" ? (
-            <icosahedronGeometry args={[20, 1]} />
-          ) : (
-            <sphereGeometry args={[18, 32, 32]} />
-          )}
-          <shaderMaterial
-            vertexShader={shaderPair.vert}
-            fragmentShader={shaderPair.frag}
-            uniforms={uniforms.current}
-            transparent
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-      ))}
+      {/* Environment for reflections */}
+      <Environment preset="night" />
 
-      {/* Edge lines */}
-      {edgePositions.length > 0 && (
+      {/* Additional lights for specular highlights */}
+      <pointLight position={[100, 100, 200]} intensity={200} color="#ffffff" />
+      <pointLight position={[-150, -80, 150]} intensity={150} color={palette[1]} />
+      <pointLight position={[0, 150, -100]} intensity={100} color={palette[0]} />
+
+      {/* Instanced sphere cluster */}
+      <instancedMesh
+        ref={instanceRef}
+        args={[undefined, undefined, maxInstances]}
+        frustumCulled={false}
+      >
+        <sphereGeometry args={[1, 24, 24]} />
+        <primitive object={material} attach="material" />
+      </instancedMesh>
+
+      {/* Thin white edge lines */}
+      {edgeLineArray.length > 0 && (
         <lineSegments>
           <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[edgePositions, 3]} />
+            <bufferAttribute attach="attributes-position" args={[edgeLineArray, 3]} />
           </bufferGeometry>
-          <lineBasicMaterial color="#ffffff" transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
+          <lineBasicMaterial color="#ffffff" transparent opacity={0.12} depthWrite={false} />
         </lineSegments>
       )}
     </group>
