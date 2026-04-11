@@ -23,11 +23,11 @@ export function ThreeRenderer() {
     >
       <AdaptiveQuality>
         <CameraRig />
-        <ambientLight intensity={0.15} />
-        <directionalLight position={[0, 0, 500]} intensity={0.5} />
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[0, 0, 500]} intensity={1.0} />
         <MeshGraph />
         <ParticleField />
-        <ImagePlanes />
+        {/* <ImagePlanes /> — disabled until core shaders are tuned */}
         <PostStack />
       </AdaptiveQuality>
     </Canvas>

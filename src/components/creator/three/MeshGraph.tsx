@@ -224,9 +224,9 @@ export function MeshGraph() {
       {connectedPositions.map(({ id, position }) => (
         <mesh key={id} position={position}>
           {renderMode === "crystal" ? (
-            <icosahedronGeometry args={[10, 1]} />
+            <icosahedronGeometry args={[20, 1]} />
           ) : (
-            <sphereGeometry args={[8, 32, 32]} />
+            <sphereGeometry args={[18, 32, 32]} />
           )}
           <shaderMaterial
             vertexShader={shaderPair.vert}
