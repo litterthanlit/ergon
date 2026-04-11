@@ -6,6 +6,7 @@ import { MeshGraph } from "./three/MeshGraph";
 import { ParticleField } from "./three/ParticleField";
 import { PostStack } from "./three/PostStack";
 import { AdaptiveQuality } from "./three/AdaptiveQuality";
+import { ImagePlanes } from "./three/ImagePlanes";
 
 export function ThreeRenderer() {
   return (
@@ -26,6 +27,7 @@ export function ThreeRenderer() {
         <directionalLight position={[0, 0, 500]} intensity={0.5} />
         <MeshGraph />
         <ParticleField />
+        <ImagePlanes />
         <PostStack />
       </AdaptiveQuality>
     </Canvas>
