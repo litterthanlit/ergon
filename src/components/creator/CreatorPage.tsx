@@ -1,8 +1,8 @@
 "use client";
 
-import { DotGrid } from "./DotGrid";
+import { useEffect } from "react";
 import { ThreeRenderer } from "./ThreeRenderer";
-import { useCreatorStore, RENDER_MODES, type RenderMode } from "@/lib/creator-store";
+import { useCreatorStore, RENDER_MODES, MESH_PRESETS, type RenderMode, type MeshPreset } from "@/lib/creator-store";
 
 const PALETTES = [
   ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
@@ -16,6 +16,8 @@ export function CreatorPage() {
   const edges = useCreatorStore((s) => s.edges);
   const renderMode = useCreatorStore((s) => s.renderMode);
   const setRenderMode = useCreatorStore((s) => s.setRenderMode);
+  const activePreset = useCreatorStore((s) => s.activePreset);
+  const setPreset = useCreatorStore((s) => s.setPreset);
   const breathe = useCreatorStore((s) => s.breathe);
   const pulseSpeed = useCreatorStore((s) => s.pulseSpeed);
   const tempo = useCreatorStore((s) => s.tempo);
@@ -26,31 +28,45 @@ export function CreatorPage() {
   const setPalette = useCreatorStore((s) => s.setPalette);
   const postFX = useCreatorStore((s) => s.postFX);
   const togglePostFX = useCreatorStore((s) => s.togglePostFX);
-  const clearAll = useCreatorStore((s) => s.clearAll);
-  const removeLastEdge = useCreatorStore((s) => s.removeLastEdge);
   const randomizeSeed = useCreatorStore((s) => s.randomizeSeed);
+
+  // Load default preset on mount — art appears immediately
+  useEffect(() => {
+    if (edges.length === 0) {
+      setPreset("constellation");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="h-screen w-screen bg-[#09090b] flex flex-col overflow-hidden">
       {/* Canvas area — full screen */}
       <div className="flex-1 relative">
         <ThreeRenderer />
-        <DotGrid />
-
-        {/* Hint — only when no edges */}
-        {edges.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <p className="text-sm text-white/20 tracking-wide">
-              Click dots to connect them
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Bottom controls — minimal floating bar */}
       <div className="absolute bottom-0 left-0 right-0 z-30">
         <div className="flex items-center justify-center pb-6">
           <div className="flex items-center gap-5 bg-[#111113]/90 backdrop-blur-md border border-[#27272a] rounded-xl px-5 py-3">
+            {/* Mesh preset selector */}
+            <div className="flex items-center gap-1">
+              {MESH_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => setPreset(preset.id as MeshPreset)}
+                  className={`px-2 py-1 text-[10px] rounded-md transition-all cursor-pointer ${
+                    activePreset === preset.id
+                      ? "bg-white/10 text-white font-medium"
+                      : "text-[#71717a] hover:text-white"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-[#27272a]" />
+
             {/* Render mode selector */}
             <div className="flex items-center gap-1">
               {RENDER_MODES.map((mode) => (
@@ -166,20 +182,6 @@ export function CreatorPage() {
               className="text-[10px] text-[#71717a] hover:text-white uppercase tracking-wider transition-colors cursor-pointer"
             >
               Shuffle
-            </button>
-            <button
-              onClick={removeLastEdge}
-              disabled={edges.length === 0}
-              className="text-[10px] text-[#71717a] hover:text-white uppercase tracking-wider transition-colors disabled:opacity-20 cursor-pointer"
-            >
-              Undo
-            </button>
-            <button
-              onClick={clearAll}
-              disabled={edges.length === 0}
-              className="text-[10px] text-[#71717a] hover:text-[#ef4444] uppercase tracking-wider transition-colors disabled:opacity-20 cursor-pointer"
-            >
-              Clear
             </button>
           </div>
         </div>
