@@ -4,7 +4,6 @@ import { useCreatorStore } from "@/lib/creator-store";
 describe("creator-store 3D extensions", () => {
   beforeEach(() => {
     useCreatorStore.setState({
-      renderMode: "fluid",
       postFX: {
         bloom: false,
         chromatic: false,
@@ -18,12 +17,16 @@ describe("creator-store 3D extensions", () => {
     });
   });
 
-  it("has 7 render modes in RENDER_MODES", async () => {
-    const { RENDER_MODES } = await import("@/lib/creator-store");
-    expect(RENDER_MODES).toHaveLength(7);
-    expect(RENDER_MODES.map((m) => m.id)).toEqual([
-      "fluid", "nebula", "crystal", "mycelium", "plasma", "erosion", "flow",
-    ]);
+  it("has all 9 layer keys in the layers state", () => {
+    const layers = useCreatorStore.getState().layers;
+    const keys = Object.keys(layers);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "spheres", "tendrils", "dust", "splatter",
+        "nebula", "flow", "wireframe", "halos", "lightRays",
+      ])
+    );
+    expect(keys).toHaveLength(9);
   });
 
   it("defaults all postFX to false", () => {
