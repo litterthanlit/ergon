@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ThreeRenderer } from "./ThreeRenderer";
 import { useCreatorStore, MESH_PRESETS, type MeshPreset, type PostFX, type Layers } from "@/lib/creator-store";
+import { SequencerPanel } from "./SequencerPanel";
 
 const PALETTES = [
   ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
@@ -283,10 +284,7 @@ export function CreatorPage() {
               className="bg-[#0d0d0f] border-t border-[#27272a] shrink-0 overflow-hidden"
               style={{ height: bottomHeight }}
             >
-              {/* Sequencer panel placeholder — implemented in Task 9 */}
-              <div className="flex items-center justify-center h-full text-[10px] text-[#3f3f46] uppercase tracking-widest">
-                Scene Sequencer
-              </div>
+              <SequencerPanel />
             </div>
           </>
         )}
