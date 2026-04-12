@@ -5,6 +5,61 @@ import { ThreeRenderer } from "./ThreeRenderer";
 import { useCreatorStore, MESH_PRESETS, type MeshPreset, type PostFX, type Layers } from "@/lib/creator-store";
 import { SequencerPanel } from "./SequencerPanel";
 
+// Save/load utilities
+function generateSceneId(): string {
+  return `scene-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+type SavedScene = {
+  id: string;
+  name: string;
+  timestamp: number;
+  palette: string[];
+  state: string; // JSON stringified
+};
+
+function saveScene(name: string): string {
+  const state = useCreatorStore.getState();
+  const id = generateSceneId();
+  const saved: SavedScene = {
+    id,
+    name,
+    timestamp: Date.now(),
+    palette: state.palette,
+    state: JSON.stringify({
+      nodes: state.nodes,
+      edges: state.edges,
+      layers: state.layers,
+      modulations: state.modulations,
+      breathe: state.breathe,
+      pulseSpeed: state.pulseSpeed,
+      tempo: state.tempo,
+      seed: state.seed,
+      palette: state.palette,
+      postFX: state.postFX,
+      snapshots: state.snapshots,
+      connections: state.connections,
+    }),
+  };
+  const existing = JSON.parse(localStorage.getItem("ergon-scenes") ?? "[]") as SavedScene[];
+  existing.push(saved);
+  localStorage.setItem("ergon-scenes", JSON.stringify(existing));
+  return id;
+}
+
+function loadScene(id: string): boolean {
+  const existing = JSON.parse(localStorage.getItem("ergon-scenes") ?? "[]") as SavedScene[];
+  const scene = existing.find((s) => s.id === id);
+  if (!scene) return false;
+  const parsed = JSON.parse(scene.state);
+  useCreatorStore.setState(parsed);
+  return true;
+}
+
+function listScenes(): SavedScene[] {
+  return JSON.parse(localStorage.getItem("ergon-scenes") ?? "[]") as SavedScene[];
+}
+
 const PALETTES = [
   ["#00ffa3", "#0088ff", "#cc44ff", "#ffffff", "#ff2d6b"],
   ["#ff006e", "#3a86ff", "#ffbe0b", "#8338ec", "#ffffff"],
@@ -210,6 +265,10 @@ export function CreatorPage() {
   const resizing = useRef(false);
   const showSequencer = snapshots.length >= 2;
 
+  // Save/load
+  const [showLoadPicker, setShowLoadPicker] = useState(false);
+  const [savedScenes, setSavedScenes] = useState<SavedScene[]>([]);
+
   useEffect(() => {
     if (showSequencer && bottomHeight === 0) {
       setBottomHeight(140);
@@ -243,7 +302,7 @@ export function CreatorPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard bindings for undo/redo
+  // Keyboard bindings for undo/redo/save/load
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd+Z for undo (macOS)
@@ -255,6 +314,18 @@ export function CreatorPage() {
       if (e.metaKey && e.shiftKey && e.key === "Z") {
         e.preventDefault();
         redo();
+      }
+      // Cmd+S for save
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        const name = prompt("Scene name:", `Scene ${Date.now()}`);
+        if (name) saveScene(name);
+      }
+      // Cmd+O for load
+      if ((e.metaKey || e.ctrlKey) && e.key === "o") {
+        e.preventDefault();
+        setSavedScenes(listScenes());
+        setShowLoadPicker(true);
       }
     };
 
@@ -419,6 +490,53 @@ export function CreatorPage() {
 
         </div>
       </div>
+
+      {/* Load picker modal */}
+      {showLoadPicker && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowLoadPicker(false)}
+        >
+          <div
+            className="bg-[#18181b] border border-[#27272a] rounded-lg p-6 max-w-md max-h-96 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-[14px] font-medium text-white mb-4">Load Scene</h2>
+            {savedScenes.length === 0 ? (
+              <p className="text-[12px] text-[#71717a]">No saved scenes yet.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {savedScenes.map((scene) => (
+                  <button
+                    key={scene.id}
+                    onClick={() => {
+                      loadScene(scene.id);
+                      setShowLoadPicker(false);
+                    }}
+                    className="flex items-center gap-3 w-full p-3 rounded-md bg-[#27272a]/50 hover:bg-[#27272a] transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex gap-1.5">
+                      {scene.palette.slice(0, 5).map((color, i) => (
+                        <div
+                          key={i}
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-white truncate">{scene.name}</p>
+                      <p className="text-[10px] text-[#71717a]">
+                        {new Date(scene.timestamp).toLocaleDateString()} {new Date(scene.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
