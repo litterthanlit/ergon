@@ -195,6 +195,15 @@ export function CreatorPage() {
   const takeSnapshot = useCreatorStore((s) => s.takeSnapshot);
   const snapshots = useCreatorStore((s) => s.snapshots);
 
+  // Undo/redo via zundo
+  const undo = useCallback(() => {
+    useCreatorStore.temporal.getState().undo();
+  }, []);
+
+  const redo = useCallback(() => {
+    useCreatorStore.temporal.getState().redo();
+  }, []);
+
   // Bottom panel resize
   const [bottomHeight, setBottomHeight] = useState(0);
   const resizing = useRef(false);
@@ -232,6 +241,25 @@ export function CreatorPage() {
       setPreset("constellation");
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keyboard bindings for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+Z for undo (macOS)
+      if (e.metaKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Cmd+Shift+Z for redo (macOS)
+      if (e.metaKey && e.shiftKey && e.key === "Z") {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
 
   return (
     <div className="h-screen w-screen bg-[#09090b] flex overflow-hidden">
