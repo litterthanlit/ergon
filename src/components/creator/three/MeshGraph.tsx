@@ -4,9 +4,9 @@ import { Environment } from "@react-three/drei";
 import { useCreatorStore } from "@/lib/creator-store";
 import { SphereCluster } from "./layers/SphereCluster";
 import { TendrilSystem } from "./layers/TendrilSystem";
+import { DustCloud } from "./layers/DustCloud";
 
 // Stubs for layers not yet implemented
-function DustCloud() { return null; }
 function SplatterParticles() { return null; }
 function NebulaCloud() { return null; }
 function FlowParticles() { return null; }
