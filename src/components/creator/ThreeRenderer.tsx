@@ -6,6 +6,7 @@ import { MeshGraph } from "./three/MeshGraph";
 import { ParticleField } from "./three/ParticleField";
 import { PostStack } from "./three/PostStack";
 import { AdaptiveQuality } from "./three/AdaptiveQuality";
+import { SceneInteraction } from "./three/SceneInteraction";
 
 export function ThreeRenderer() {
   return (
@@ -25,6 +26,7 @@ export function ThreeRenderer() {
         <CameraRig />
         <ambientLight intensity={0.3} />
         <MeshGraph />
+        <SceneInteraction />
         <ParticleField />
         <PostStack />
       </AdaptiveQuality>
