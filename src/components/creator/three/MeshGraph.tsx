@@ -5,14 +5,12 @@ import { useCreatorStore } from "@/lib/creator-store";
 import { SphereCluster } from "./layers/SphereCluster";
 import { TendrilSystem } from "./layers/TendrilSystem";
 import { DustCloud } from "./layers/DustCloud";
-
-// Stubs for layers not yet implemented
-function SplatterParticles() { return null; }
-function NebulaCloud() { return null; }
-function FlowParticles() { return null; }
-function WireframeEdges() { return null; }
-function HaloRings() { return null; }
-function LightRaysLayer() { return null; }
+import { SplatterParticles } from "./layers/SplatterParticles";
+import { NebulaCloud } from "./layers/NebulaCloud";
+import { FlowParticles } from "./layers/FlowParticles";
+import { WireframeEdges } from "./layers/WireframeEdges";
+import { HaloRings } from "./layers/HaloRings";
+import { LightRays as LightRaysLayer } from "./layers/LightRays";
 
 export function MeshGraph() {
   const layers = useCreatorStore((s) => s.layers);
