@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useCreatorStore } from "@/lib/creator-store";
+import { playbackClickRef } from "./PlaybackEngine";
 
 const GROUND_PLANE = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
@@ -51,6 +52,9 @@ export function SceneInteraction() {
     }
 
     function onPointerDown(e: PointerEvent) {
+      const isPlaying = useCreatorStore.getState().isPlaying;
+      if (isPlaying) return;
+
       if (e.altKey) return; // Alt reserved for orbit camera
 
       const ndc = getPointerNDC(e.clientX, e.clientY);
@@ -98,6 +102,15 @@ export function SceneInteraction() {
     }
 
     function onPointerUp(e: PointerEvent) {
+      const isPlaying = useCreatorStore.getState().isPlaying;
+      if (isPlaying) {
+        // Forward click to playback engine for click triggers
+        playbackClickRef.fired = true;
+        dragging.current = null;
+        pointerDownPos.current = null;
+        return;
+      }
+
       const wasClick =
         pointerDownPos.current !== null &&
         Math.abs(e.clientX - pointerDownPos.current.x) < 5 &&

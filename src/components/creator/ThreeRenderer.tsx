@@ -8,6 +8,7 @@ import { PostStack } from "./three/PostStack";
 import { AdaptiveQuality } from "./three/AdaptiveQuality";
 import { SceneInteraction } from "./three/SceneInteraction";
 import { ModulationEngine } from "./three/ModulationEngine";
+import { PlaybackEngine } from "./three/PlaybackEngine";
 
 export function ThreeRenderer() {
   return (
@@ -27,6 +28,7 @@ export function ThreeRenderer() {
         <CameraRig />
         <ambientLight intensity={0.3} />
         <ModulationEngine />
+        <PlaybackEngine />
         <MeshGraph />
         <SceneInteraction />
         <ParticleField />
