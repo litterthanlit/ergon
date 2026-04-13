@@ -14,6 +14,42 @@
   --color-ergon-subtle: #a1a1aa;
 }
 
+:root {
+  --bg-app: #09090b;
+  --bg-panel: #111113;
+  --bg-card: #18181b;
+  --bg-hover: rgba(255,255,255,0.05);
+  --bg-active: rgba(255,255,255,0.1);
+  --border: #27272a;
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+  --accent: #a78bfa;
+  --success: #00ffa3;
+  --off: #3f3f46;
+  --viewport-bg: #09090b;
+  --panel-blur: rgba(17,17,19,0.8);
+}
+
+.theme-light {
+  --bg-app: #fafafa;
+  --bg-panel: #ffffff;
+  --bg-card: #f4f4f5;
+  --bg-hover: rgba(0,0,0,0.04);
+  --bg-active: rgba(0,0,0,0.08);
+  --border: #e4e4e7;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --text-dim: #d4d4d8;
+  --accent: #7c3aed;
+  --success: #059669;
+  --off: #d4d4d8;
+  --viewport-bg: #f0f0f2;
+  --panel-blur: rgba(255,255,255,0.8);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -24,8 +60,8 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background: #09090b;
-  color: #fafafa;
+  background: var(--bg-app);
+  color: var(--text-primary);
 }
 
 /* Scrollbar — thin, dark */

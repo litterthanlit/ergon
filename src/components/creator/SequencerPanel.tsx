@@ -24,7 +24,10 @@ function TriggerBadge({ trigger }: { trigger: Trigger }) {
         : `${trigger.param}`;
 
   return (
-    <span className="px-1.5 py-0.5 bg-[#18181b] border border-[#3f3f46] rounded text-[7px] text-[#71717a]">
+    <span
+      className="px-1.5 py-0.5 rounded text-[7px] border"
+      style={{ background: "var(--bg-card)", borderColor: "var(--off)", color: "var(--text-muted)" }}
+    >
       {label}
     </span>
   );
@@ -61,12 +64,18 @@ export function SequencerPanel() {
   return (
     <div className="flex h-full">
       {/* Transport column */}
-      <div className="w-[60px] border-r border-[#27272a] flex flex-col items-center justify-center gap-2 shrink-0">
-        <span className="text-[9px] text-[#52525b] uppercase tracking-wider">Scenes</span>
+      <div
+        className="w-[60px] border-r flex flex-col items-center justify-center gap-2 shrink-0"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <span className="text-[9px] uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>Scenes</span>
         <button
           onClick={() => setPlaying(!isPlaying)}
-          className="w-7 h-7 rounded-full border border-[#3f3f46] flex items-center justify-center text-[12px] cursor-pointer hover:border-[#00ffa3] transition-colors"
-          style={{ color: isPlaying ? "#00ffa3" : "#71717a" }}
+          className="w-7 h-7 rounded-full border flex items-center justify-center text-[12px] cursor-pointer transition-colors"
+          style={{
+            borderColor: isPlaying ? "var(--success)" : "var(--off)",
+            color: isPlaying ? "var(--success)" : "var(--text-muted)",
+          }}
         >
           {isPlaying ? "\u23F8" : "\u25B6"}
         </button>
@@ -83,11 +92,11 @@ export function SequencerPanel() {
               <div key={snap.id} className="flex items-center gap-3">
                 {/* Scene node card */}
                 <div
-                  className={`w-[100px] rounded-lg overflow-hidden cursor-pointer transition-all border ${
-                    isActive
-                      ? "border-[#a78bfa] bg-[#18181b]"
-                      : "border-[#27272a] bg-[#18181b] hover:border-[#3f3f46]"
-                  }`}
+                  className="w-[100px] rounded-lg overflow-hidden cursor-pointer transition-all border"
+                  style={{
+                    borderColor: isActive ? "var(--accent)" : "var(--border)",
+                    background: "var(--bg-card)",
+                  }}
                   onClick={() => handleNodeClick(snap.id)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -98,16 +107,23 @@ export function SequencerPanel() {
                 >
                   {/* Thumbnail */}
                   <div
-                    className="h-[60px] w-full bg-cover bg-center bg-[#0d0d0f]"
-                    style={snap.thumbnail ? { backgroundImage: `url(${snap.thumbnail})` } : undefined}
+                    className="h-[60px] w-full bg-cover bg-center"
+                    style={
+                      snap.thumbnail
+                        ? { backgroundImage: `url(${snap.thumbnail})` }
+                        : { background: "var(--bg-app)" }
+                    }
                   />
 
                   {/* Info section */}
                   <div className="p-1.5">
-                    <div className={`text-[8px] mb-0.5 ${isActive ? "text-[#a78bfa]" : "text-[#52525b]"}`}>
+                    <div
+                      className="text-[8px] mb-0.5"
+                      style={{ color: isActive ? "var(--accent)" : "var(--text-dim)" }}
+                    >
                       SCENE {i + 1}
                     </div>
-                    <div className="text-[9px] text-[#e4e4e7] truncate">{snap.name}</div>
+                    <div className="text-[9px] truncate" style={{ color: "var(--text-primary)" }}>{snap.name}</div>
 
                     {/* Palette strip */}
                     <div className="flex gap-0.5 mt-1 mb-1">
@@ -125,7 +141,8 @@ export function SequencerPanel() {
                         e.stopPropagation();
                         setDraggingFrom(snap.id);
                       }}
-                      className="text-[7px] text-[#3f3f46] hover:text-[#71717a] cursor-pointer"
+                      className="text-[7px] cursor-pointer"
+                      style={{ color: "var(--off)" }}
                     >
                       {draggingFrom === snap.id ? "click target..." : "connect \u2192"}
                     </button>
@@ -142,10 +159,10 @@ export function SequencerPanel() {
                         onClick={() => removeConnection(conn.id)}
                         title="Click to remove"
                       >
-                        <div className="w-6 border-t border-dashed border-[#3f3f46]" />
+                        <div className="w-6 border-t border-dashed" style={{ borderColor: "var(--off)" }} />
                         <TriggerBadge trigger={conn.trigger} />
-                        <div className="w-3 border-t border-dashed border-[#3f3f46]" />
-                        <span className="text-[8px] text-[#3f3f46]">&rarr;</span>
+                        <div className="w-3 border-t border-dashed" style={{ borderColor: "var(--off)" }} />
+                        <span className="text-[8px]" style={{ color: "var(--off)" }}>&rarr;</span>
                       </div>
                     ))}
                   </div>
@@ -157,7 +174,8 @@ export function SequencerPanel() {
           {/* Add scene button */}
           <button
             onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`, captureCanvasThumbnail())}
-            className="w-[100px] h-[60px] rounded-lg border border-dashed border-[#27272a] flex items-center justify-center text-[#3f3f46] text-lg hover:border-[#3f3f46] hover:text-[#52525b] cursor-pointer transition-colors shrink-0"
+            className="w-[100px] h-[60px] rounded-lg border border-dashed flex items-center justify-center text-lg cursor-pointer transition-colors shrink-0"
+            style={{ borderColor: "var(--border)", color: "var(--off)" }}
           >
             +
           </button>

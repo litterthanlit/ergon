@@ -166,32 +166,35 @@ function LayerRow({ def }: { def: LayerMeta }) {
     return (
       <div className="flex items-center justify-between px-2 py-1.5 opacity-40">
         <div className="flex items-center gap-1.5">
-          <span className="text-[8px] text-[#52525b]">&#9654;</span>
-          <span className="text-[10px] text-[#52525b]">{def.label}</span>
+          <span className="text-[8px]" style={{ color: "var(--text-dim)" }}>&#9654;</span>
+          <span className="text-[10px]" style={{ color: "var(--text-dim)" }}>{def.label}</span>
         </div>
-        <span className="text-[8px] text-[#3f3f46]">SOON</span>
+        <span className="text-[8px]" style={{ color: "var(--off)" }}>SOON</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#18181b] rounded-md mb-1 overflow-hidden">
+    <div className="rounded-md mb-1 overflow-hidden" style={{ background: "var(--bg-card)" }}>
       <div
         className="flex items-center justify-between px-2 py-1.5 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-[8px] text-[#52525b]">{expanded ? "\u25BC" : "\u25B6"}</span>
-          <span className={`text-[10px] ${layer.enabled ? "text-[#e4e4e7]" : "text-[#52525b]"}`}>
+          <span className="text-[8px]" style={{ color: "var(--text-dim)" }}>{expanded ? "\u25BC" : "\u25B6"}</span>
+          <span
+            className="text-[10px]"
+            style={{ color: layer.enabled ? "var(--text-primary)" : "var(--text-dim)" }}
+          >
             {def.label}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {layer.enabled && (
-            <div className="w-[50px] h-[3px] bg-[#27272a] rounded-full overflow-hidden">
+            <div className="w-[50px] h-[3px] rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
               <div
-                className="h-full bg-[#a78bfa] rounded-full"
-                style={{ width: `${layer.intensity * 100}%` }}
+                className="h-full rounded-full"
+                style={{ width: `${layer.intensity * 100}%`, background: "var(--accent)" }}
               />
             </div>
           )}
@@ -200,7 +203,8 @@ function LayerRow({ def }: { def: LayerMeta }) {
               e.stopPropagation();
               setLayerEnabled(def.key, !layer.enabled);
             }}
-            className={`text-[9px] cursor-pointer ${layer.enabled ? "text-[#00ffa3]" : "text-[#3f3f46]"}`}
+            className="text-[9px] cursor-pointer"
+            style={{ color: layer.enabled ? "var(--success)" : "var(--off)" }}
           >
             {layer.enabled ? "ON" : "OFF"}
           </button>
@@ -212,8 +216,8 @@ function LayerRow({ def }: { def: LayerMeta }) {
           {/* Intensity slider */}
           <div className="col-span-2">
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[8px] text-[#52525b]">Intensity</span>
-              <span className="text-[8px] text-[#52525b] tabular-nums">{(layer.intensity * 100).toFixed(0)}%</span>
+              <span className="text-[8px]" style={{ color: "var(--text-dim)" }}>Intensity</span>
+              <span className="text-[8px] tabular-nums" style={{ color: "var(--text-dim)" }}>{(layer.intensity * 100).toFixed(0)}%</span>
             </div>
             <input
               type="range"
@@ -229,7 +233,7 @@ function LayerRow({ def }: { def: LayerMeta }) {
           {def.params.map((p) => (
             <div key={p.key}>
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[8px] text-[#52525b]">{p.label}</span>
+                <span className="text-[8px]" style={{ color: "var(--text-dim)" }}>{p.label}</span>
               </div>
               <input
                 type="range"
@@ -266,6 +270,8 @@ export function CreatorPage() {
   const randomizeSeed = useCreatorStore((s) => s.randomizeSeed);
   const takeSnapshot = useCreatorStore((s) => s.takeSnapshot);
   const snapshots = useCreatorStore((s) => s.snapshots);
+  const theme = useCreatorStore((s) => s.theme);
+  const setTheme = useCreatorStore((s) => s.setTheme);
 
   // Undo/redo via zundo
   const undo = useCallback(() => {
@@ -318,7 +324,7 @@ export function CreatorPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard bindings for undo/redo/save/load
+  // Keyboard bindings for undo/redo/save/load/theme
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd+Z for undo (macOS)
@@ -343,14 +349,22 @@ export function CreatorPage() {
         setSavedScenes(listScenes());
         setShowLoadPicker(true);
       }
+      // Cmd+Shift+L for theme toggle
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "L") {
+        e.preventDefault();
+        setTheme(theme === "dark" ? "light" : "dark");
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, theme, setTheme]);
 
   return (
-    <div className="h-screen w-screen bg-[#09090b] flex overflow-hidden">
+    <div
+      className={`h-screen w-screen flex overflow-hidden${theme === "light" ? " theme-light" : ""}`}
+      style={{ background: "var(--bg-app)" }}
+    >
       {/* Left: viewport + bottom sequencer */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Viewport */}
@@ -362,14 +376,15 @@ export function CreatorPage() {
         {showSequencer && (
           <>
             <div
-              className="h-1 bg-[#27272a] cursor-row-resize flex items-center justify-center shrink-0"
+              className="h-1 cursor-row-resize flex items-center justify-center shrink-0"
+              style={{ background: "var(--border)" }}
               onPointerDown={onResizeStart}
             >
-              <div className="w-8 h-0.5 bg-[#3f3f46] rounded-full" />
+              <div className="w-8 h-0.5 rounded-full" style={{ background: "var(--off)" }} />
             </div>
             <div
-              className="bg-[#0d0d0f] border-t border-[#27272a] shrink-0 overflow-hidden"
-              style={{ height: bottomHeight }}
+              className="border-t shrink-0 overflow-hidden"
+              style={{ height: bottomHeight, background: "var(--bg-app)", borderColor: "var(--border)" }}
             >
               <SequencerPanel />
             </div>
@@ -378,12 +393,30 @@ export function CreatorPage() {
       </div>
 
       {/* Right panel */}
-      <div className="w-[240px] shrink-0 h-full overflow-y-auto border-l border-[#27272a] bg-[#111113]/80 backdrop-blur-xl">
+      <div
+        className="w-[240px] shrink-0 h-full overflow-y-auto border-l backdrop-blur-xl"
+        style={{ borderColor: "var(--border)", background: "var(--panel-blur)" }}
+      >
         <div className="flex flex-col gap-6 p-5">
+
+          {/* THEME TOGGLE */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-[0.15em]" style={{ color: "var(--text-muted)" }}>
+              {theme === "light" ? "Light" : "Dark"}
+            </span>
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-7 h-7 rounded-md flex items-center justify-center transition-colors cursor-pointer"
+              style={{ background: "var(--bg-card)", color: "var(--text-secondary)" }}
+              title="Toggle theme (Cmd+Shift+L)"
+            >
+              {theme === "light" ? "☀" : "☾"}
+            </button>
+          </div>
 
           {/* SCENE PRESETS */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Scene Presets</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Scene Presets</h3>
             <div className="flex flex-wrap gap-1">
               {SCENE_PRESETS.map((preset) => (
                 <button
@@ -392,7 +425,8 @@ export function CreatorPage() {
                     const thumb = captureCanvasThumbnail();
                     applyScenePreset(preset.id as ScenePresetId, thumb);
                   }}
-                  className="px-2.5 py-1 text-[11px] text-[#a1a1aa] hover:text-white rounded-md transition-all cursor-pointer hover:bg-white/5 border border-transparent hover:border-[#3f3f46]"
+                  className="px-2.5 py-1 text-[11px] rounded-md transition-all cursor-pointer border border-transparent"
+                  style={{ color: "var(--text-secondary)" }}
                 >
                   {preset.label}
                 </button>
@@ -400,21 +434,22 @@ export function CreatorPage() {
             </div>
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* FORM — mesh presets */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Form</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Form</h3>
             <div className="flex flex-col gap-0.5">
               {MESH_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => setPreset(preset.id as MeshPreset)}
-                  className={`text-left px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer ${
-                    activePreset === preset.id
-                      ? "bg-white/10 text-white font-medium"
-                      : "text-[#a1a1aa] hover:text-white hover:bg-white/5"
-                  }`}
+                  className="text-left px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer"
+                  style={{
+                    background: activePreset === preset.id ? "var(--bg-active)" : undefined,
+                    color: activePreset === preset.id ? "var(--text-primary)" : "var(--text-secondary)",
+                    fontWeight: activePreset === preset.id ? 500 : undefined,
+                  }}
                 >
                   {preset.label}
                 </button>
@@ -422,51 +457,51 @@ export function CreatorPage() {
             </div>
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* LAYERS — collapsible per-layer controls */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Layers</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Layers</h3>
             {LAYER_DEFS.map((def) => (
               <LayerRow key={def.key} def={def} />
             ))}
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* PARAMETERS — global sliders */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Parameters</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Parameters</h3>
             <div className="flex flex-col gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-[#a1a1aa]">Breathe</span>
-                  <span className="text-[10px] text-[#71717a] tabular-nums">{breathe}</span>
+                  <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>Breathe</span>
+                  <span className="text-[10px] tabular-nums" style={{ color: "var(--text-muted)" }}>{breathe}</span>
                 </div>
                 <input type="range" min={0} max={30} step={1} value={breathe} onChange={(e) => setBreathe(Number(e.target.value))} className="w-full" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-[#a1a1aa]">Pulse</span>
-                  <span className="text-[10px] text-[#71717a] tabular-nums">{pulseSpeed.toFixed(1)}</span>
+                  <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>Pulse</span>
+                  <span className="text-[10px] tabular-nums" style={{ color: "var(--text-muted)" }}>{pulseSpeed.toFixed(1)}</span>
                 </div>
                 <input type="range" min={0} max={3} step={0.1} value={pulseSpeed} onChange={(e) => setPulseSpeed(Number(e.target.value))} className="w-full" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-[#a1a1aa]">Energy</span>
-                  <span className="text-[10px] text-[#71717a] tabular-nums">{tempo.toFixed(1)}</span>
+                  <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>Energy</span>
+                  <span className="text-[10px] tabular-nums" style={{ color: "var(--text-muted)" }}>{tempo.toFixed(1)}</span>
                 </div>
                 <input type="range" min={0} max={3} step={0.1} value={tempo} onChange={(e) => setTempo(Number(e.target.value))} className="w-full" />
               </div>
             </div>
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* PALETTE */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Palette</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Palette</h3>
             <div className="flex items-center gap-2">
               {PALETTES.map((pal, i) => (
                 <button
@@ -482,24 +517,27 @@ export function CreatorPage() {
             </div>
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* EFFECTS */}
           <section>
-            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Effects</h3>
+            <h3 className="text-[10px] uppercase tracking-[0.15em] mb-3" style={{ color: "var(--text-muted)" }}>Effects</h3>
             <div className="flex flex-col gap-0.5">
               {FX_ITEMS.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => togglePostFX(key)}
-                  className={`flex items-center justify-between px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer ${
-                    postFX[key]
-                      ? "bg-white/10 text-white"
-                      : "text-[#a1a1aa] hover:text-white hover:bg-white/5"
-                  }`}
+                  className="flex items-center justify-between px-3 py-1.5 text-[12px] rounded-md transition-all cursor-pointer"
+                  style={{
+                    background: postFX[key] ? "var(--bg-active)" : undefined,
+                    color: postFX[key] ? "var(--text-primary)" : "var(--text-secondary)",
+                  }}
                 >
                   <span>{label}</span>
-                  <span className={`text-[10px] ${postFX[key] ? "text-[#00ffa3]" : "text-[#3f3f46]"}`}>
+                  <span
+                    className="text-[10px]"
+                    style={{ color: postFX[key] ? "var(--success)" : "var(--off)" }}
+                  >
                     {postFX[key] ? "ON" : "OFF"}
                   </span>
                 </button>
@@ -507,19 +545,21 @@ export function CreatorPage() {
             </div>
           </section>
 
-          <div className="h-px bg-[#27272a]" />
+          <div className="h-px" style={{ background: "var(--border)" }} />
 
           {/* ACTIONS */}
           <section className="flex gap-2">
             <button
               onClick={randomizeSeed}
-              className="flex-1 px-3 py-2 text-[11px] text-[#a1a1aa] hover:text-white uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md hover:bg-white/5 text-center"
+              className="flex-1 px-3 py-2 text-[11px] uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md text-center"
+              style={{ color: "var(--text-secondary)" }}
             >
               Shuffle
             </button>
             <button
               onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`, captureCanvasThumbnail())}
-              className="flex-1 px-3 py-2 text-[11px] text-[#a1a1aa] hover:text-white uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md hover:bg-white/5 text-center"
+              className="flex-1 px-3 py-2 text-[11px] uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md text-center"
+              style={{ color: "var(--text-secondary)" }}
             >
               Snapshot
             </button>
@@ -535,12 +575,13 @@ export function CreatorPage() {
           onClick={() => setShowLoadPicker(false)}
         >
           <div
-            className="bg-[#18181b] border border-[#27272a] rounded-lg p-6 max-w-md max-h-96 overflow-y-auto"
+            className="rounded-lg p-6 max-w-md max-h-96 overflow-y-auto border"
+            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-[14px] font-medium text-white mb-4">Load Scene</h2>
+            <h2 className="text-[14px] font-medium mb-4" style={{ color: "var(--text-primary)" }}>Load Scene</h2>
             {savedScenes.length === 0 ? (
-              <p className="text-[12px] text-[#71717a]">No saved scenes yet.</p>
+              <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>No saved scenes yet.</p>
             ) : (
               <div className="flex flex-col gap-2">
                 {savedScenes.map((scene) => (
@@ -550,7 +591,8 @@ export function CreatorPage() {
                       loadScene(scene.id);
                       setShowLoadPicker(false);
                     }}
-                    className="flex items-center gap-3 w-full p-3 rounded-md bg-[#27272a]/50 hover:bg-[#27272a] transition-colors text-left cursor-pointer"
+                    className="flex items-center gap-3 w-full p-3 rounded-md transition-colors text-left cursor-pointer"
+                    style={{ background: "var(--bg-hover)" }}
                   >
                     {scene.thumbnail ? (
                       <div
@@ -558,7 +600,10 @@ export function CreatorPage() {
                         style={{ backgroundImage: `url(${scene.thumbnail})` }}
                       />
                     ) : (
-                      <div className="w-[60px] h-[36px] rounded bg-[#18181b] shrink-0 flex items-center justify-center">
+                      <div
+                        className="w-[60px] h-[36px] rounded shrink-0 flex items-center justify-center"
+                        style={{ background: "var(--bg-card)" }}
+                      >
                         <div className="flex gap-0.5">
                           {scene.palette.slice(0, 5).map((color, i) => (
                             <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
@@ -567,8 +612,8 @@ export function CreatorPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-white truncate">{scene.name}</p>
-                      <p className="text-[10px] text-[#71717a]">
+                      <p className="text-[12px] truncate" style={{ color: "var(--text-primary)" }}>{scene.name}</p>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
                         {new Date(scene.timestamp).toLocaleDateString()} {new Date(scene.timestamp).toLocaleTimeString()}
                       </p>
                       <div className="flex gap-1 mt-1">
