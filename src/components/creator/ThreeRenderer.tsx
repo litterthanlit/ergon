@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { useCreatorStore } from "@/lib/creator-store";
 import { CameraRig } from "./three/CameraRig";
 import { MeshGraph } from "./three/MeshGraph";
 import { ParticleField } from "./three/ParticleField";
@@ -11,10 +12,12 @@ import { ModulationEngine } from "./three/ModulationEngine";
 import { PlaybackEngine } from "./three/PlaybackEngine";
 
 export function ThreeRenderer() {
+  const theme = useCreatorStore((s) => s.theme);
+
   return (
     <Canvas
       className="absolute inset-0 w-full h-full"
-      style={{ background: "transparent" }}
+      style={{ background: theme === "dark" ? "#09090b" : "#f0f0f2" }}
       gl={{
         antialias: true,
         alpha: true,

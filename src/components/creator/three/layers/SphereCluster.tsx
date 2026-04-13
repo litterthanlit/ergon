@@ -138,6 +138,7 @@ export function SphereCluster() {
   const pulseSpeed = useCreatorStore((s) => s.pulseSpeed);
   const tempo = useCreatorStore((s) => s.tempo);
   const seed = useCreatorStore((s) => s.seed);
+  const theme = useCreatorStore((s) => s.theme);
   const sphereConfig = useCreatorStore((s) => s.layers.spheres);
 
   const quality = useQuality();
@@ -244,11 +245,11 @@ export function SphereCluster() {
   const material = useMemo(() => {
     const p = sphereConfig.params;
     return new THREE.MeshPhysicalMaterial({
-      roughness: p.roughness ?? 0.15,
+      roughness: (p.roughness ?? 0.15) + (theme === "light" ? 0.1 : 0),
       metalness: p.metalness ?? 0.3,
       clearcoat: 1.0,
       clearcoatRoughness: 0.1,
-      envMapIntensity: 1.5,
+      envMapIntensity: theme === "light" ? 1.0 : 1.5,
       transparent: true,
       opacity: 0.92 * sphereConfig.intensity,
       transmission: p.transmission ?? 0.3,
@@ -257,9 +258,9 @@ export function SphereCluster() {
       iridescence: p.iridescence ?? 0,
       color: new THREE.Color(sphereConfig.color ?? palette[1]),
       emissive: new THREE.Color(palette[0]),
-      emissiveIntensity: p.emissiveIntensity ?? 0.15,
+      emissiveIntensity: Math.max(0, (p.emissiveIntensity ?? 0.15) - (theme === "light" ? 0.05 : 0)),
     });
-  }, [sphereConfig, palette]);
+  }, [sphereConfig, palette, theme]);
 
   const maxInstances = spheresPerVertex * 50 + spheresPerEdge * 50;
 

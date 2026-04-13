@@ -15,13 +15,17 @@ import { LightRays as LightRaysLayer } from "./layers/LightRays";
 export function MeshGraph() {
   const layers = useCreatorStore((s) => s.layers);
   const palette = useCreatorStore((s) => s.palette);
+  const theme = useCreatorStore((s) => s.theme);
 
   return (
     <group>
-      <Environment preset="night" />
-      <pointLight position={[100, 100, 200]} intensity={200} color="#ffffff" />
-      <pointLight position={[-150, -80, 150]} intensity={150} color={palette[1]} />
-      <pointLight position={[0, 150, -100]} intensity={100} color={palette[0]} />
+      <Environment preset={theme === "dark" ? "night" : "studio"} />
+      <pointLight position={[100, 100, 200]} intensity={theme === "dark" ? 200 : 120} color="#ffffff" />
+      <pointLight position={[-150, -80, 150]} intensity={theme === "dark" ? 150 : 90} color={palette[1]} />
+      <pointLight position={[0, 150, -100]} intensity={theme === "dark" ? 100 : 60} color={palette[0]} />
+      {theme === "light" && (
+        <directionalLight position={[0, 200, 100]} intensity={80} color="#ffffff" />
+      )}
 
       {layers.spheres.enabled && <SphereCluster />}
       {layers.tendrils.enabled && <TendrilSystem />}
