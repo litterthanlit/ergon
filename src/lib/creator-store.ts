@@ -59,6 +59,7 @@ export type Snapshot = {
   id: string;
   name: string;
   timestamp: number;
+  thumbnail: string;
   state: SerializedState;
 };
 
@@ -77,6 +78,25 @@ export type SceneConnection = {
     easing: "linear" | "ease-in" | "ease-out" | "ease-in-out";
   };
 };
+
+export type PlaybackState = {
+  phase: "idle" | "playing" | "crossfading";
+  fromSnapshotId: string | null;
+  toSnapshotId: string | null;
+  progress: number;
+  triggeredConnectionId: string | null;
+  elapsedInScene: number;
+};
+
+export type ScenePresetId = "deepSea" | "cosmos" | "laboratory" | "bioluminescence" | "electric";
+
+export const SCENE_PRESETS: { id: ScenePresetId; label: string }[] = [
+  { id: "deepSea", label: "Deep Sea" },
+  { id: "cosmos", label: "Cosmos" },
+  { id: "laboratory", label: "Laboratory" },
+  { id: "bioluminescence", label: "Bio" },
+  { id: "electric", label: "Electric" },
+];
 
 export type MeshPreset = "ring" | "constellation" | "grid" | "spiral" | "cluster" | "single";
 
@@ -150,6 +170,56 @@ const DEFAULT_LAYERS: Layers = {
   wireframe: defaultLayerConfig(false, {}),
   halos: defaultLayerConfig(false, {}),
   lightRays: defaultLayerConfig(false, {}),
+};
+
+// ---------------------------------------------------------------------------
+// Scene preset configs
+// ---------------------------------------------------------------------------
+
+type ScenePresetConfig = {
+  form: MeshPreset;
+  palette: string[];
+  enabledLayers: (keyof Layers)[];
+  sphereParams: Record<string, number>;
+  fx: Partial<PostFX>;
+};
+
+const SCENE_PRESET_CONFIGS: Record<ScenePresetId, ScenePresetConfig> = {
+  deepSea: {
+    form: "cluster",
+    palette: ["#00b4d8", "#0077b6", "#48cae4", "#ffffff", "#9d4edd"],
+    enabledLayers: ["spheres", "dust"],
+    sphereParams: { countPerVertex: 40, sizeMin: 0.8, sizeMax: 12, scatterRadius: 25, metalness: 0.1, roughness: 0.1, transmission: 0.5, iridescence: 0, emissiveIntensity: 0.3 },
+    fx: { bloom: true, vignette: true, chromatic: false, dof: false, grain: false, toneMapping: false, motionBlur: false },
+  },
+  cosmos: {
+    form: "constellation",
+    palette: ["#7b2cbf", "#3a0ca3", "#f72585", "#ffd60a", "#ffffff"],
+    enabledLayers: ["spheres", "tendrils"],
+    sphereParams: { countPerVertex: 40, sizeMin: 0.8, sizeMax: 12, scatterRadius: 25, metalness: 0.5, roughness: 0.15, transmission: 0.3, iridescence: 0.8, emissiveIntensity: 0.5 },
+    fx: { bloom: true, chromatic: true, vignette: false, dof: false, grain: false, toneMapping: false, motionBlur: false },
+  },
+  laboratory: {
+    form: "grid",
+    palette: ["#e0ddd5", "#8888aa", "#4a4a6a", "#1a1a2e", "#ffffff"],
+    enabledLayers: ["spheres"],
+    sphereParams: { countPerVertex: 40, sizeMin: 0.8, sizeMax: 12, scatterRadius: 25, metalness: 0.2, roughness: 0.8, transmission: 0, iridescence: 0, emissiveIntensity: 0.05 },
+    fx: { bloom: false, chromatic: false, vignette: false, dof: false, grain: false, toneMapping: true, motionBlur: false },
+  },
+  bioluminescence: {
+    form: "spiral",
+    palette: ["#06d6a0", "#00f5d4", "#80ed99", "#ffffff", "#2d6a4f"],
+    enabledLayers: ["spheres", "splatter", "dust"],
+    sphereParams: { countPerVertex: 40, sizeMin: 0.8, sizeMax: 12, scatterRadius: 25, metalness: 0.3, roughness: 0.4, transmission: 0.2, iridescence: 0, emissiveIntensity: 0.8 },
+    fx: { bloom: true, chromatic: false, vignette: false, dof: false, grain: true, toneMapping: false, motionBlur: false },
+  },
+  electric: {
+    form: "ring",
+    palette: ["#ff6b00", "#0466c8", "#ffbe0b", "#ffffff", "#ef233c"],
+    enabledLayers: ["spheres", "tendrils", "splatter"],
+    sphereParams: { countPerVertex: 40, sizeMin: 0.8, sizeMax: 12, scatterRadius: 25, metalness: 0.7, roughness: 0.05, transmission: 0.3, iridescence: 0, emissiveIntensity: 0.6 },
+    fx: { bloom: true, chromatic: true, vignette: false, dof: false, grain: false, toneMapping: false, motionBlur: false },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -283,6 +353,12 @@ type CreatorState = {
   activeSnapshotId: string | null;
   isPlaying: boolean;
 
+  // Theme
+  theme: "dark" | "light";
+
+  // Playback
+  playbackState: PlaybackState;
+
   // Assets
   imagePlanes: ImagePlane[];
 
@@ -310,13 +386,20 @@ type CreatorState = {
   updateModulation: (target: string, updates: Partial<Modulation>) => void;
 
   // Snapshots & sequencer
-  takeSnapshot: (name: string) => void;
+  takeSnapshot: (name: string, thumbnail?: string) => void;
   loadSnapshot: (id: string) => void;
   deleteSnapshot: (id: string) => void;
   addConnection: (from: string, to: string, trigger: Trigger) => void;
   removeConnection: (id: string) => void;
   updateConnection: (id: string, updates: Partial<SceneConnection>) => void;
   setPlaying: (playing: boolean) => void;
+
+  // Theme
+  setTheme: (theme: "dark" | "light") => void;
+
+  // Playback
+  setPlaybackState: (updates: Partial<PlaybackState>) => void;
+  resetPlayback: () => void;
 
   // Presets & global
   setPreset: (preset: MeshPreset) => void;
@@ -327,6 +410,9 @@ type CreatorState = {
   randomizeSeed: () => void;
   togglePostFX: (effect: keyof PostFX) => void;
   clearAll: () => void;
+
+  // Scene presets
+  applyScenePreset: (preset: ScenePresetId, thumbnail?: string) => void;
 
   // Image planes
   addImagePlane: (url: string, position: [number, number, number]) => void;
@@ -399,6 +485,17 @@ function getInitialStateValues() {
     connections: [] as SceneConnection[],
     activeSnapshotId: null as string | null,
     isPlaying: false,
+
+    theme: "dark" as "dark" | "light",
+
+    playbackState: {
+      phase: "idle",
+      fromSnapshotId: null,
+      toSnapshotId: null,
+      progress: 0,
+      triggeredConnectionId: null,
+      elapsedInScene: 0,
+    } as PlaybackState,
 
     imagePlanes: [] as ImagePlane[],
   };
@@ -491,12 +588,13 @@ export const useCreatorStore = create<CreatorState>()(
         })),
 
       // --- Snapshot & sequencer actions ---
-      takeSnapshot: (name) =>
+      takeSnapshot: (name, thumbnail) =>
         set((state) => {
           const snap: Snapshot = {
             id: `snap-${++snapshotIdCounter}`,
             name,
             timestamp: Date.now(),
+            thumbnail: thumbnail ?? "",
             state: serializeState(state),
           };
           return { snapshots: [...state.snapshots, snap] };
@@ -556,6 +654,28 @@ export const useCreatorStore = create<CreatorState>()(
 
       setPlaying: (playing) => set({ isPlaying: playing }),
 
+      // --- Theme actions ---
+      setTheme: (theme) => set({ theme }),
+
+      // --- Playback actions ---
+      setPlaybackState: (updates) =>
+        set((state) => ({
+          playbackState: { ...state.playbackState, ...updates },
+        })),
+
+      resetPlayback: () =>
+        set({
+          playbackState: {
+            phase: "idle",
+            fromSnapshotId: null,
+            toSnapshotId: null,
+            progress: 0,
+            triggeredConnectionId: null,
+            elapsedInScene: 0,
+          },
+          isPlaying: false,
+        }),
+
       // --- Preset & global actions ---
       setPreset: (preset) => {
         const { nodes, edges } = generatePreset(preset);
@@ -574,6 +694,49 @@ export const useCreatorStore = create<CreatorState>()(
         })),
 
       clearAll: () => set({ edges: [], selectedNodeId: null, imagePlanes: [] }),
+
+      // --- Scene preset actions ---
+      applyScenePreset: (preset, thumbnail) => {
+        const state = get();
+        // Auto-snapshot current state
+        const snap: Snapshot = {
+          id: `snap-${++snapshotIdCounter}`,
+          name: `Auto: before ${preset}`,
+          timestamp: Date.now(),
+          thumbnail: thumbnail ?? "",
+          state: serializeState(state),
+        };
+
+        const config = SCENE_PRESET_CONFIGS[preset];
+        const { nodes, edges } = generatePreset(config.form);
+
+        // Build layers: enable only the ones in the preset
+        const newLayers = JSON.parse(JSON.stringify(DEFAULT_LAYERS)) as Layers;
+        const allLayerKeys = Object.keys(newLayers) as (keyof Layers)[];
+        for (const key of allLayerKeys) {
+          newLayers[key].enabled = config.enabledLayers.includes(key);
+        }
+        // Apply sphere param overrides
+        newLayers.spheres.params = { ...newLayers.spheres.params, ...config.sphereParams };
+
+        // Build postFX
+        const newPostFX: PostFX = {
+          bloom: false, chromatic: false, vignette: false,
+          dof: false, grain: false, toneMapping: false, motionBlur: false,
+          ...config.fx,
+        };
+
+        set({
+          snapshots: [...state.snapshots, snap],
+          nodes,
+          edges,
+          selectedNodeId: null,
+          activePreset: config.form,
+          layers: newLayers,
+          palette: config.palette,
+          postFX: newPostFX,
+        });
+      },
 
       // --- Image plane actions ---
       addImagePlane: (url, position) =>

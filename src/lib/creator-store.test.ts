@@ -234,3 +234,76 @@ describe("creator-store", () => {
     });
   });
 });
+
+describe("thumbnails", () => {
+  it("takeSnapshot stores thumbnail", () => {
+    useCreatorStore.getState().takeSnapshot("Thumb test", "data:image/png;base64,abc");
+    const snap = useCreatorStore.getState().snapshots[0];
+    expect(snap.thumbnail).toBe("data:image/png;base64,abc");
+  });
+
+  it("takeSnapshot defaults thumbnail to empty string", () => {
+    useCreatorStore.getState().takeSnapshot("No thumb");
+    const snap = useCreatorStore.getState().snapshots[0];
+    expect(snap.thumbnail).toBe("");
+  });
+});
+
+describe("theme", () => {
+  it("defaults to dark", () => {
+    expect(useCreatorStore.getState().theme).toBe("dark");
+  });
+
+  it("setTheme switches to light", () => {
+    useCreatorStore.getState().setTheme("light");
+    expect(useCreatorStore.getState().theme).toBe("light");
+  });
+});
+
+describe("playbackState", () => {
+  it("defaults to idle", () => {
+    expect(useCreatorStore.getState().playbackState.phase).toBe("idle");
+  });
+
+  it("setPlaybackState updates partially", () => {
+    useCreatorStore.getState().setPlaybackState({ phase: "playing", elapsedInScene: 500 });
+    expect(useCreatorStore.getState().playbackState.phase).toBe("playing");
+    expect(useCreatorStore.getState().playbackState.elapsedInScene).toBe(500);
+  });
+
+  it("resetPlayback returns to idle", () => {
+    useCreatorStore.getState().setPlaybackState({ phase: "crossfading", progress: 0.5 });
+    useCreatorStore.getState().resetPlayback();
+    expect(useCreatorStore.getState().playbackState.phase).toBe("idle");
+    expect(useCreatorStore.getState().playbackState.progress).toBe(0);
+  });
+});
+
+describe("scene presets", () => {
+  it("applyScenePreset auto-snapshots then applies", () => {
+    useCreatorStore.getState().addNode([0, 0, 0]);
+    useCreatorStore.getState().applyScenePreset("deepSea");
+    // Auto-snapshot should have captured previous state
+    expect(useCreatorStore.getState().snapshots.length).toBeGreaterThanOrEqual(1);
+    // Palette should be Deep Sea
+    expect(useCreatorStore.getState().palette[0]).toBe("#00b4d8");
+    // Spheres and dust should be enabled
+    expect(useCreatorStore.getState().layers.spheres.enabled).toBe(true);
+    expect(useCreatorStore.getState().layers.dust.enabled).toBe(true);
+    // Tendrils should be disabled for Deep Sea
+    expect(useCreatorStore.getState().layers.tendrils.enabled).toBe(false);
+  });
+
+  it("applyScenePreset sets correct FX", () => {
+    useCreatorStore.getState().applyScenePreset("cosmos");
+    expect(useCreatorStore.getState().postFX.bloom).toBe(true);
+    expect(useCreatorStore.getState().postFX.chromatic).toBe(true);
+    expect(useCreatorStore.getState().postFX.vignette).toBe(false);
+  });
+
+  it("applyScenePreset sets sphere material params", () => {
+    useCreatorStore.getState().applyScenePreset("laboratory");
+    expect(useCreatorStore.getState().layers.spheres.params.roughness).toBe(0.8);
+    expect(useCreatorStore.getState().layers.spheres.params.metalness).toBe(0.2);
+  });
+});
