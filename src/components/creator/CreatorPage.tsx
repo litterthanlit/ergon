@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { ThreeRenderer } from "./ThreeRenderer";
-import { useCreatorStore, MESH_PRESETS, type MeshPreset, type PostFX, type Layers } from "@/lib/creator-store";
+import { useCreatorStore, MESH_PRESETS, SCENE_PRESETS, type MeshPreset, type PostFX, type Layers, type ScenePresetId } from "@/lib/creator-store";
 import { SequencerPanel } from "./SequencerPanel";
 
 // Save/load utilities
@@ -252,6 +252,7 @@ export function CreatorPage() {
   const edges = useCreatorStore((s) => s.edges);
   const activePreset = useCreatorStore((s) => s.activePreset);
   const setPreset = useCreatorStore((s) => s.setPreset);
+  const applyScenePreset = useCreatorStore((s) => s.applyScenePreset);
   const breathe = useCreatorStore((s) => s.breathe);
   const pulseSpeed = useCreatorStore((s) => s.pulseSpeed);
   const tempo = useCreatorStore((s) => s.tempo);
@@ -379,6 +380,27 @@ export function CreatorPage() {
       {/* Right panel */}
       <div className="w-[240px] shrink-0 h-full overflow-y-auto border-l border-[#27272a] bg-[#111113]/80 backdrop-blur-xl">
         <div className="flex flex-col gap-6 p-5">
+
+          {/* SCENE PRESETS */}
+          <section>
+            <h3 className="text-[10px] text-[#71717a] uppercase tracking-[0.15em] mb-3">Scene Presets</h3>
+            <div className="flex flex-wrap gap-1">
+              {SCENE_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => {
+                    const thumb = captureCanvasThumbnail();
+                    applyScenePreset(preset.id as ScenePresetId, thumb);
+                  }}
+                  className="px-2.5 py-1 text-[11px] text-[#a1a1aa] hover:text-white rounded-md transition-all cursor-pointer hover:bg-white/5 border border-transparent hover:border-[#3f3f46]"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="h-px bg-[#27272a]" />
 
           {/* FORM — mesh presets */}
           <section>
