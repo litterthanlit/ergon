@@ -10,10 +10,23 @@ function generateSceneId(): string {
   return `scene-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function captureCanvasThumbnail(): string {
+  const canvas = document.querySelector("canvas");
+  if (!canvas) return "";
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = 200;
+  tempCanvas.height = 120;
+  const ctx = tempCanvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(canvas, 0, 0, 200, 120);
+  return tempCanvas.toDataURL("image/png", 0.5);
+}
+
 type SavedScene = {
   id: string;
   name: string;
   timestamp: number;
+  thumbnail: string;
   palette: string[];
   state: string; // JSON stringified
 };
@@ -21,10 +34,12 @@ type SavedScene = {
 function saveScene(name: string): string {
   const state = useCreatorStore.getState();
   const id = generateSceneId();
+  const thumbnail = captureCanvasThumbnail();
   const saved: SavedScene = {
     id,
     name,
     timestamp: Date.now(),
+    thumbnail,
     palette: state.palette,
     state: JSON.stringify({
       nodes: state.nodes,
@@ -481,7 +496,7 @@ export function CreatorPage() {
               Shuffle
             </button>
             <button
-              onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`)}
+              onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`, captureCanvasThumbnail())}
               className="flex-1 px-3 py-2 text-[11px] text-[#a1a1aa] hover:text-white uppercase tracking-[0.15em] transition-colors cursor-pointer rounded-md hover:bg-white/5 text-center"
             >
               Snapshot
@@ -515,20 +530,30 @@ export function CreatorPage() {
                     }}
                     className="flex items-center gap-3 w-full p-3 rounded-md bg-[#27272a]/50 hover:bg-[#27272a] transition-colors text-left cursor-pointer"
                   >
-                    <div className="flex gap-1.5">
-                      {scene.palette.slice(0, 5).map((color, i) => (
-                        <div
-                          key={i}
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
+                    {scene.thumbnail ? (
+                      <div
+                        className="w-[60px] h-[36px] rounded bg-cover bg-center shrink-0"
+                        style={{ backgroundImage: `url(${scene.thumbnail})` }}
+                      />
+                    ) : (
+                      <div className="w-[60px] h-[36px] rounded bg-[#18181b] shrink-0 flex items-center justify-center">
+                        <div className="flex gap-0.5">
+                          {scene.palette.slice(0, 5).map((color, i) => (
+                            <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-white truncate">{scene.name}</p>
                       <p className="text-[10px] text-[#71717a]">
                         {new Date(scene.timestamp).toLocaleDateString()} {new Date(scene.timestamp).toLocaleTimeString()}
                       </p>
+                      <div className="flex gap-1 mt-1">
+                        {scene.palette.slice(0, 5).map((color, i) => (
+                          <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                        ))}
+                      </div>
                     </div>
                   </button>
                 ))}

@@ -3,6 +3,18 @@
 import { useState, useCallback } from "react";
 import { useCreatorStore, type Trigger } from "@/lib/creator-store";
 
+function captureCanvasThumbnail(): string {
+  const canvas = document.querySelector("canvas");
+  if (!canvas) return "";
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = 200;
+  tempCanvas.height = 120;
+  const ctx = tempCanvas.getContext("2d");
+  if (!ctx) return "";
+  ctx.drawImage(canvas, 0, 0, 200, 120);
+  return tempCanvas.toDataURL("image/png", 0.5);
+}
+
 function TriggerBadge({ trigger }: { trigger: Trigger }) {
   const label =
     trigger.type === "time"
@@ -71,7 +83,7 @@ export function SequencerPanel() {
               <div key={snap.id} className="flex items-center gap-3">
                 {/* Scene node card */}
                 <div
-                  className={`w-[90px] rounded-lg p-2 cursor-pointer transition-all border ${
+                  className={`w-[100px] rounded-lg overflow-hidden cursor-pointer transition-all border ${
                     isActive
                       ? "border-[#a78bfa] bg-[#18181b]"
                       : "border-[#27272a] bg-[#18181b] hover:border-[#3f3f46]"
@@ -84,11 +96,30 @@ export function SequencerPanel() {
                     }
                   }}
                 >
-                  <div className={`text-[8px] mb-0.5 ${isActive ? "text-[#a78bfa]" : "text-[#52525b]"}`}>
-                    SCENE {i + 1}
-                  </div>
-                  <div className="text-[9px] text-[#e4e4e7] truncate">{snap.name}</div>
-                  <div className="mt-1">
+                  {/* Thumbnail */}
+                  <div
+                    className="h-[60px] w-full bg-cover bg-center bg-[#0d0d0f]"
+                    style={snap.thumbnail ? { backgroundImage: `url(${snap.thumbnail})` } : undefined}
+                  />
+
+                  {/* Info section */}
+                  <div className="p-1.5">
+                    <div className={`text-[8px] mb-0.5 ${isActive ? "text-[#a78bfa]" : "text-[#52525b]"}`}>
+                      SCENE {i + 1}
+                    </div>
+                    <div className="text-[9px] text-[#e4e4e7] truncate">{snap.name}</div>
+
+                    {/* Palette strip */}
+                    <div className="flex gap-0.5 mt-1 mb-1">
+                      {(snap.state.palette ?? []).slice(0, 5).map((color: string, ci: number) => (
+                        <div
+                          key={ci}
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -125,8 +156,8 @@ export function SequencerPanel() {
 
           {/* Add scene button */}
           <button
-            onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`)}
-            className="w-[90px] h-[60px] rounded-lg border border-dashed border-[#27272a] flex items-center justify-center text-[#3f3f46] text-lg hover:border-[#3f3f46] hover:text-[#52525b] cursor-pointer transition-colors shrink-0"
+            onClick={() => takeSnapshot(`Scene ${snapshots.length + 1}`, captureCanvasThumbnail())}
+            className="w-[100px] h-[60px] rounded-lg border border-dashed border-[#27272a] flex items-center justify-center text-[#3f3f46] text-lg hover:border-[#3f3f46] hover:text-[#52525b] cursor-pointer transition-colors shrink-0"
           >
             +
           </button>
