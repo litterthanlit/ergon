@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   type ParamSchema,
-  type ParamValues,
   validateParamSchema,
   getDefaultValues,
 } from "@/lib/types";

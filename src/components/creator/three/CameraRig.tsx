@@ -7,12 +7,17 @@ import * as THREE from "three";
 import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 
 export function CameraRig() {
-  const { camera, gl } = useThree();
+  const { camera: sceneCamera, gl } = useThree();
   const orbitRef = useRef<OrbitControlsType>(null);
+  const cameraRef = useRef<THREE.Camera | null>(null);
   const [orbitEnabled, setOrbitEnabled] = useState(false);
   const mouse = useRef({ x: 0, y: 0 });
   const smoothOffset = useRef({ x: 0, y: 0 });
   const basePosition = useRef(new THREE.Vector3(0, 0, 500));
+
+  useEffect(() => {
+    cameraRef.current = sceneCamera;
+  }, [sceneCamera]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -26,6 +31,8 @@ export function CameraRig() {
       if (e.key === "Alt") setOrbitEnabled(false);
     };
     const handleDblClick = () => {
+      const camera = cameraRef.current;
+      if (!camera) return;
       camera.position.copy(basePosition.current);
       camera.lookAt(0, 0, 0);
       if (orbitRef.current) {
@@ -45,18 +52,22 @@ export function CameraRig() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [camera, gl]);
+  }, [gl]);
 
   useFrame(() => {
     if (orbitEnabled) return;
+    const camera = cameraRef.current;
+    if (!camera) return;
     const maxOffset = 15;
     const targetX = mouse.current.x * maxOffset;
     const targetY = mouse.current.y * maxOffset;
     smoothOffset.current.x += (targetX - smoothOffset.current.x) * 0.08;
     smoothOffset.current.y += (targetY - smoothOffset.current.y) * 0.08;
-    camera.position.x = basePosition.current.x + smoothOffset.current.x;
-    camera.position.y = basePosition.current.y + smoothOffset.current.y;
-    camera.position.z = basePosition.current.z;
+    camera.position.set(
+      basePosition.current.x + smoothOffset.current.x,
+      basePosition.current.y + smoothOffset.current.y,
+      basePosition.current.z,
+    );
     camera.lookAt(0, 0, 0);
   });
 

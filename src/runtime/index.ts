@@ -143,12 +143,34 @@ function handleExport(scale: number): void {
     sendError("No canvas found for export");
     return;
   }
-  const dataUrl = canvas.toDataURL("image/png");
+  const exportScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  let dataUrl: string;
+  let width = canvas.width;
+  let height = canvas.height;
+
+  if (exportScale === 1) {
+    dataUrl = canvas.toDataURL("image/png");
+  } else {
+    const scaledCanvas = document.createElement("canvas");
+    width = Math.round(canvas.width * exportScale);
+    height = Math.round(canvas.height * exportScale);
+    scaledCanvas.width = width;
+    scaledCanvas.height = height;
+    const ctx = scaledCanvas.getContext("2d");
+    if (!ctx) {
+      sendError("Could not create export canvas");
+      return;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(canvas, 0, 0, width, height);
+    dataUrl = scaledCanvas.toDataURL("image/png");
+  }
+
   const msg = {
     type: "ergon:export-data" as const,
     dataUrl,
-    width: canvas.width,
-    height: canvas.height,
+    width,
+    height,
   };
   window.parent.postMessage(msg, "*");
 }

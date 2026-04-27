@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import { SUPABASE_DISABLED_MESSAGE } from "@/lib/supabase/config";
 import type { Work, WorkWithProfile } from "@/lib/supabase/types";
 
 function generateSlug(title: string): string {
@@ -26,6 +27,10 @@ export async function saveWork(data: {
   params: Record<string, unknown> | null;
 }): Promise<SaveResult> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -72,6 +77,10 @@ export type PublishResult = {
 
 export async function publishWork(workId: string, title: string): Promise<PublishResult> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -97,6 +106,10 @@ export async function publishWork(workId: string, title: string): Promise<Publis
 
 export async function loadWork(workId: string): Promise<{ work?: Work; error?: string }> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -116,6 +129,10 @@ export async function loadWork(workId: string): Promise<{ work?: Work; error?: s
 
 export async function listMyWorks(): Promise<{ works?: Work[]; error?: string }> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -135,6 +152,10 @@ export async function listMyWorks(): Promise<{ works?: Work[]; error?: string }>
 export async function getPublishedWork(slug: string): Promise<{ work?: WorkWithProfile; error?: string }> {
   const supabase = await createServerSupabase();
 
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
+
   const { data, error } = await supabase
     .from("works")
     .select("*, profiles(username, display_name)")
@@ -152,6 +173,10 @@ export async function getArtistWorks(username: string): Promise<{
   error?: string;
 }> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")

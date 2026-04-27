@@ -29,7 +29,7 @@ export function AdaptiveQuality({ children }: { children: React.ReactNode }) {
   const [tier, setTier] = useState<QualityTier>(2);
   const { gl } = useThree();
   const frameTimes = useRef<number[]>([]);
-  const lastTime = useRef(performance.now());
+  const lastTime = useRef<number | null>(null);
   const stableFrames = useRef(0);
   const currentTier = useRef<QualityTier>(2);
   const baseTier = useRef<QualityTier>(2);
@@ -48,6 +48,10 @@ export function AdaptiveQuality({ children }: { children: React.ReactNode }) {
 
   useFrame(() => {
     const now = performance.now();
+    if (lastTime.current === null) {
+      lastTime.current = now;
+      return;
+    }
     const delta = now - lastTime.current;
     lastTime.current = now;
     frameTimes.current.push(delta);

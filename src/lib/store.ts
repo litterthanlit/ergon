@@ -34,7 +34,7 @@ type Recipe = {
   drivers: SharedDrivers;
 };
 
-let paramHistory: History = createHistory(getDefaultValues(drift.schema));
+const paramHistory: History = createHistory(getDefaultValues(drift.schema));
 
 type StudioState = {
   // Template

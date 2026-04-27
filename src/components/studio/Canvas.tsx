@@ -26,9 +26,15 @@ export function Canvas() {
   const layerBridgeRefs = useRef<Map<string, Bridge>>(new Map());
 
   const codeRef = useRef(code);
-  codeRef.current = code;
   const valuesRef = useRef(values);
-  valuesRef.current = values;
+
+  useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
+
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
 
   const setupBridge = useCallback(() => {
     const iframe = iframeRef.current;
@@ -98,11 +104,12 @@ export function Canvas() {
   }, [compositionMode, sharedDrivers]);
 
   useEffect(() => {
+    const layerBridges = layerBridgeRefs.current;
     return () => {
       bridgeRef.current?.destroy();
       // Clean up all layer bridges
-      layerBridgeRefs.current.forEach((bridge) => bridge.destroy());
-      layerBridgeRefs.current.clear();
+      layerBridges.forEach((bridge) => bridge.destroy());
+      layerBridges.clear();
     };
   }, []);
 
@@ -187,6 +194,7 @@ export function Canvas() {
             title={`Layer: ${layer.name}`}
             src="/sandbox/index.html"
             sandbox="allow-scripts"
+            allow="accelerometer; gyroscope"
             onLoad={(e) => handleLayerIframeLoad(layer.id, e.currentTarget)}
             className="absolute inset-0 w-full h-full border-0"
             style={{
@@ -210,6 +218,7 @@ export function Canvas() {
           title="Ergon Sandbox"
           src="/sandbox/index.html"
           sandbox="allow-scripts"
+          allow="accelerometer; gyroscope"
           onLoad={handleIframeLoad}
           className="w-full h-full border-0"
           style={{ background: "#09090b" }}

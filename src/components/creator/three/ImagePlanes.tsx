@@ -256,7 +256,7 @@ export function ImagePlanes() {
   const palette = useCreatorStore((s) => s.palette);
   const imagePlanes = useCreatorStore((s) => s.imagePlanes);
   const addImagePlane = useCreatorStore((s) => s.addImagePlane);
-  const { gl, camera, viewport } = useThree();
+  const { gl, camera } = useThree();
 
   // Number of auto planes scales with edge count
   const autoPlaneCount = edges.length > 0 ? Math.min(2 + Math.floor(edges.length / 3), 4) : 0;

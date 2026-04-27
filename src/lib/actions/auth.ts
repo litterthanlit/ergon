@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import { SUPABASE_DISABLED_MESSAGE } from "@/lib/supabase/config";
 import { redirect } from "next/navigation";
 
 export type AuthResult = {
@@ -9,6 +10,10 @@ export type AuthResult = {
 
 export async function signup(formData: FormData): Promise<AuthResult> {
   const supabase = await createServerSupabase();
+
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -48,6 +53,10 @@ export async function signup(formData: FormData): Promise<AuthResult> {
 export async function login(formData: FormData): Promise<AuthResult> {
   const supabase = await createServerSupabase();
 
+  if (!supabase) {
+    return { error: SUPABASE_DISABLED_MESSAGE };
+  }
+
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
@@ -69,6 +78,9 @@ export async function login(formData: FormData): Promise<AuthResult> {
 
 export async function logout(): Promise<void> {
   const supabase = await createServerSupabase();
+  if (!supabase) {
+    redirect("/studio");
+  }
   await supabase.auth.signOut();
   redirect("/login");
 }

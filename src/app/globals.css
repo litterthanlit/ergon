@@ -26,6 +26,23 @@ body {
   overflow: hidden;
   background: #09090b;
   color: #fafafa;
+  font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  letter-spacing: inherit;
+}
+
+::selection {
+  background: rgba(232, 185, 49, 0.22);
+  color: #0a1628;
 }
 
 /* Scrollbar — thin, dark */
@@ -90,7 +107,41 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }
 
-/* Panel animations */
+.ergon-dark-range[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ergon-dark-range[type="range"]::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  background: #e4e4e7;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.ergon-dark-range[type="range"]::-moz-range-track {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ergon-dark-range[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #e4e4e7;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.react-flow__handle {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.65);
+}
+
+.react-flow__controls-button {
+  background: rgba(9, 9, 11, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #d4d4d8 !important;
+}
+
+/* Studio panel animations */
 @keyframes slide-up {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -112,4 +163,15 @@ input[type="range"]::-moz-range-thumb {
 /* Select — dark */
 select {
   color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-fade-in {
+    animation: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: none;
+  }
 }

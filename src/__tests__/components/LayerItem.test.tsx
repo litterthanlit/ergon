@@ -27,11 +27,11 @@ describe("LayerItem", () => {
 
   it("shows active state", () => {
     const { container } = render(<LayerItem {...defaultProps} isActive={true} />);
-    expect(container.querySelector("[data-testid='layer-item']")?.className).toContain("bg-ergon-elevated");
+    expect(container.querySelector("[data-testid='layer-item']")?.className).toContain("border-ergon-text");
   });
 
   it("shows opacity value", () => {
     render(<LayerItem {...defaultProps} isActive={true} opacity={0.5} />);
-    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText("50% opacity")).toBeInTheDocument();
   });
 });

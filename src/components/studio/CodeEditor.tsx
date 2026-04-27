@@ -104,8 +104,12 @@ export function CodeEditor({ code, onChange, errorLine }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  const initialCodeRef = useRef(code);
   const isExternalUpdate = useRef(false);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const createEditor = useCallback(() => {
     if (!containerRef.current) return;
@@ -118,7 +122,7 @@ export function CodeEditor({ code, onChange, errorLine }: Props) {
     });
 
     const state = EditorState.create({
-      doc: code,
+      doc: initialCodeRef.current,
       extensions: [
         lineNumbers(),
         highlightActiveLine(),

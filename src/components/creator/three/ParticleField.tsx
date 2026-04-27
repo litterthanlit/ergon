@@ -5,6 +5,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useQuality } from "./AdaptiveQuality";
 
+function pseudoRandom(index: number): number {
+  const value = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 export function ParticleField() {
   const pointsRef = useRef<THREE.Points>(null);
   const quality = useQuality();
@@ -15,12 +20,13 @@ export function ParticleField() {
     const velocities = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * 600;
-      positions[i3 + 1] = (Math.random() - 0.5) * 400;
-      positions[i3 + 2] = (Math.random() - 0.5) * 300;
-      velocities[i3] = (Math.random() - 0.5) * 0.1;
-      velocities[i3 + 1] = (Math.random() - 0.5) * 0.1;
-      velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
+      const noiseBase = i * 6;
+      positions[i3] = (pseudoRandom(noiseBase) - 0.5) * 600;
+      positions[i3 + 1] = (pseudoRandom(noiseBase + 1) - 0.5) * 400;
+      positions[i3 + 2] = (pseudoRandom(noiseBase + 2) - 0.5) * 300;
+      velocities[i3] = (pseudoRandom(noiseBase + 3) - 0.5) * 0.1;
+      velocities[i3 + 1] = (pseudoRandom(noiseBase + 4) - 0.5) * 0.1;
+      velocities[i3 + 2] = (pseudoRandom(noiseBase + 5) - 0.5) * 0.05;
     }
     return { positions, velocities };
   }, [count]);

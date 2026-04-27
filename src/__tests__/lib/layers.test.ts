@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   createLayer,
-  type Layer,
-  type BlendMode,
   BLEND_MODES,
 } from "@/lib/layers";
 

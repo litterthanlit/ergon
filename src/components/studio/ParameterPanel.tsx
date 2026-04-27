@@ -21,6 +21,9 @@ type Props = {
   schema: ParamSchema | null;
   values: ParamValues;
   onChange: (key: string, value: ControlValue) => void;
+  tone?: "light" | "dark";
+  title?: string;
+  description?: string;
 };
 
 function renderControl(
@@ -85,13 +88,55 @@ function renderControl(
   }
 }
 
-export function ParameterPanel({ schema, values, onChange }: Props) {
+export function ParameterPanel({
+  schema,
+  values,
+  onChange,
+  tone = "light",
+  title,
+  description,
+}: Props) {
+  const isDark = tone === "dark";
   if (!schema) {
-    return <div className="flex flex-col gap-4" />;
+    return (
+      <div className={`rounded-2xl border border-dashed px-4 py-4 ${
+        isDark ? "border-white/10 bg-white/[0.035]" : "border-ergon-border/80 bg-white/50"
+      }`}>
+        <div className="flex flex-col gap-1">
+          <span className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
+            isDark ? "text-zinc-500" : "text-ergon-subtle"
+          }`}>
+            Shape the block
+          </span>
+          <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-ergon-muted"}`}>
+            Pick a block or load a recipe to give the composition something to push against.
+          </p>
+        </div>
+      </div>
+    );
   }
   return (
-    <div className="flex flex-col gap-8">
-      {Object.entries(schema).map(([key, def]) => renderControl(key, def, values[key], onChange))}
+    <div className="space-y-5">
+      <div className="flex flex-col gap-1">
+        <span className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
+          isDark ? "text-zinc-500" : "text-ergon-subtle"
+        }`}>
+          {title ?? "Shape the active form"}
+        </span>
+        <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-ergon-muted"}`}>
+          {description ?? "These controls shape the currently selected block in the composition."}
+        </p>
+      </div>
+      <div className="flex flex-col gap-5">
+          {Object.entries(schema).map(([key, def], index) => (
+            <div
+              key={key}
+              className={index === 0 ? "" : "border-t border-ergon-border/60 pt-5"}
+            >
+              {renderControl(key, def, values[key], onChange)}
+            </div>
+          ))}
+      </div>
     </div>
   );
 }

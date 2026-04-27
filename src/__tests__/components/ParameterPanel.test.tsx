@@ -17,9 +17,12 @@ describe("ParameterPanel", () => {
     expect(screen.getByText("Invert")).toBeInTheDocument();
   });
 
-  it("renders nothing when schema is null", () => {
-    const { container } = render(<ParameterPanel schema={null} values={{}} onChange={vi.fn()} />);
-    expect(container.firstChild?.childNodes.length).toBe(0);
+  it("renders an empty-state prompt when schema is null", () => {
+    render(<ParameterPanel schema={null} values={{}} onChange={vi.fn()} />);
+    expect(screen.getByText("Shape the block")).toBeInTheDocument();
+    expect(
+      screen.getByText("Pick a block or load a recipe to give the composition something to push against.")
+    ).toBeInTheDocument();
   });
 
   it("renders a slider for number params", () => {

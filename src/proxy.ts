@@ -1,12 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  const config = getSupabaseConfig();
+
+  if (!config) {
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    config.url,
+    config.anonKey,
     {
       cookies: {
         getAll() {
@@ -24,11 +31,6 @@ export async function proxy(request: NextRequest) {
       },
     }
   );
-
-  // Skip auth check if Supabase isn't configured (dev mode)
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your-project")) {
-    return response;
-  }
 
   const { data: { user } } = await supabase.auth.getUser();
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useCreatorStore, type RenderMode } from "@/lib/creator-store";
 import { useQuality } from "./AdaptiveQuality";
@@ -40,6 +40,17 @@ const SHADERS: Record<RenderMode, { vert: string; frag: string }> = {
   flow:     { vert: buildShader(flowVert, coreGlsl), frag: buildShader(flowFrag, coreGlsl) },
 };
 
+type ShaderPair = (typeof SHADERS)[RenderMode];
+
+type GraphUniforms = THREE.ShaderMaterial["uniforms"] & {
+  uTime: { value: number };
+  uBreathe: { value: number };
+  uPulseSpeed: { value: number };
+  uTempo: { value: number };
+  uSeed: { value: number };
+  uPalette: { value: THREE.Vector3[] };
+};
+
 // ---------------------------------------------------------------------------
 // Hex colour → THREE.Vector3 (sRGB)
 // ---------------------------------------------------------------------------
@@ -47,6 +58,66 @@ const SHADERS: Record<RenderMode, { vert: string; frag: string }> = {
 function hexToVec3(hex: string): THREE.Vector3 {
   const c = new THREE.Color(hex);
   return new THREE.Vector3(c.r, c.g, c.b);
+}
+
+function pseudoRandom(index: number): number {
+  const value = Math.sin(index * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function GraphShaderMaterial({
+  shaderPair,
+  breathe,
+  pulseSpeed,
+  tempo,
+  seed,
+  paletteVec3,
+}: {
+  shaderPair: ShaderPair;
+  breathe: number;
+  pulseSpeed: number;
+  tempo: number;
+  seed: number;
+  paletteVec3: THREE.Vector3[];
+}) {
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const initialUniforms = useMemo<GraphUniforms>(() => ({
+    uTime: { value: 0 },
+    uBreathe: { value: 0 },
+    uPulseSpeed: { value: 0 },
+    uTempo: { value: 1 },
+    uSeed: { value: 0 },
+    uPalette: { value: [] },
+  }), []);
+
+  useEffect(() => {
+    const uniforms = materialRef.current?.uniforms as GraphUniforms | undefined;
+    if (!uniforms) return;
+    uniforms.uBreathe.value = breathe;
+    uniforms.uPulseSpeed.value = pulseSpeed;
+    uniforms.uTempo.value = tempo;
+    uniforms.uSeed.value = seed;
+    uniforms.uPalette.value = paletteVec3;
+  }, [breathe, pulseSpeed, tempo, seed, paletteVec3]);
+
+  useFrame(() => {
+    const uniforms = materialRef.current?.uniforms as GraphUniforms | undefined;
+    if (!uniforms) return;
+    // eslint-disable-next-line react-hooks/immutability -- R3F shader uniforms are updated imperatively inside the render loop.
+    uniforms.uTime.value += 0.016 * tempo;
+  });
+
+  return (
+    <shaderMaterial
+      ref={materialRef}
+      vertexShader={shaderPair.vert}
+      fragmentShader={shaderPair.frag}
+      uniforms={initialUniforms}
+      transparent
+      depthWrite={false}
+      blending={THREE.AdditiveBlending}
+    />
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +134,6 @@ export function MeshGraph() {
   const tempo = useCreatorStore((s) => s.tempo);
   const seed = useCreatorStore((s) => s.seed);
 
-  const { viewport } = useThree();
   const _quality = useQuality();
 
   // Collect IDs of connected vertices (only vertices with at least one edge)
@@ -84,11 +154,10 @@ export function MeshGraph() {
   }, [points]);
 
   // Convert screen-space worldX/worldY to 3D positions
-  const toPosition = useMemo(() => {
-    const w = viewport.width > 0 ? viewport.width : 1;
-    const h = viewport.height > 0 ? viewport.height : 1;
+  const toPosition = useMemo(
+    () =>
     // Use a fixed mapping scale so objects spread across the view
-    return (worldX: number, worldY: number): [number, number, number] => {
+    (worldX: number, worldY: number): [number, number, number] => {
       // viewport.width/height give the frustum size in world units at z=0
       // worldX/worldY are pixel coords from the grid init
       const winW = typeof window !== "undefined" ? window.innerWidth : 1;
@@ -96,8 +165,9 @@ export function MeshGraph() {
       const x = (worldX / winW - 0.5) * 500;
       const y = -(worldY / winH - 0.5) * 300;
       return [x, y, 0];
-    };
-  }, [viewport.width, viewport.height]);
+    },
+    [],
+  );
 
   // Connected vertex positions
   const connectedPositions = useMemo(() => {
@@ -114,28 +184,6 @@ export function MeshGraph() {
     () => palette.slice(0, 5).map(hexToVec3),
     [palette],
   );
-
-  // Shared shader uniforms (one set, shared by ref across all sphere materials)
-  const uniforms = useRef({
-    uTime: { value: 0 },
-    uBreathe: { value: breathe },
-    uPulseSpeed: { value: pulseSpeed },
-    uTempo: { value: tempo },
-    uSeed: { value: seed },
-    uPalette: { value: paletteVec3 },
-  });
-
-  // Keep uniforms in sync with store values each render
-  uniforms.current.uBreathe.value = breathe;
-  uniforms.current.uPulseSpeed.value = pulseSpeed;
-  uniforms.current.uTempo.value = tempo;
-  uniforms.current.uSeed.value = seed;
-  uniforms.current.uPalette.value = paletteVec3;
-
-  // Advance time
-  useFrame(() => {
-    uniforms.current.uTime.value += 0.016 * tempo;
-  });
 
   // Current shader pair
   const shaderPair = SHADERS[renderMode];
@@ -160,18 +208,19 @@ export function MeshGraph() {
       for (let p = 0; p < particlesPerEdge; p++) {
         const t = p / particlesPerEdge;
         const i3 = idx * 3;
-        positions[i3] = fx + dx * t + (Math.random() - 0.5) * 10;
-        positions[i3 + 1] = fy + dy * t + (Math.random() - 0.5) * 10;
-        positions[i3 + 2] = (Math.random() - 0.5) * 20;
+        const noiseBase = seed * 1000 + idx * 7;
+        positions[i3] = fx + dx * t + (pseudoRandom(noiseBase) - 0.5) * 10;
+        positions[i3 + 1] = fy + dy * t + (pseudoRandom(noiseBase + 1) - 0.5) * 10;
+        positions[i3 + 2] = (pseudoRandom(noiseBase + 2) - 0.5) * 20;
         velocities[i3] = dx * 0.01;
         velocities[i3 + 1] = dy * 0.01;
-        velocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
-        progress[idx] = Math.random();
+        velocities[i3 + 2] = (pseudoRandom(noiseBase + 3) - 0.5) * 0.01;
+        progress[idx] = pseudoRandom(noiseBase + 4);
         idx++;
       }
     }
     return { positions: positions.slice(0, idx * 3), velocities: velocities.slice(0, idx * 3), progress: progress.slice(0, idx), count: idx };
-  }, [renderMode, edges, pointMap, toPosition, _quality.particleMultiplier]);
+  }, [renderMode, edges, pointMap, toPosition, _quality.particleMultiplier, seed]);
 
   // Edge line geometry — flat Float32Array of pairs
   const edgePositions = useMemo(() => {
@@ -197,13 +246,13 @@ export function MeshGraph() {
             <bufferAttribute attach="attributes-aVelocity" args={[flowParticles.velocities, 3]} />
             <bufferAttribute attach="attributes-aProgress" args={[flowParticles.progress, 1]} />
           </bufferGeometry>
-          <shaderMaterial
-            vertexShader={shaderPair.vert}
-            fragmentShader={shaderPair.frag}
-            uniforms={uniforms.current}
-            transparent
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
+          <GraphShaderMaterial
+            shaderPair={shaderPair}
+            breathe={breathe}
+            pulseSpeed={pulseSpeed}
+            tempo={tempo}
+            seed={seed}
+            paletteVec3={paletteVec3}
           />
         </points>
         {edgePositions.length > 0 && (
@@ -228,13 +277,13 @@ export function MeshGraph() {
           ) : (
             <sphereGeometry args={[8, 32, 32]} />
           )}
-          <shaderMaterial
-            vertexShader={shaderPair.vert}
-            fragmentShader={shaderPair.frag}
-            uniforms={uniforms.current}
-            transparent
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
+          <GraphShaderMaterial
+            shaderPair={shaderPair}
+            breathe={breathe}
+            pulseSpeed={pulseSpeed}
+            tempo={tempo}
+            seed={seed}
+            paletteVec3={paletteVec3}
           />
         </mesh>
       ))}

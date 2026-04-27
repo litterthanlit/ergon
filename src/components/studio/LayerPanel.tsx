@@ -53,10 +53,15 @@ export function LayerPanel({ onLayerSelect }: Props) {
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-ergon-subtle uppercase tracking-[0.12em]">
-          Layers ({layers.length})
-        </span>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-ergon-subtle uppercase tracking-[0.12em]">
+            Forms ({layers.length})
+          </span>
+        </div>
+        <p className="text-[11px] leading-relaxed text-ergon-muted">
+          Keep the stack simple. Swap or isolate a form to compare how each one changes the piece.
+        </p>
       </div>
 
       {/* Layer list */}
@@ -96,6 +101,7 @@ export function LayerPanel({ onLayerSelect }: Props) {
           onSelect={handleSwapBlock}
           onCancel={() => setSwapTarget(null)}
           filterRole={layers.find((l) => l.id === swapTarget)?.role}
+          mode="swap"
         />
       )}
 
@@ -104,13 +110,15 @@ export function LayerPanel({ onLayerSelect }: Props) {
         <BlockPicker
           onSelect={handleAddBlock}
           onCancel={() => setShowPicker(false)}
+          mode="add"
         />
       ) : !swapTarget ? (
         <button
           onClick={() => setShowPicker(true)}
-          className="w-full py-2.5 text-sm font-medium text-ergon-subtle border border-dashed border-ergon-border rounded-lg hover:border-ergon-muted hover:bg-ergon-surface/50 transition-colors cursor-pointer"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ergon-border bg-white/60 px-4 py-3 text-sm font-medium text-ergon-subtle transition-colors hover:border-ergon-muted hover:bg-white cursor-pointer"
         >
-          + Add block
+          <span className="text-base leading-none">+</span>
+          <span>Add form</span>
         </button>
       ) : null}
     </div>

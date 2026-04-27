@@ -1,5 +1,5 @@
-import { Studio } from "@/components/studio/Studio";
+import { NodeStudio } from "@/components/studio/NodeStudio";
 
 export default function StudioPage() {
-  return <Studio />;
+  return <NodeStudio />;
 }

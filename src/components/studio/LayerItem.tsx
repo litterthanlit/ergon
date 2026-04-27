@@ -41,30 +41,31 @@ export function LayerItem({
     <div
       data-testid="layer-item"
       onClick={onSelect}
-      className={`px-3.5 py-3 border rounded-lg cursor-pointer transition-all ${
+      className={`px-4 py-3.5 border rounded-2xl cursor-pointer transition-all ${
         isSoloed
-          ? "border-ergon-accent/50 bg-ergon-accent/5"
+          ? "border-ergon-accent bg-amber-50/60 ring-1 ring-ergon-accent/20"
           : isActive
-            ? "border-ergon-border bg-ergon-elevated"
-            : "border-transparent hover:border-ergon-border hover:bg-ergon-elevated/50"
-      } ${!visible && !isSoloed ? "opacity-30" : ""}`}
+            ? "border-ergon-text bg-white shadow-[0_10px_24px_rgba(10,22,40,0.05)]"
+            : "border-ergon-border/80 bg-white/70 hover:border-ergon-muted hover:bg-white"
+      } ${!visible && !isSoloed ? "opacity-35" : ""}`}
     >
-      {/* Top row: role badge + name + actions */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-ergon-muted bg-ergon-bg px-1.5 py-0.5 rounded shrink-0">
+      <div className="flex items-start gap-2.5">
+        <span className="mt-0.5 shrink-0 rounded-full border border-ergon-border/80 bg-ergon-surface px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-ergon-muted">
           {ROLE_LABELS[role]}
         </span>
-        <span className="text-sm font-medium text-ergon-text truncate flex-1">
-          {name}
-        </span>
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-sm font-medium text-ergon-text">
+              {name}
+            </span>
+            <div className="flex shrink-0 items-center gap-0.5">
           {/* Solo */}
           <button
             onClick={(e) => { e.stopPropagation(); onSolo(); }}
-            className={`p-1 rounded transition-colors ${
+            className={`rounded p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ergon-text focus-visible:ring-offset-2 ${
               isSoloed ? "text-ergon-accent" : "text-ergon-muted hover:text-ergon-text"
             }`}
-            title={isSoloed ? "Unsolo" : "Solo"}
+            title={isSoloed ? "Release form" : "Isolate form"}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
               {isSoloed ? (
@@ -77,8 +78,8 @@ export function LayerItem({
           {/* Swap */}
           <button
             onClick={(e) => { e.stopPropagation(); onSwap(); }}
-            className="p-1 text-ergon-muted hover:text-ergon-text transition-colors"
-            title="Swap block"
+            className="p-1 text-ergon-muted hover:text-ergon-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ergon-text focus-visible:ring-offset-2"
+            title="Swap form"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
               <path d="M2 4h8M8 2l2 2-2 2" />
@@ -88,8 +89,8 @@ export function LayerItem({
           {/* Visibility */}
           <button
             onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
-            className="p-1 text-ergon-muted hover:text-ergon-text transition-colors"
-            title={visible ? "Hide" : "Show"}
+            className="p-1 text-ergon-muted hover:text-ergon-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ergon-text focus-visible:ring-offset-2"
+            title={visible ? "Hide form" : "Reveal form"}
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
               {visible ? (
@@ -102,18 +103,33 @@ export function LayerItem({
           {/* Remove */}
           <button
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="p-1 text-ergon-muted hover:text-ergon-red transition-colors"
-            title="Remove"
+            className="p-1 text-ergon-muted hover:text-ergon-red transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ergon-text focus-visible:ring-offset-2"
+            title="Remove form"
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M2 2l6 6M8 2l-6 6" />
             </svg>
           </button>
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[10px] text-ergon-muted">
+              {visible ? "Visible" : "Hidden"}
+            </span>
+            <span className="text-[10px] text-ergon-border">•</span>
+            <span className="text-[10px] text-ergon-muted">
+              {Math.round(opacity * 100)}% opacity
+            </span>
+            <span className="text-[10px] text-ergon-border">•</span>
+            <span className="truncate text-[10px] text-ergon-muted">
+              {blendMode}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Opacity */}
-      <div className="flex items-center gap-2 mt-2.5">
+      <div className="mt-3 flex items-center gap-3">
         <input
           type="range"
           min={0}
@@ -124,18 +140,14 @@ export function LayerItem({
           onChange={(e) => onOpacityChange(parseFloat(e.target.value))}
           className="flex-1"
         />
-        <span className="text-[10px] font-mono text-ergon-muted w-7 text-right">
-          {Math.round(opacity * 100)}%
-        </span>
       </div>
 
-      {/* Blend mode */}
       <div className="mt-2">
         <select
           value={blendMode}
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => onBlendModeChange(e.target.value as BlendMode)}
-          className="w-full text-[11px] text-ergon-subtle bg-ergon-bg border border-ergon-border rounded-md px-2.5 py-1.5 focus:outline-none focus:border-ergon-muted"
+          className="w-full rounded-lg border border-ergon-border bg-white px-2.5 py-1.5 text-[11px] text-ergon-subtle focus:outline-none focus:ring-2 focus:ring-ergon-text focus:ring-offset-1"
         >
           {BLEND_MODES.map((mode) => (
             <option key={mode} value={mode}>{mode}</option>
