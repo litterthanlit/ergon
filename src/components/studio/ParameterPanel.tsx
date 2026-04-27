@@ -123,9 +123,11 @@ export function ParameterPanel({
         }`}>
           {title ?? "Shape the active form"}
         </span>
-        <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-ergon-muted"}`}>
-          {description ?? "These controls shape the currently selected block in the composition."}
-        </p>
+        {(description ?? "These controls shape the currently selected block in the composition.") && (
+          <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-500" : "text-ergon-muted"}`}>
+            {description ?? "These controls shape the currently selected block in the composition."}
+          </p>
+        )}
       </div>
       <div className="flex flex-col gap-5">
           {Object.entries(schema).map(([key, def], index) => (

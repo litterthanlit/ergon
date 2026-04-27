@@ -30,11 +30,12 @@ async function getPublishedWorks(): Promise<WorkCard[]> {
 }
 
 const exampleSystems = [
-  ["Source", "Contour field", "#e5e7eb"],
-  ["Motion", "Flow current", "#38bdf8"],
-  ["Color", "Aurora wash", "#f472b6"],
-  ["Feedback", "Particle memory", "#a78bfa"],
-  ["Output", "Live canvas", "#86efac"],
+  ["Curl Noise TOP", "Organic source", "#67e8f9"],
+  ["Fluid Advection TOP", "Liquid motion", "#a78bfa"],
+  ["Raymarch Glass TOP", "Refractive depth", "#e0f2fe"],
+  ["Bloom TOP", "Cinematic light", "#fde68a"],
+  ["Color Grade TOP", "Editorial finish", "#c4b5fd"],
+  ["Out TOP", "Live canvas", "#86efac"],
 ] as const;
 
 export default async function HomePage() {
@@ -43,7 +44,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-dvh overflow-y-auto bg-[#050609] text-zinc-100">
       <section className="relative min-h-dvh overflow-hidden px-5 py-5 md:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(56,189,248,0.18),transparent_30%),radial-gradient(circle_at_24%_36%,rgba(244,114,182,0.14),transparent_28%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(56,189,248,0.12),transparent_34%),linear-gradient(300deg,rgba(167,139,250,0.12),transparent_36%)]" />
         <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-40px)] max-w-7xl flex-col">
           <header className="flex items-center justify-between border-b border-white/10 py-4">
             <Link href="/" className="flex items-center gap-3">
@@ -53,7 +54,7 @@ export default async function HomePage() {
               <span>
                 <span className="block text-sm font-semibold uppercase tracking-[0.16em]">Ergon</span>
                 <span className="block text-[10px] uppercase tracking-[0.14em] text-zinc-600">
-                  generative node studio
+                  organic TOP lab
                 </span>
               </span>
             </Link>
@@ -73,38 +74,38 @@ export default async function HomePage() {
           <div className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="max-w-xl">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">
-                Generative art, patched visually
+                Reference-grade organic visual systems
               </p>
               <h1 className="mt-5 text-balance text-5xl font-semibold leading-[0.95] text-zinc-50 md:text-7xl">
-                Build living visuals without wrestling a blank canvas.
+                Build luminous generative visuals from real texture operators.
               </h1>
               <p className="mt-6 text-pretty text-lg leading-8 text-zinc-400">
-                Ergon is a pure node workspace for visual artists: macro operators, realtime
-                generative output, and After Effects-style keyframes in one dark, cinematic studio.
+                Ergon is a cinematic TOP studio for visual artists: curl noise, fluid advection,
+                glass refraction, bloom, color grade, and export-ready GPU output in one live canvas.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/studio"
                   className="rounded-full bg-zinc-100 px-6 py-3 text-sm font-semibold text-zinc-950 transition-transform hover:scale-[1.02]"
                 >
-                  Launch live patch
+                  Open Studio
                 </Link>
                 <a
                   href="#systems"
                   className="rounded-full border border-white/12 px-6 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/8"
                 >
-                  See systems
+                  View systems
                 </a>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-black/60 p-3 shadow-2xl shadow-black/40">
-              <div className="grid min-h-[560px] overflow-hidden rounded-[22px] border border-white/10 bg-[#08090d] lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="border border-white/10 bg-black/60 p-3 shadow-2xl shadow-black/40">
+              <div className="grid min-h-[560px] overflow-hidden border border-white/10 bg-[#08090d] lg:grid-cols-[0.92fr_1.08fr]">
                 <div className="relative overflow-hidden border-b border-white/10 bg-black lg:border-b-0 lg:border-r">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(56,189,248,0.36),transparent_22%),radial-gradient(circle_at_58%_45%,rgba(244,114,182,0.28),transparent_26%),radial-gradient(circle_at_70%_70%,rgba(167,139,250,0.24),transparent_22%)]" />
-                  <div className="absolute inset-0 opacity-80 [background-image:linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.09)_42%,transparent_43%),radial-gradient(circle,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:100%_100%,38px_38px]" />
+                  <div className="absolute inset-0 bg-[conic-gradient(from_120deg_at_50%_45%,rgba(2,6,23,1),rgba(56,189,248,0.34),rgba(167,139,250,0.26),rgba(247,201,120,0.18),rgba(2,6,23,1))]" />
+                  <div className="absolute inset-0 opacity-80 [background-image:linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.09)_42%,transparent_43%),radial-gradient(circle,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:100%_100%,38px_38px]" />
                   <div className="absolute bottom-4 left-4 rounded-full border border-white/15 bg-black/45 px-3 py-1.5 text-[11px] text-zinc-300 backdrop-blur-md">
-                    Live output · cinematic field
+                    Live output · liquid aurora
                   </div>
                 </div>
                 <div className="relative p-5">

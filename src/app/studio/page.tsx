@@ -1,5 +1,5 @@
-import { NodeStudio } from "@/components/studio/NodeStudio";
+import { TextureStudio } from "@/components/studio/TextureStudio";
 
 export default function StudioPage() {
-  return <NodeStudio />;
+  return <TextureStudio />;
 }

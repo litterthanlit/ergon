@@ -1,5 +1,5 @@
-import { CreatorPage } from "@/components/creator/CreatorPage";
+import { redirect } from "next/navigation";
 
 export default function CreatePage() {
-  return <CreatorPage />;
+  redirect("/studio");
 }
