@@ -81,30 +81,29 @@ describe("Texture studio controls", () => {
     expect(useTexturePatchStore.getState().playback.playing).toBe(false);
   });
 
-  it("operator browser tabs and search filter TOP operators", () => {
+  it("operator browser systems and search filter TOP operators", () => {
     render(<TextureOperatorBrowser />);
-    expect(screen.getByRole("button", { name: "Curl Noise" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Systems/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Depth/ }));
     fireEvent.change(screen.getByLabelText("Search Operators"), { target: { value: "glass" } });
     expect(screen.getByRole("button", { name: "Raymarch Glass" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Curl Noise" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "CHOP" }));
-    expect(screen.getByText(/reserved for the next domain pass/i)).toBeInTheDocument();
   });
 
   it("recipe rail loads starter systems", () => {
     render(<TextureRightPanel />);
     const before = useTexturePatchStore.getState().patch.name;
+    fireEvent.click(screen.getByRole("button", { name: "recipe" }));
     fireEvent.click(screen.getByRole("button", { name: "Volumetric Veil" }));
     expect(useTexturePatchStore.getState().patch.name).not.toBe(before);
     expect(useTexturePatchStore.getState().patch.name).toBe("Glass Veil");
   });
 
-  it("viewer playback controls toggle and scrub frame", () => {
+  it("viewer scrub changes frame", () => {
     const onRuntimeReady = vi.fn();
     render(<TextureViewer plan={useTexturePatchStore.getState().renderPlan} onRuntimeReady={onRuntimeReady} />);
-    fireEvent.click(screen.getByRole("button", { name: "Pause playback" }));
-    expect(useTexturePatchStore.getState().playback.playing).toBe(false);
     fireEvent.change(screen.getByLabelText("Timeline frame"), { target: { value: "240" } });
     expect(useTexturePatchStore.getState().playback.frame).toBe(240);
+    expect(useTexturePatchStore.getState().playback.playing).toBe(false);
   });
 });

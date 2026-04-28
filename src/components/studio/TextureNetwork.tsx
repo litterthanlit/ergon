@@ -51,8 +51,8 @@ function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
 
   return (
     <div
-      className={`min-w-[154px] border bg-[#111217] shadow-xl shadow-black/25 ${
-        selected ? "border-zinc-100" : "border-white/12"
+      className={`min-w-[148px] overflow-hidden rounded-lg border bg-[#1a1d20]/92 shadow-xl shadow-black/25 backdrop-blur ${
+        selected ? "border-blue-400 shadow-blue-500/10" : "border-white/14"
       } ${textureNode.bypass ? "opacity-55" : ""}`}
     >
       {(operator?.inputs ?? []).map((port, index) => (
@@ -65,25 +65,16 @@ function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
           style={{ top: 38 + index * 18, background: tone }}
         />
       ))}
-      <div className={`relative h-8 overflow-hidden bg-gradient-to-r ${miniPreviewClass(textureNode.type)}`}>
+      <div className={`relative mx-3 mt-3 h-12 overflow-hidden rounded-md bg-gradient-to-r ${miniPreviewClass(textureNode.type)}`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,0.65),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(255,255,255,0.22),transparent_24%)]" />
-        <div className="absolute left-2 top-2 flex items-center gap-1.5">
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/70">TOP</span>
+        <div className="absolute right-2 top-2 flex items-center gap-1.5">
           <span className="size-2" style={{ backgroundColor: tone }} />
         </div>
       </div>
-      <div className="px-2.5 py-2">
-        <div className="truncate text-[12px] font-semibold text-zinc-100">{textureNode.label}</div>
-        <div className="mt-1 truncate font-mono text-[9px] text-zinc-600">{textureNode.id}</div>
+      <div className="px-3 py-2.5">
+        <div className="truncate text-[13px] font-medium text-zinc-100">{textureNode.label.replace(" TOP", "")}</div>
       </div>
-      <div className="grid grid-cols-4 border-t border-white/10 font-mono text-[9px]">
-        <span className={`px-2 py-1 text-center ${textureNode.bypass ? "bg-amber-300 text-black" : "text-zinc-600"}`}>B</span>
-        <span className={`border-l border-white/10 px-2 py-1 text-center ${textureNode.lock ? "bg-zinc-200 text-black" : "text-zinc-600"}`}>L</span>
-        <span className={`border-l border-white/10 px-2 py-1 text-center ${isViewer ? "bg-emerald-300 text-black" : "text-zinc-600"}`}>V</span>
-        <span className="border-l border-white/10 px-2 py-1 text-center text-zinc-600">
-          {operator?.inputs.length ?? 0}:{operator?.outputs.length ?? 0}
-        </span>
-      </div>
+      <span className={`absolute right-3 bottom-3 size-2.5 rounded-full ${isViewer ? "bg-white" : "bg-white/20"}`} />
       {operator?.outputs.map((port) => (
         <Handle
           key={port.id}
@@ -130,7 +121,7 @@ export function TextureNetwork() {
         sourceHandle: edge.sourcePort,
         target: edge.target,
         targetHandle: edge.targetPort,
-        style: { stroke: "rgba(210, 238, 247, 0.54)", strokeWidth: 1.35 },
+        style: { stroke: patch.viewerNodeId === edge.target ? "rgba(173,216,255,0.88)" : "rgba(196, 214, 220, 0.5)", strokeWidth: patch.viewerNodeId === edge.target ? 2 : 1.35 },
         animated: patch.viewerNodeId === edge.target,
       })),
     [patch.edges, patch.viewerNodeId]
@@ -143,24 +134,23 @@ export function TextureNetwork() {
   };
 
   return (
-    <section className="relative min-h-[300px] border-t border-[#20252b] bg-[#070b0f]">
-      <div className="absolute left-0 right-0 top-0 z-10 flex h-8 items-center justify-between border-b border-[#20252b] bg-[#0b0f13]/95 px-3 backdrop-blur">
-        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-          <span className="text-cyan-300/70">›</span>
-          <span>{"/ Workbench"}</span>
-          <span className="border-l border-[#20252b] pl-2">{patch.nodes.length} TOPs</span>
+    <section className="relative min-h-[360px] bg-[#121619]">
+      <div className="absolute left-0 right-0 top-0 z-10 flex h-10 items-center justify-between border-b border-white/10 bg-[#171a1d]/80 px-4 backdrop-blur-xl">
+        <div className="mx-auto flex items-center gap-2 text-[13px] text-zinc-300">
+          <span className="text-zinc-500">⌃</span>
+          <span>Advanced Graph</span>
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-zinc-600">
-          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">⇤</button>
-          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">⇥</button>
-          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">▦</button>
+        <div className="absolute right-4 flex items-center gap-1 text-[12px] text-zinc-600">
+          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">⇤</button>
+          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">⇥</button>
+          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">▦</button>
         </div>
       </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        defaultViewport={{ x: 48, y: 84, zoom: 0.68 }}
+        defaultViewport={{ x: 28, y: 110, zoom: 0.78 }}
         minZoom={0.3}
         maxZoom={1.6}
         onConnect={handleConnect}
@@ -168,9 +158,10 @@ export function TextureNetwork() {
         onNodeDoubleClick={(_, node) => setViewerNode(node.id)}
         onNodeDragStop={(_, node) => setNodePosition(node.id, node.position)}
         proOptions={{ hideAttribution: true }}
+        className="bg-[radial-gradient(circle_at_45%_18%,rgba(110,135,152,0.14),transparent_32%),#121619]"
       >
-        <Background color="rgba(255,255,255,0.14)" gap={24} size={1} />
-        <Controls className="!border-white/10 !bg-zinc-950/90 !text-zinc-200" />
+        <Background color="rgba(255,255,255,0.08)" gap={24} size={1} />
+        <Controls className="!hidden" />
       </ReactFlow>
     </section>
   );

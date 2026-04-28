@@ -58,7 +58,7 @@ export function TextureStudio() {
   }, [handleSave, patch.name, workId]);
 
   return (
-    <main className="flex min-h-dvh w-screen flex-col overflow-y-auto bg-[#050609] text-zinc-100 lg:h-dvh lg:overflow-hidden">
+    <main className="min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[radial-gradient(circle_at_18%_0%,rgba(120,160,190,0.16),transparent_34%),linear-gradient(135deg,#07090b,#111417_48%,#07090b)] p-3 text-zinc-100 lg:h-dvh lg:overflow-hidden">
       <TextureProHeader
         onExport={handleExport}
         onSave={handleSave}
@@ -68,13 +68,31 @@ export function TextureStudio() {
         workSlug={workSlug}
       />
       <ReactFlowProvider>
-        <div className="grid min-h-[900px] flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[264px_minmax(0,1fr)_500px]">
-          <TextureOperatorBrowser />
-          <div className="grid min-h-0 grid-rows-[minmax(360px,1fr)_330px]">
+        <div className="grid min-h-[980px] overflow-hidden rounded-xl border border-white/12 bg-[#101316]/82 shadow-2xl shadow-black/45 backdrop-blur-2xl lg:h-[calc(100dvh-1.5rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_276px] lg:grid-rows-[44vh_minmax(0,1fr)_54px]">
+          <div className="min-h-0 lg:col-span-2">
             <TextureViewer plan={renderPlan} onRuntimeReady={setRuntime} />
-            <TextureNetwork />
           </div>
-          <TextureRightPanel />
+          <div className="grid min-h-0 border-t border-white/10 lg:col-span-2 lg:grid-cols-[236px_minmax(0,1fr)_276px]">
+            <TextureOperatorBrowser />
+            <TextureNetwork />
+            <TextureRightPanel />
+          </div>
+          <div className="hidden items-center justify-between border-t border-white/10 bg-[#171a1d]/85 px-5 text-sm text-zinc-500 lg:col-span-2 lg:flex">
+            <div className="flex items-center gap-7">
+              <button type="button" aria-label="Undo" className="text-lg hover:text-white">↶</button>
+              <button type="button" aria-label="Redo" className="text-lg text-zinc-700 hover:text-white">↷</button>
+              <button type="button" aria-label="Lock" className="hover:text-white">▣</button>
+              <span className="h-7 w-px bg-white/10" />
+              <button type="button" aria-label="Zoom out" className="text-lg hover:text-white">−</button>
+              <button type="button" aria-label="Zoom in" className="text-lg hover:text-white">＋</button>
+              <button type="button" className="rounded-md border border-white/10 bg-white/[0.035] px-4 py-2 text-[13px] text-zinc-300 hover:bg-white/10">100% ⌄</button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" aria-label="List layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-300">▤</button>
+              <button type="button" aria-label="Panel layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-500">▭</button>
+              <button type="button" aria-label="Grid layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-500">▦</button>
+            </div>
+          </div>
         </div>
       </ReactFlowProvider>
     </main>

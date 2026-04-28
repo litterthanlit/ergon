@@ -53,6 +53,63 @@ export function TextureInspector({ embedded = false }: Props) {
   const nodeStats = stats?.nodeStats[selectedNode.id];
   const groups = schemaGroups(operator);
 
+  if (embedded) {
+    return (
+      <div className="mt-4 space-y-5">
+        {groups.length === 0 ? (
+          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-500">
+            This node has no exposed artist controls.
+          </div>
+        ) : (
+          groups.map((group) => (
+            <div key={group.label} className="rounded-lg border border-white/10 bg-white/[0.025] p-3">
+              <ParameterPanel
+                schema={group.schema}
+                values={valuesFor(group.schema, selectedNode.params)}
+                onChange={(key, value) => updateNodeParam(selectedNode.id, key, value as ParamValue)}
+                tone="dark"
+                title={group.label}
+                description=""
+              />
+            </div>
+          ))
+        )}
+
+        {operator.presets && operator.presets.length > 0 && (
+          <div>
+            <h3 className="text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500">Quick Presets</h3>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {operator.presets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    for (const [key, value] of Object.entries(preset.params)) {
+                      updateNodeParam(selectedNode.id, key, value as ParamValue);
+                    }
+                  }}
+                  className="rounded-md border border-white/10 bg-white/[0.035] px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/8"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
+          <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500">Cook Stats</div>
+          <div className="grid grid-cols-2 gap-2 text-[11px] text-zinc-500">
+            <span>{nodeStats?.cookMs.toFixed(2) ?? "0.00"} ms</span>
+            <span>{nodeStats?.resolution.join("x") ?? "pending"}</span>
+            <span>{operator.inputs.length} in</span>
+            <span>{operator.outputs.length} out</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <aside className={`${embedded ? "h-full" : "min-h-[300px] border-t lg:border-l lg:border-t-0"} flex w-full shrink-0 flex-col border-white/10 bg-[#0a0b10]`}>
       <div className="border-b border-white/10 px-4 py-4">

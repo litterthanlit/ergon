@@ -2,93 +2,91 @@
 
 import {
   searchTextureOperators,
-  textureOperatorBrowserTabs,
-  textureOperatorCategoryLabels,
+  textureStarters,
+  type TextureRecipeId,
   type TextureOperatorType,
 } from "@/lib/texture-patch";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
-import { TextureThumb } from "./TextureThumb";
+
+const systemGroups = [
+  { label: "Sources", icon: "⌘", query: "noise" },
+  { label: "Motion", icon: "⌁", query: "curl" },
+  { label: "Liquid", icon: "≋", query: "fluid" },
+  { label: "Color", icon: "◌", query: "color" },
+  { label: "Glow", icon: "☼", query: "bloom" },
+  { label: "Depth", icon: "◎", query: "glass" },
+  { label: "Grain", icon: "⠿", query: "grain" },
+  { label: "Output", icon: "○", query: "out" },
+];
 
 export function TextureOperatorBrowser() {
-  const patch = useTexturePatchStore((state) => state.patch);
-  const stats = useTexturePatchStore((state) => state.stats);
   const browser = useTexturePatchStore((state) => state.operatorBrowser);
-  const selectOperatorCategory = useTexturePatchStore((state) => state.selectOperatorCategory);
   const setOperatorSearch = useTexturePatchStore((state) => state.setOperatorSearch);
   const addOperator = useTexturePatchStore((state) => state.addOperator);
-  const selectedNode = patch.nodes.find((node) => node.id === patch.selectedNodeId);
-  const nodeStats = selectedNode ? stats?.nodeStats[selectedNode.id] : undefined;
+  const loadRecipe = useTexturePatchStore((state) => state.loadRecipe);
   const groups = searchTextureOperators(browser.tab, browser.search);
+  const libraryItems = Object.values(groups).flat();
 
   return (
-    <aside className="flex min-h-0 flex-col border-r border-[#20252b] bg-[#0b1014]">
-      <div className="grid grid-cols-6 border-b border-[#20252b] text-[10px] uppercase tracking-[0.12em]">
-        {textureOperatorBrowserTabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => selectOperatorCategory(tab)}
-            className={`h-8 border-r border-[#20252b] last:border-r-0 ${
-              browser.tab === tab ? "bg-[#141a20] text-zinc-200" : "text-zinc-600 hover:text-zinc-300"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-        <button type="button" onClick={() => addOperator("null")} className="h-8 text-zinc-500 hover:text-zinc-200">+</button>
+    <aside className="flex min-h-0 flex-col border-r border-white/10 bg-[#15181b]/78 backdrop-blur-xl">
+      <div className="grid grid-cols-2 border-b border-white/10 p-3 pb-0 text-[13px]">
+        <button type="button" className="rounded-t-md bg-white/10 px-4 py-3 font-medium text-white">Systems</button>
+        <button type="button" className="px-4 py-3 text-zinc-500">Node Library</button>
       </div>
 
-      <div className="border-b border-[#20252b] p-2">
+      <div className="space-y-2 p-4">
+        {systemGroups.map((group) => (
+          <button
+            key={group.label}
+            type="button"
+            onClick={() => setOperatorSearch(group.query)}
+            className="flex h-11 w-full items-center gap-3 rounded-lg border border-white/10 bg-white/[0.045] px-4 text-left text-[14px] text-zinc-200 shadow-sm shadow-black/10 hover:bg-white/[0.075]"
+          >
+            <span className="grid size-6 place-items-center rounded-full text-[15px] text-cyan-200">{group.icon}</span>
+            {group.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="border-t border-white/10 px-4 pb-3 pt-4">
         <label className="sr-only" htmlFor="operator-search">Search Operators</label>
         <input
           id="operator-search"
           value={browser.search}
           onChange={(event) => setOperatorSearch(event.target.value)}
           placeholder="Search Operators"
-          className="h-8 w-full border border-[#252c33] bg-[#0a0e12] px-3 font-mono text-[11px] text-zinc-300 outline-none placeholder:text-zinc-700 focus:border-cyan-300/35"
+          className="h-9 w-full rounded-lg border border-white/10 bg-black/18 px-3 text-[13px] text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-blue-300/45"
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-        {browser.tab !== "TOP" ? (
-          <div className="mt-6 border border-[#20252b] bg-[#0e1318] p-3 text-xs leading-5 text-zinc-500">
-            {browser.tab} operators are reserved for the next domain pass. TOPs are active in V2.1.
-          </div>
-        ) : (
-          Object.entries(groups).map(([category, items]) => (
-            <div key={category} className="border-b border-[#1b2026] py-2 last:border-b-0">
-              <div className="mb-1 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-                <span>{textureOperatorCategoryLabels[category as keyof typeof textureOperatorCategoryLabels]}</span>
-                <span>{items.length.toString().padStart(2, "0")}</span>
-              </div>
-              <div className="space-y-0.5">
-                {items.map((operator) => (
-                  <button
-                    key={operator.type}
-                    type="button"
-                    aria-label={operator.label.replace(" TOP", "")}
-                    onClick={() => addOperator(operator.type as TextureOperatorType)}
-                    className="grid h-6 w-full grid-cols-[1fr_auto] items-center border border-transparent px-1.5 text-left text-[11px] text-zinc-500 hover:border-[#29313a] hover:bg-[#11171d] hover:text-zinc-200"
-                    title={operator.description}
-                  >
-                    <span className="truncate">{operator.label.replace(" TOP", "")}</span>
-                    <span className="font-mono text-[9px] uppercase text-zinc-700">TOP</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div className="border-t border-[#20252b] p-2">
-        <TextureThumb id="organic-refraction" accent="#67e8f9" className="h-[90px] border border-[#242b33]" />
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 font-mono text-[10px] text-zinc-500">
-          <span>Resolution</span><span>{patch.resolution[0]} {patch.resolution[1]}</span>
-          <span>Pixel Format</span><span>RGBA 16f</span>
-          <span>Selected</span><span className="truncate">{selectedNode?.label ?? "None"}</span>
-          <span>GPU</span><span>{nodeStats?.cookMs.toFixed(2) ?? "0.00"} ms</span>
-          <span>Last Cook</span><span>{stats?.cookMs.toFixed(2) ?? "0.00"} ms</span>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <div className="mb-2 text-[11px] uppercase tracking-[0.08em] text-zinc-600">Quick Add</div>
+        <div className="space-y-1.5">
+          {libraryItems.slice(0, 8).map((operator) => (
+            <button
+              key={operator.type}
+              type="button"
+              aria-label={operator.label.replace(" TOP", "")}
+              onClick={() => addOperator(operator.type as TextureOperatorType)}
+              className="grid h-9 w-full grid-cols-[1fr_auto] items-center rounded-md border border-transparent px-3 text-left text-[13px] text-zinc-400 hover:border-white/10 hover:bg-white/[0.055] hover:text-white"
+            >
+              <span className="truncate">{operator.label.replace(" TOP", "")}</span>
+              <span className="text-[10px] uppercase text-zinc-700">TOP</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 space-y-1.5">
+          {textureStarters.slice(0, 3).map((starter) => (
+            <button
+              key={starter.id}
+              type="button"
+              onClick={() => loadRecipe(starter.recipeId as TextureRecipeId)}
+              className="w-full rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-left hover:bg-white/[0.07]"
+            >
+              <span className="block text-[13px] font-medium text-zinc-200">{starter.label}</span>
+              <span className="mt-0.5 block text-[11px] text-zinc-600">{starter.tags.join(" · ")}</span>
+            </button>
+          ))}
         </div>
       </div>
     </aside>
