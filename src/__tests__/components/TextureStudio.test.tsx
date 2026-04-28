@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TextureCommandBar } from "@/components/studio/TextureCommandBar";
 import { TextureInspector } from "@/components/studio/TextureInspector";
+import { TextureOperatorBrowser } from "@/components/studio/TextureOperatorBrowser";
+import { TextureProHeader } from "@/components/studio/TextureProHeader";
+import { TextureRightPanel } from "@/components/studio/TextureRightPanel";
+import { TextureViewer } from "@/components/studio/TextureViewer";
 import { compileTexturePatch, textureRecipes } from "@/lib/texture-patch";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
 
@@ -13,12 +16,21 @@ vi.mock("next/link", () => ({
 
 function resetStore() {
   const patch = textureRecipes[0].create();
-  useTexturePatchStore.setState({
-    patch,
-    renderPlan: compileTexturePatch(patch),
-    stats: null,
-  });
-}
+    useTexturePatchStore.setState({
+      patch,
+      renderPlan: compileTexturePatch(patch),
+      stats: null,
+      playback: {
+        playing: true,
+        frame: patch.timeline?.currentFrame ?? 0,
+        fpsTarget: patch.timeline?.fps ?? 60,
+        durationFrames: patch.timeline?.durationFrames ?? 720,
+        loop: patch.timeline?.loop ?? true,
+        playbackRate: 1,
+      },
+      operatorBrowser: { tab: "TOP", search: "" },
+    });
+  }
 
 describe("Texture studio controls", () => {
   beforeEach(() => {
@@ -51,10 +63,11 @@ describe("Texture studio controls", () => {
     expect(state.renderPlan.rendererBackend).toBe("webgl2");
   });
 
-  it("command palette applies a deterministic mutation", () => {
+  it("header playback and export controls work", () => {
+    const onExport = vi.fn();
     render(
-      <TextureCommandBar
-        onExport={vi.fn()}
+      <TextureProHeader
+        onExport={onExport}
         onSave={vi.fn()}
         onPublish={vi.fn()}
         isSaving={false}
@@ -62,25 +75,36 @@ describe("Texture studio controls", () => {
         workSlug={null}
       />
     );
-    const originalBloom = useTexturePatchStore.getState().patch.nodes.find((node) => node.type === "bloom");
-    fireEvent.click(screen.getByRole("button", { name: "Increase bloom" }));
-    const bloom = useTexturePatchStore.getState().patch.nodes.find((node) => node.type === "bloom");
-    expect(bloom?.params.strength).toBeGreaterThan(originalBloom?.params.strength as number);
+    fireEvent.click(screen.getByRole("button", { name: "Export" }));
+    expect(onExport).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    expect(useTexturePatchStore.getState().playback.playing).toBe(false);
   });
 
-  it("adds an operator from the command bar", () => {
-    render(
-      <TextureCommandBar
-        onExport={vi.fn()}
-        onSave={vi.fn()}
-        onPublish={vi.fn()}
-        isSaving={false}
-        isPublishing={false}
-        workSlug={null}
-      />
-    );
+  it("operator browser tabs and search filter TOP operators", () => {
+    render(<TextureOperatorBrowser />);
+    expect(screen.getByRole("button", { name: "Curl Noise" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Search Operators"), { target: { value: "glass" } });
+    expect(screen.getByRole("button", { name: "Raymarch Glass" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Curl Noise" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "CHOP" }));
+    expect(screen.getByText(/reserved for the next domain pass/i)).toBeInTheDocument();
+  });
+
+  it("recipe rail loads starter systems", () => {
+    render(<TextureRightPanel />);
     const before = useTexturePatchStore.getState().patch.name;
-    fireEvent.click(screen.getByRole("button", { name: "Glass Veil" }));
+    fireEvent.click(screen.getByRole("button", { name: "Volumetric Veil" }));
     expect(useTexturePatchStore.getState().patch.name).not.toBe(before);
+    expect(useTexturePatchStore.getState().patch.name).toBe("Glass Veil");
+  });
+
+  it("viewer playback controls toggle and scrub frame", () => {
+    const onRuntimeReady = vi.fn();
+    render(<TextureViewer plan={useTexturePatchStore.getState().renderPlan} onRuntimeReady={onRuntimeReady} />);
+    fireEvent.click(screen.getByRole("button", { name: "Pause playback" }));
+    expect(useTexturePatchStore.getState().playback.playing).toBe(false);
+    fireEvent.change(screen.getByLabelText("Timeline frame"), { target: { value: "240" } });
+    expect(useTexturePatchStore.getState().playback.frame).toBe(240);
   });
 });

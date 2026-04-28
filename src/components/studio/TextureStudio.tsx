@@ -6,9 +6,10 @@ import { downloadDataUrl, exportFilename } from "@/lib/export";
 import { publishWork, saveWork } from "@/lib/actions/works";
 import type { TextureRuntime } from "@/lib/texture-runtime";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
-import { TextureCommandBar } from "./TextureCommandBar";
-import { TextureInspector } from "./TextureInspector";
 import { TextureNetwork } from "./TextureNetwork";
+import { TextureOperatorBrowser } from "./TextureOperatorBrowser";
+import { TextureProHeader } from "./TextureProHeader";
+import { TextureRightPanel } from "./TextureRightPanel";
 import { TextureViewer } from "./TextureViewer";
 
 export function TextureStudio() {
@@ -58,7 +59,7 @@ export function TextureStudio() {
 
   return (
     <main className="flex min-h-dvh w-screen flex-col overflow-y-auto bg-[#050609] text-zinc-100 lg:h-dvh lg:overflow-hidden">
-      <TextureCommandBar
+      <TextureProHeader
         onExport={handleExport}
         onSave={handleSave}
         onPublish={handlePublish}
@@ -67,12 +68,13 @@ export function TextureStudio() {
         workSlug={workSlug}
       />
       <ReactFlowProvider>
-        <div className="grid min-h-0 flex-1 grid-rows-[minmax(520px,1fr)_minmax(300px,36vh)]">
-          <TextureViewer plan={renderPlan} onRuntimeReady={setRuntime} />
-          <div className="grid min-h-0 border-t border-white/10 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
+        <div className="grid min-h-[900px] flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[264px_minmax(0,1fr)_500px]">
+          <TextureOperatorBrowser />
+          <div className="grid min-h-0 grid-rows-[minmax(360px,1fr)_330px]">
+            <TextureViewer plan={renderPlan} onRuntimeReady={setRuntime} />
             <TextureNetwork />
-            <TextureInspector />
           </div>
+          <TextureRightPanel />
         </div>
       </ReactFlowProvider>
     </main>

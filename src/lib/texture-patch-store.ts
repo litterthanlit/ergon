@@ -12,6 +12,7 @@ import {
   type TextureCommandId,
   type TextureEdge,
   type TextureNode,
+  type TextureOperatorBrowserTab,
   type TextureOperatorType,
   type TexturePatch,
   type TextureQuality,
@@ -26,6 +27,18 @@ type TexturePatchState = {
   patch: TexturePatch;
   renderPlan: TextureRenderPlan;
   stats: TextureRuntimeStats | null;
+  playback: {
+    playing: boolean;
+    frame: number;
+    fpsTarget: number;
+    durationFrames: number;
+    loop: boolean;
+    playbackRate: number;
+  };
+  operatorBrowser: {
+    tab: TextureOperatorBrowserTab;
+    search: string;
+  };
   setSelectedNode: (id: string) => void;
   setViewerNode: (id: string) => void;
   updateNodeParam: (nodeId: string, key: string, value: ParamValue) => void;
@@ -36,12 +49,29 @@ type TexturePatchState = {
   toggleLock: (nodeId: string) => void;
   setRendererBackend: (backend: TextureRendererBackend) => void;
   setQuality: (quality: TextureQuality) => void;
+  setPlaying: (playing: boolean) => void;
+  setFrame: (frame: number) => void;
+  setPlaybackRate: (rate: number) => void;
+  selectOperatorCategory: (tab: TextureOperatorBrowserTab) => void;
+  setOperatorSearch: (search: string) => void;
   loadRecipe: (id: TextureRecipeId) => void;
   applyCommand: (id: TextureCommandId) => void;
   setStats: (stats: TextureRuntimeStats) => void;
 };
 
 const starterPatch = textureRecipes[0].create();
+
+function playbackFromPatch(patch: TexturePatch): TexturePatchState["playback"] {
+  const timeline = patch.timeline ?? { fps: 60, durationFrames: 720, loop: true, currentFrame: 0 };
+  return {
+    playing: true,
+    frame: timeline.currentFrame,
+    fpsTarget: timeline.fps,
+    durationFrames: timeline.durationFrames,
+    loop: timeline.loop,
+    playbackRate: 1,
+  };
+}
 
 function recompute(patch: TexturePatch) {
   return { patch, renderPlan: compileTexturePatch(patch) };
@@ -66,6 +96,8 @@ function defaultTargetPort(target: TextureNode, edges: TextureEdge[]) {
 export const useTexturePatchStore = create<TexturePatchState>((set) => ({
   ...recompute(starterPatch),
   stats: null,
+  playback: playbackFromPatch(starterPatch),
+  operatorBrowser: { tab: "TOP", search: "" },
 
   setSelectedNode: (id) =>
     set((state) => ({
@@ -149,10 +181,49 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
   setQuality: (quality) =>
     set((state) => recompute({ ...state.patch, quality })),
 
+  setPlaying: (playing) =>
+    set((state) => ({
+      playback: { ...state.playback, playing },
+    })),
+
+  setFrame: (frame) =>
+    set((state) => {
+      const duration = Math.max(1, state.playback.durationFrames);
+      const clamped = state.playback.loop ? ((frame % duration) + duration) % duration : Math.max(0, Math.min(duration, frame));
+      const patch = {
+        ...state.patch,
+        timeline: { ...(state.patch.timeline ?? { fps: state.playback.fpsTarget, durationFrames: duration, loop: state.playback.loop }), currentFrame: clamped },
+      };
+      return {
+        ...recompute(patch),
+        playback: { ...state.playback, frame: clamped },
+      };
+    }),
+
+  setPlaybackRate: (rate) =>
+    set((state) => ({
+      playback: { ...state.playback, playbackRate: rate },
+    })),
+
+  selectOperatorCategory: (tab) =>
+    set((state) => ({
+      operatorBrowser: { ...state.operatorBrowser, tab },
+    })),
+
+  setOperatorSearch: (search) =>
+    set((state) => ({
+      operatorBrowser: { ...state.operatorBrowser, search },
+    })),
+
   loadRecipe: (id) =>
     set(() => {
       const recipe = getTextureRecipe(id);
-      return recipe ? recompute(recipe.create()) : {};
+      if (!recipe) return {};
+      const patch = recipe.create();
+      return {
+        ...recompute(patch),
+        playback: playbackFromPatch(patch),
+      };
     }),
 
   applyCommand: (id) =>

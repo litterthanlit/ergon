@@ -5,6 +5,7 @@ export type TextureRendererBackend = "webgpu" | "webgl2";
 export type TextureQuality = "preview" | "final";
 export type TextureOperatorCategory = "generator" | "simulation" | "modifier" | "network" | "output";
 export type TexturePersistentBuffer = "feedback" | "simulation";
+export type TextureOperatorBrowserTab = "TOP" | "CHOP" | "SOP" | "MAT" | "DAT";
 
 export type TextureOperatorType =
   | "noise"
@@ -78,12 +79,20 @@ export type TextureEdge = {
   targetPort: string;
 };
 
+export type TextureTimeline = {
+  fps: number;
+  durationFrames: number;
+  loop: boolean;
+  currentFrame: number;
+};
+
 export type TexturePatch = {
   id: string;
   name: string;
   resolution: [number, number];
   rendererBackend: TextureRendererBackend;
   quality: TextureQuality;
+  timeline?: TextureTimeline;
   selectedNodeId: string;
   viewerNodeId: string;
   nodes: TextureNode[];
@@ -528,6 +537,16 @@ const textureOperatorDefinitions: Omit<TextureOperatorDefinition, "defaults" | "
   },
 ];
 
+export const textureOperatorBrowserTabs: TextureOperatorBrowserTab[] = ["TOP", "CHOP", "SOP", "MAT", "DAT"];
+
+export const textureOperatorCategoryLabels: Record<TextureOperatorCategory, string> = {
+  generator: "Generators",
+  simulation: "Fields",
+  modifier: "Filters",
+  network: "Blend",
+  output: "Render",
+};
+
 export const textureOperators: TextureOperatorDefinition[] = textureOperatorDefinitions.map((operator) => ({
   ...operator,
   defaults: schemaDefaults(operator.schema),
@@ -542,6 +561,33 @@ export function getTextureOperator(type: TextureOperatorType): TextureOperatorDe
 
 export function listTextureOperators(category?: TextureOperatorCategory): TextureOperatorDefinition[] {
   return category ? textureOperators.filter((operator) => operator.category === category) : textureOperators;
+}
+
+export function searchTextureOperators(
+  tab: TextureOperatorBrowserTab,
+  query = ""
+): Record<TextureOperatorCategory, TextureOperatorDefinition[]> {
+  const emptyGroups = {
+    generator: [],
+    simulation: [],
+    modifier: [],
+    network: [],
+    output: [],
+  } satisfies Record<TextureOperatorCategory, TextureOperatorDefinition[]>;
+  if (tab !== "TOP") return emptyGroups;
+  const normalized = query.trim().toLowerCase();
+  const groups: Record<TextureOperatorCategory, TextureOperatorDefinition[]> = {
+    generator: [],
+    simulation: [],
+    modifier: [],
+    network: [],
+    output: [],
+  };
+  for (const operator of textureOperators) {
+    const haystack = `${operator.label} ${operator.description} ${operator.type}`.toLowerCase();
+    if (!normalized || haystack.includes(normalized)) groups[operator.category].push(operator);
+  }
+  return groups;
 }
 
 export function createTextureNode(
@@ -594,6 +640,7 @@ function makePatch(
     resolution: [1600, 900],
     rendererBackend: "webgpu",
     quality,
+    timeline: { fps: 60, durationFrames: 720, loop: true, currentFrame: 96 },
     selectedNodeId,
     viewerNodeId,
     nodes,
@@ -624,17 +671,46 @@ export function createLiquidAuroraPatch(): TexturePatch {
 
 export type TextureRecipeId = "liquid-aurora" | "glass-veil" | "bloom-signal" | "reaction-field" | "chromatic-smoke";
 
-export const textureRecipes: { id: TextureRecipeId; label: string; description: string; create: () => TexturePatch }[] = [
+export type TextureRecipe = {
+  id: TextureRecipeId;
+  label: string;
+  description: string;
+  thumbnail: string;
+  accent: string;
+  tags: string[];
+  featuredOperatorTypes: TextureOperatorType[];
+  create: () => TexturePatch;
+};
+
+export type TextureStarter = {
+  id: string;
+  label: string;
+  thumbnail: string;
+  accent: string;
+  description: string;
+  tags: string[];
+  recipeId: TextureRecipeId;
+};
+
+export const textureRecipes: TextureRecipe[] = [
   {
     id: "liquid-aurora",
     label: "Liquid Aurora",
     description: "Curl flow, glass refraction, bloom, and silver-cyan color grade.",
+    thumbnail: "organic-refraction",
+    accent: "#67e8f9",
+    tags: ["glass", "curl", "bloom"],
+    featuredOperatorTypes: ["curl-noise", "fluid-advection", "raymarch-glass", "bloom", "color-grade"],
     create: createLiquidAuroraPatch,
   },
   {
     id: "glass-veil",
     label: "Glass Veil",
     description: "A refractive gradient system with soft folds and restrained highlights.",
+    thumbnail: "volumetric-veil",
+    accent: "#a7f3d0",
+    tags: ["refraction", "veil", "soft"],
+    featuredOperatorTypes: ["gradient", "curl-noise", "displace", "raymarch-glass", "color-grade"],
     create: () => {
       const nodes = [
         createTextureNode("gradient", { x: 0, y: -50 }, { id: "gradient-1", params: { colorA: "#01040a", colorB: "#a7f3d0", angle: 0.58, softness: 1.25 } }),
@@ -659,6 +735,10 @@ export const textureRecipes: { id: TextureRecipeId; label: string; description: 
     id: "bloom-signal",
     label: "Bloom Signal",
     description: "Graphic masks pushed through additive bloom and finished as a poster-like field.",
+    thumbnail: "fluid-bloom",
+    accent: "#f7c978",
+    tags: ["signal", "bloom", "poster"],
+    featuredOperatorTypes: ["shape", "curl-noise", "composite", "bloom", "chromatic-aberration"],
     create: () => {
       const nodes = [
         createTextureNode("shape", { x: 0, y: -40 }, { id: "shape-1", params: { shape: "Ring", size: 0.62, feather: 0.1, colorA: "#ffffff" } }),
@@ -683,6 +763,10 @@ export const textureRecipes: { id: TextureRecipeId; label: string; description: 
     id: "reaction-field",
     label: "Reaction Field",
     description: "A persistent organic simulation with growth, erosion, bloom, and grade.",
+    thumbnail: "bio-lattice",
+    accent: "#8cf8d2",
+    tags: ["simulation", "organic", "growth"],
+    featuredOperatorTypes: ["curl-noise", "reaction-diffusion", "bloom", "film-grain"],
     create: () => {
       const nodes = [
         createTextureNode("curl-noise", { x: 0, y: 35 }, { id: "curl-1", params: { scale: 6.5, speed: 0.2, flow: 1, contrast: 1.1, seed: 72, colorA: "#02040a", colorB: "#8cf8d2", colorC: colorWarm } }),
@@ -705,6 +789,10 @@ export const textureRecipes: { id: TextureRecipeId; label: string; description: 
     id: "chromatic-smoke",
     label: "Chromatic Smoke",
     description: "Dark smoke ribbons with lens separation, soft bloom, and a cool editorial finish.",
+    thumbnail: "iridion-flow",
+    accent: "#c4b5fd",
+    tags: ["smoke", "lens", "editorial"],
+    featuredOperatorTypes: ["curl-noise", "fluid-advection", "chromatic-aberration", "bloom"],
     create: () => {
       const nodes = [
         createTextureNode("curl-noise", { x: 0, y: 30 }, { id: "curl-1", params: { scale: 4.8, speed: 0.2, flow: 2.45, contrast: 1.18, seed: 8, colorA: "#010207", colorB: "#64748b", colorC: "#c4b5fd" } }),
@@ -724,6 +812,89 @@ export const textureRecipes: { id: TextureRecipeId; label: string; description: 
     },
   },
 ];
+
+export const textureStarters: TextureStarter[] = [
+  {
+    id: "organic-refraction",
+    label: "Organic Refraction",
+    thumbnail: "organic-refraction",
+    accent: "#67e8f9",
+    description: "Glossy organic glass with cyan-violet highlights.",
+    tags: ["glass", "premium"],
+    recipeId: "liquid-aurora",
+  },
+  {
+    id: "fluid-bloom",
+    label: "Fluid Bloom",
+    thumbnail: "fluid-bloom",
+    accent: "#f7c978",
+    description: "Additive light, glow, and poster-like signal energy.",
+    tags: ["bloom", "signal"],
+    recipeId: "bloom-signal",
+  },
+  {
+    id: "volumetric-veil",
+    label: "Volumetric Veil",
+    thumbnail: "volumetric-veil",
+    accent: "#a7f3d0",
+    description: "Soft refractive folds and veil-like depth.",
+    tags: ["soft", "glass"],
+    recipeId: "glass-veil",
+  },
+  {
+    id: "iridion-flow",
+    label: "Iridion Flow",
+    thumbnail: "iridion-flow",
+    accent: "#c4b5fd",
+    description: "Chromatic smoke flow with subtle lens splitting.",
+    tags: ["smoke", "lens"],
+    recipeId: "chromatic-smoke",
+  },
+  {
+    id: "neural-foam",
+    label: "Neural Foam",
+    thumbnail: "neural-foam",
+    accent: "#fda4af",
+    description: "Cellular foam, reaction texture, and warm sparks.",
+    tags: ["cells", "reaction"],
+    recipeId: "reaction-field",
+  },
+  {
+    id: "lava-lamp",
+    label: "Lava Lamp",
+    thumbnail: "lava-lamp",
+    accent: "#fb923c",
+    description: "Warm suspended blobs with glassy edges.",
+    tags: ["warm", "blob"],
+    recipeId: "bloom-signal",
+  },
+  {
+    id: "bio-lattice",
+    label: "Bio-Lattice",
+    thumbnail: "bio-lattice",
+    accent: "#8cf8d2",
+    description: "Persistent organic growth field.",
+    tags: ["bio", "lattice"],
+    recipeId: "reaction-field",
+  },
+  {
+    id: "oil-water",
+    label: "Oil & Water",
+    thumbnail: "oil-water",
+    accent: "#93c5fd",
+    description: "Iridescent fluid refraction with silver-blue grading.",
+    tags: ["oil", "water"],
+    recipeId: "glass-veil",
+  },
+];
+
+export function framesToTime(frame: number, fps: number): number {
+  return Math.max(0, frame) / Math.max(1, fps);
+}
+
+export function timeToFrame(time: number, fps: number): number {
+  return Math.max(0, Math.round(time * Math.max(1, fps)));
+}
 
 export function getTextureRecipe(id: TextureRecipeId) {
   return textureRecipes.find((recipe) => recipe.id === id);

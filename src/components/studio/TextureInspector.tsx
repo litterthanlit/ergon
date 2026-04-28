@@ -5,6 +5,10 @@ import { getTextureOperator, type TextureOperatorDefinition, type TextureQuality
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
 import type { ParamSchema, ParamValue, ParamValues } from "@/lib/types";
 
+type Props = {
+  embedded?: boolean;
+};
+
 function schemaGroups(operator: TextureOperatorDefinition) {
   const used = new Set<string>();
   const groups = (operator.paramGroups ?? [])
@@ -26,7 +30,7 @@ function valuesFor(schema: ParamSchema, values: ParamValues) {
   return Object.fromEntries(Object.keys(schema).map((key) => [key, values[key]])) as ParamValues;
 }
 
-export function TextureInspector() {
+export function TextureInspector({ embedded = false }: Props) {
   const patch = useTexturePatchStore((state) => state.patch);
   const stats = useTexturePatchStore((state) => state.stats);
   const updateNodeParam = useTexturePatchStore((state) => state.updateNodeParam);
@@ -40,7 +44,7 @@ export function TextureInspector() {
 
   if (!selectedNode || !operator) {
     return (
-      <aside className="flex min-h-[300px] w-full items-center justify-center border-t border-white/10 bg-[#0a0b10] text-sm text-zinc-500 lg:border-l lg:border-t-0">
+      <aside className={`${embedded ? "h-full" : "min-h-[300px] border-t lg:border-l lg:border-t-0"} flex w-full items-center justify-center border-white/10 bg-[#0a0b10] text-sm text-zinc-500`}>
         Select a TOP.
       </aside>
     );
@@ -50,7 +54,7 @@ export function TextureInspector() {
   const groups = schemaGroups(operator);
 
   return (
-    <aside className="flex min-h-[300px] w-full shrink-0 flex-col border-t border-white/10 bg-[#0a0b10] lg:border-l lg:border-t-0">
+    <aside className={`${embedded ? "h-full" : "min-h-[300px] border-t lg:border-l lg:border-t-0"} flex w-full shrink-0 flex-col border-white/10 bg-[#0a0b10]`}>
       <div className="border-b border-white/10 px-4 py-4">
         <div className="flex items-center justify-between gap-2">
           <span className="border border-white/10 bg-white/6 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">

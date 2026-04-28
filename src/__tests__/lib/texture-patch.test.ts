@@ -5,9 +5,13 @@ import {
   countPersistentBuffers,
   createTextureEdge,
   createTextureNode,
+  framesToTime,
   getTextureOperator,
   listTextureOperators,
+  searchTextureOperators,
+  textureStarters,
   textureRecipes,
+  timeToFrame,
   validateTexturePatch,
 } from "@/lib/texture-patch";
 import { detectTextureRuntimeCapabilities } from "@/lib/texture-runtime";
@@ -49,6 +53,34 @@ describe("texture patch", () => {
     expect(typeof capabilities.webgl2).toBe("boolean");
   });
 
+  it("ships complete deterministic recipe and starter metadata", () => {
+    expect(textureRecipes.every((recipe) =>
+      recipe.thumbnail && recipe.accent && recipe.tags.length > 0 && recipe.featuredOperatorTypes.length > 0
+    )).toBe(true);
+    expect(textureStarters.map((starter) => starter.label)).toEqual([
+      "Organic Refraction",
+      "Fluid Bloom",
+      "Volumetric Veil",
+      "Iridion Flow",
+      "Neural Foam",
+      "Lava Lamp",
+      "Bio-Lattice",
+      "Oil & Water",
+    ]);
+  });
+
+  it("filters operator browser groups by tab and search query", () => {
+    expect(searchTextureOperators("CHOP", "").generator).toEqual([]);
+    const results = searchTextureOperators("TOP", "glass");
+    expect(results.modifier.map((operator) => operator.type)).toContain("raymarch-glass");
+    expect(searchTextureOperators("TOP", "noise").generator.length).toBeGreaterThan(0);
+  });
+
+  it("converts between timeline frames and seconds", () => {
+    expect(framesToTime(120, 60)).toBe(2);
+    expect(timeToFrame(2.5, 60)).toBe(150);
+  });
+
   it("validates required output and invalid cables", () => {
     const patch = textureRecipes[0].create();
     const missingOut = { ...patch, nodes: patch.nodes.filter((node) => node.type !== "out") };
@@ -81,6 +113,7 @@ describe("texture patch", () => {
       "out-1",
     ]);
     expect(plan.rendererBackend).toBe("webgpu");
+    expect(patch.timeline?.fps).toBe(60);
   });
 
   it("applies local commands deterministically", () => {

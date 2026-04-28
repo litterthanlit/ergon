@@ -14,7 +14,6 @@ import {
 } from "@xyflow/react";
 import {
   getTextureOperator,
-  listTextureOperators,
   type TextureNode,
   type TextureOperatorCategory,
   type TextureOperatorType,
@@ -107,13 +106,6 @@ export function TextureNetwork() {
   const setViewerNode = useTexturePatchStore((state) => state.setViewerNode);
   const setNodePosition = useTexturePatchStore((state) => state.setNodePosition);
   const connectNodes = useTexturePatchStore((state) => state.connectNodes);
-  const addOperator = useTexturePatchStore((state) => state.addOperator);
-  const operators = listTextureOperators();
-  const operatorGroups = [
-    { label: "Sources", items: operators.filter((operator) => operator.category === "generator" || operator.category === "simulation") },
-    { label: "Finish", items: operators.filter((operator) => operator.category === "modifier") },
-    { label: "Network", items: operators.filter((operator) => operator.category === "network" || operator.category === "output") },
-  ];
 
   const nodes: Node<TextureNodeData>[] = useMemo(
     () =>
@@ -151,37 +143,24 @@ export function TextureNetwork() {
   };
 
   return (
-    <section className="relative min-h-[300px] bg-[#07080c]">
-      <div className="absolute left-3 right-3 top-3 z-10 flex flex-wrap items-center gap-2">
-        <div className="border border-white/10 bg-black/70 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 backdrop-blur">
-          network / TOP
+    <section className="relative min-h-[300px] border-t border-[#20252b] bg-[#070b0f]">
+      <div className="absolute left-0 right-0 top-0 z-10 flex h-8 items-center justify-between border-b border-[#20252b] bg-[#0b0f13]/95 px-3 backdrop-blur">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+          <span className="text-cyan-300/70">›</span>
+          <span>{"/ Workbench"}</span>
+          <span className="border-l border-[#20252b] pl-2">{patch.nodes.length} TOPs</span>
         </div>
-        <div className="flex max-w-full gap-1 overflow-x-auto border border-white/10 bg-black/55 p-1 backdrop-blur">
-          {operatorGroups.map((group) => (
-            <div key={group.label} className="flex shrink-0 items-center gap-1 border-r border-white/10 pr-1 last:border-r-0">
-              <span className="px-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-600">
-                {group.label}
-              </span>
-              {group.items.map((operator) => (
-                <button
-                  key={operator.type}
-                  type="button"
-                  onClick={() => addOperator(operator.type as TextureOperatorType)}
-                  className="shrink-0 border border-transparent px-1.5 py-1 font-mono text-[10px] text-zinc-400 transition-colors hover:border-white/10 hover:bg-white/10 hover:text-zinc-100"
-                  title={operator.description}
-                >
-                  {operator.label.replace(" TOP", "")}
-                </button>
-              ))}
-            </div>
-          ))}
+        <div className="flex items-center gap-1 text-[10px] text-zinc-600">
+          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">⇤</button>
+          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">⇥</button>
+          <button type="button" className="grid size-6 place-items-center border border-[#20252b] hover:text-zinc-300">▦</button>
         </div>
       </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        defaultViewport={{ x: 58, y: 112, zoom: 0.72 }}
+        defaultViewport={{ x: 48, y: 84, zoom: 0.68 }}
         minZoom={0.3}
         maxZoom={1.6}
         onConnect={handleConnect}
