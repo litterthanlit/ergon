@@ -5,7 +5,8 @@ type WorkCard = {
   id: string;
   title: string;
   slug: string;
-  template_id: string;
+  template_id: string | null;
+  thumbnail_url: string | null;
   profiles?: {
     username?: string;
     display_name?: string;
@@ -19,7 +20,7 @@ async function getPublishedWorks(): Promise<WorkCard[]> {
 
     const { data } = await supabase
       .from("works")
-      .select("id, title, slug, template_id, profiles(username, display_name)")
+      .select("id, title, slug, template_id, thumbnail_url, profiles(username, display_name)")
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(6);
@@ -167,16 +168,25 @@ export default async function HomePage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             {(works.length ? works : [
-              { id: "demo-1", title: "Cinematic Field", slug: "demo-1", template_id: "flowfield" },
-              { id: "demo-2", title: "Aurora Memory", slug: "demo-2", template_id: "aurora" },
-              { id: "demo-3", title: "Soft Feedback", slug: "demo-3", template_id: "drift" },
+              { id: "demo-1", title: "Cinematic Field", slug: "demo-1", template_id: "flowfield", thumbnail_url: null },
+              { id: "demo-2", title: "Aurora Memory", slug: "demo-2", template_id: "aurora", thumbnail_url: null },
+              { id: "demo-3", title: "Soft Feedback", slug: "demo-3", template_id: "drift", thumbnail_url: null },
             ]).map((work, index) => (
               <Link
                 key={work.id}
                 href={works.length ? `/work/${work.slug}` : "/studio"}
                 className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-3 transition-colors hover:bg-white/[0.06]"
               >
-                <div className="aspect-[4/3] rounded-2xl bg-black [background-image:radial-gradient(circle_at_30%_20%,rgba(56,189,248,0.28),transparent_28%),radial-gradient(circle_at_70%_60%,rgba(244,114,182,0.22),transparent_26%)]" />
+                {work.thumbnail_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={work.thumbnail_url}
+                    alt={`${work.title} preview`}
+                    className="aspect-[4/3] w-full rounded-2xl bg-black object-cover"
+                  />
+                ) : (
+                  <div className="aspect-[4/3] rounded-2xl bg-black [background-image:radial-gradient(circle_at_30%_20%,rgba(56,189,248,0.28),transparent_28%),radial-gradient(circle_at_70%_60%,rgba(244,114,182,0.22),transparent_26%)]" />
+                )}
                 <div className="px-1 pt-4">
                   <h3 className="font-semibold text-zinc-100">{work.title}</h3>
                   <p className="mt-1 text-sm text-zinc-600">

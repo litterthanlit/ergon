@@ -14,6 +14,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
 import { compositeLayersToDataUrl, type CompositeLayer } from "@/lib/compositor";
 import { saveWork, publishWork } from "@/lib/actions/works";
+import type { WorkDocument } from "@/lib/work-document";
 import { recipes } from "@/lib/recipes";
 
 function parseErrorLine(error: string | null): number | null {
@@ -68,6 +69,8 @@ export function Studio() {
   const setWorkSlug = useStudioStore((s) => s.setWorkSlug);
   const setIsSaving = useStudioStore((s) => s.setIsSaving);
   const setIsPublishing = useStudioStore((s) => s.setIsPublishing);
+  const setStatus = useStudioStore((s) => s.setStatus);
+  const setError = useStudioStore((s) => s.setError);
   const compositionMode = useStudioStore((s) => s.compositionMode);
   const layers = useStudioStore((s) => s.layers);
   const activeLayerIndex = useStudioStore((s) => s.activeLayerIndex);
@@ -152,36 +155,61 @@ export function Studio() {
     }
   }, [template.name, compositionMode, layers]);
 
-  const handleSave = useCallback(async () => {
+  const captureSandboxThumbnail = useCallback(() => {
+    const iframe = document.querySelector<HTMLIFrameElement>('iframe[title="Ergon Sandbox"]');
+    const iframeDoc = iframe?.contentDocument || iframe?.contentWindow?.document;
+    const canvas = iframeDoc?.querySelector("canvas");
+    return canvas?.toDataURL("image/png") ?? null;
+  }, []);
+
+  const handleSave = useCallback(async (): Promise<string | null> => {
     setIsSaving(true);
     try {
-      const result = await saveWork({
-        id: workId ?? undefined,
-        title: workTitle,
+      const document: WorkDocument = {
+        engine: "p5-sketch",
+        version: 1,
         code,
         templateId: template.id,
         params: values as Record<string, unknown>,
+        paramsSchema: schema,
+      };
+      const result = await saveWork({
+        id: workId ?? undefined,
+        title: workTitle,
+        document,
+        thumbnailDataUrl: captureSandboxThumbnail(),
       });
+      if (result.error) {
+        setError(result.error);
+        return null;
+      }
       if (result.id) {
         setWorkId(result.id);
       }
+      setStatus("ready");
+      return result.id ?? workId;
     } finally {
       setIsSaving(false);
     }
-  }, [workId, workTitle, code, template.id, values, setWorkId, setIsSaving]);
+  }, [captureSandboxThumbnail, code, schema, setError, setIsSaving, setStatus, setWorkId, template.id, values, workId, workTitle]);
 
   const handlePublish = useCallback(async () => {
-    if (!workId) return;
+    const id = workId ?? await handleSave();
+    if (!id) return;
     setIsPublishing(true);
     try {
-      const result = await publishWork(workId, workTitle);
+      const result = await publishWork(id, workTitle);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
       if (result.slug) {
         setWorkSlug(result.slug);
       }
     } finally {
       setIsPublishing(false);
     }
-  }, [workId, workTitle, setWorkSlug, setIsPublishing]);
+  }, [handleSave, setError, setIsPublishing, setWorkSlug, workId, workTitle]);
 
   useEffect(() => {
     function onExport() { handleExport(); }

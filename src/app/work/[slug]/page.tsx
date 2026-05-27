@@ -1,6 +1,8 @@
 import { getPublishedWork } from "@/lib/actions/works";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { PublishedTextureRenderer } from "@/components/studio/PublishedTextureRenderer";
+import { parseWorkDocument } from "@/lib/work-document";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -26,11 +28,12 @@ export default async function WorkPage({ params }: Props) {
   const { work } = await getPublishedWork(slug);
   if (!work) notFound();
 
-  const codeEncoded = encodeURIComponent(work.code);
-  const paramsEncoded = work.params
-    ? encodeURIComponent(JSON.stringify(work.params))
-    : "";
-  const sandboxUrl = `/sandbox/index.html#code=${codeEncoded}${paramsEncoded ? `&params=${paramsEncoded}` : ""}`;
+  const document = parseWorkDocument(work);
+  const sandboxUrl = document.engine === "p5-sketch"
+    ? `/sandbox/index.html#code=${encodeURIComponent(document.code)}${
+        document.params ? `&params=${encodeURIComponent(JSON.stringify(document.params))}` : ""
+      }`
+    : null;
 
   const artistName = work.profiles?.display_name || work.profiles?.username || "Anonymous";
   const artistUsername = work.profiles?.username;
@@ -62,13 +65,17 @@ export default async function WorkPage({ params }: Props) {
 
       {/* Full-bleed canvas */}
       <div className="flex-1 relative" style={{ viewTransitionName: "work-canvas" }}>
-        <iframe
-          title={work.title}
-          src={sandboxUrl}
-          sandbox="allow-scripts"
-          className="absolute inset-0 w-full h-full border-0"
-          style={{ background: "#000" }}
-        />
+        {document.engine === "texture-patch" ? (
+          <PublishedTextureRenderer patch={document.patch} title={work.title} />
+        ) : (
+          <iframe
+            title={work.title}
+            src={sandboxUrl ?? "/sandbox/index.html"}
+            sandbox="allow-scripts"
+            className="absolute inset-0 w-full h-full border-0"
+            style={{ background: "#000" }}
+          />
+        )}
       </div>
 
       {/* Bottom info — always visible, minimal */}

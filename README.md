@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ergon
 
-## Getting Started
+Ergon is a browser-native visual creation tool inspired by TouchDesigner: live GPU visuals, operator graphs, recipes, parameter controls, and published works that stay interactive.
 
-First, run the development server:
+## Current Architecture
+
+- `src/app/studio/page.tsx` opens `TextureStudio`, the current graph-based texture editor.
+- `src/lib/texture-patch.ts` defines TOP-style operators, recipes, validation, and render plans.
+- `src/lib/texture-runtime.ts` renders texture patches with WebGL2.
+- `src/lib/work-document.ts` defines the canonical saved work format.
+- Published works are engine-aware:
+  - `texture-patch` renders with the texture runtime.
+  - `p5-sketch` renders in the legacy sandbox iframe.
+
+## Run Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Optional Supabase env vars:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
 
-## Learn More
+Without Supabase, the studio runs in demo mode but save/publish is disabled.
 
-To learn more about Next.js, take a look at the following resources:
+## Publishing Model
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Works now use a versioned document contract:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `engine`
+- `document_version`
+- `document`
+- `thumbnail_url`
 
-## Deploy on Vercel
+Old `code`, `template_id`, and `params` columns remain as compatibility fallbacks. This keeps old p5 sketches readable while making texture patches first-class.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Apply `docs/supabase-phase-0.sql` before relying on save/publish in a real Supabase project.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Useful Commands
+
+```bash
+npm test
+npm run lint
+npm run build
+npm run build:runtime
+```
+
+## Known Limits
+
+- WebGPU is not implemented; the texture renderer is WebGL2.
+- User-authored JS still belongs in the sandbox path.
+- Play Mode, command history, control nodes, shader editing, and gamified onboarding are future phases.

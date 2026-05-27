@@ -12,6 +12,7 @@ import { useVisualPatchStore } from "@/lib/visual-patch-store";
 import { compositeLayersToDataUrl, type CompositeLayer } from "@/lib/compositor";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
 import { publishWork, saveWork } from "@/lib/actions/works";
+import type { WorkDocument } from "@/lib/work-document";
 
 export function NodeStudio() {
   const patch = useVisualPatchStore((state) => state.patch);
@@ -48,30 +49,35 @@ export function NodeStudio() {
     downloadDataUrl(dataUrl, exportFilename(patch.name, "png"));
   }, [patch.name, renderPlan.layers]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (): Promise<string | null> => {
     setIsSaving(true);
     try {
-      const result = await saveWork({
-        id: workId ?? undefined,
-        title: patch.name,
+      const document: WorkDocument = {
+        engine: "p5-sketch",
+        version: 1,
         code: JSON.stringify(patch),
         templateId: "visual-patch",
         params: { patch, renderPlan },
+      };
+      const result = await saveWork({
+        id: workId ?? undefined,
+        title: patch.name,
+        document,
       });
+      if (result.error) return null;
       if (result.id) setWorkId(result.id);
+      return result.id ?? workId;
     } finally {
       setIsSaving(false);
     }
   }, [patch, renderPlan, workId]);
 
   const handlePublish = useCallback(async () => {
-    if (!workId) {
-      await handleSave();
-      return;
-    }
+    const id = workId ?? await handleSave();
+    if (!id) return;
     setIsPublishing(true);
     try {
-      const result = await publishWork(workId, patch.name);
+      const result = await publishWork(id, patch.name);
       if (result.slug) setWorkSlug(result.slug);
     } finally {
       setIsPublishing(false);

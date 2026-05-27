@@ -1,3 +1,5 @@
+import type { WorkDocument, WorkEngine } from "@/lib/work-document";
+
 export type Profile = {
   id: string;
   username: string;
@@ -12,6 +14,10 @@ export type Work = {
   code: string;
   template_id: string | null;
   params: Record<string, unknown> | null;
+  engine: WorkEngine | null;
+  document_version: number | null;
+  document: WorkDocument | Record<string, unknown> | null;
+  thumbnail_url: string | null;
   is_published: boolean;
   slug: string | null;
   created_at: string;
