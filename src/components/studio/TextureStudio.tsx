@@ -13,15 +13,21 @@ import { TextureProHeader } from "./TextureProHeader";
 import { TextureRightPanel } from "./TextureRightPanel";
 import { TextureViewer } from "./TextureViewer";
 
+type PersistenceStatus = {
+  kind: "success" | "error";
+  message: string;
+};
+
 export function TextureStudio() {
   const patch = useTexturePatchStore((state) => state.patch);
   const renderPlan = useTexturePatchStore((state) => state.renderPlan);
+  const markSaved = useTexturePatchStore((state) => state.markSaved);
   const [runtime, setRuntime] = useState<TextureRuntime | null>(null);
   const [workId, setWorkId] = useState<string | null>(null);
   const [workSlug, setWorkSlug] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus | null>(null);
 
   const handleExport = useCallback(() => {
     const dataUrl = runtime?.exportPng(1);
@@ -30,7 +36,7 @@ export function TextureStudio() {
 
   const handleSave = useCallback(async (): Promise<string | null> => {
     setIsSaving(true);
-    setPersistenceError(null);
+    setPersistenceStatus(null);
     try {
       const thumbnail = runtime?.exportPng(0.35) ?? null;
       const document: WorkDocument = {
@@ -47,28 +53,33 @@ export function TextureStudio() {
         thumbnailDataUrl: thumbnail,
       });
       if (result.error) {
-        setPersistenceError(result.error);
+        setPersistenceStatus({ kind: "error", message: result.error });
         return null;
       }
       if (result.id) setWorkId(result.id);
+      markSaved();
+      setPersistenceStatus({ kind: "success", message: "Saved" });
       return result.id ?? workId;
     } finally {
       setIsSaving(false);
     }
-  }, [patch, runtime, workId]);
+  }, [markSaved, patch, runtime, workId]);
 
   const handlePublish = useCallback(async () => {
     const id = workId ?? await handleSave();
     if (!id) return;
     setIsPublishing(true);
-    setPersistenceError(null);
+    setPersistenceStatus(null);
     try {
       const result = await publishWork(id, patch.name);
       if (result.error) {
-        setPersistenceError(result.error);
+        setPersistenceStatus({ kind: "error", message: result.error });
         return;
       }
-      if (result.slug) setWorkSlug(result.slug);
+      if (result.slug) {
+        setWorkSlug(result.slug);
+        setPersistenceStatus({ kind: "success", message: "Published" });
+      }
     } finally {
       setIsPublishing(false);
     }
@@ -84,13 +95,25 @@ export function TextureStudio() {
         isPublishing={isPublishing}
         workSlug={workSlug}
       />
-      {persistenceError && (
-        <div className="absolute right-4 top-20 z-40 max-w-sm rounded-lg border border-red-400/30 bg-red-950/85 px-4 py-3 text-sm text-red-100 shadow-2xl">
-          {persistenceError}
+      {persistenceStatus && (
+        <div
+          role={persistenceStatus.kind === "error" ? "alert" : "status"}
+          className={`absolute right-4 top-20 z-40 max-w-sm rounded-lg border px-4 py-3 text-sm shadow-2xl ${
+            persistenceStatus.kind === "error"
+              ? "border-red-400/30 bg-red-950/85 text-red-100"
+              : "border-emerald-300/25 bg-emerald-950/80 text-emerald-100"
+          }`}
+        >
+          <span>{persistenceStatus.message}</span>
+          {workSlug && (
+            <a href={`/work/${workSlug}`} className="ml-3 underline decoration-white/30 underline-offset-4 hover:text-white">
+              Open published work
+            </a>
+          )}
         </div>
       )}
       <ReactFlowProvider>
-        <div className="grid min-h-[980px] overflow-hidden rounded-xl border border-white/12 bg-[#101316]/82 shadow-2xl shadow-black/45 backdrop-blur-2xl lg:h-[calc(100dvh-1.5rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_276px] lg:grid-rows-[44vh_minmax(0,1fr)_54px]">
+        <div className="grid min-h-[980px] overflow-hidden rounded-xl border border-white/12 bg-[#101316]/82 shadow-2xl shadow-black/45 backdrop-blur-2xl lg:h-[calc(100dvh-1.5rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_276px] lg:grid-rows-[44vh_minmax(0,1fr)]">
           <div className="min-h-0 lg:col-span-2">
             <TextureViewer plan={renderPlan} onRuntimeReady={setRuntime} />
           </div>
@@ -98,22 +121,6 @@ export function TextureStudio() {
             <TextureOperatorBrowser />
             <TextureNetwork />
             <TextureRightPanel />
-          </div>
-          <div className="hidden items-center justify-between border-t border-white/10 bg-[#171a1d]/85 px-5 text-sm text-zinc-500 lg:col-span-2 lg:flex">
-            <div className="flex items-center gap-7">
-              <button type="button" aria-label="Undo" className="text-lg hover:text-white">↶</button>
-              <button type="button" aria-label="Redo" className="text-lg text-zinc-700 hover:text-white">↷</button>
-              <button type="button" aria-label="Lock" className="hover:text-white">▣</button>
-              <span className="h-7 w-px bg-white/10" />
-              <button type="button" aria-label="Zoom out" className="text-lg hover:text-white">−</button>
-              <button type="button" aria-label="Zoom in" className="text-lg hover:text-white">＋</button>
-              <button type="button" className="rounded-md border border-white/10 bg-white/[0.035] px-4 py-2 text-[13px] text-zinc-300 hover:bg-white/10">100% ⌄</button>
-            </div>
-            <div className="flex items-center gap-2">
-              <button type="button" aria-label="List layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-300">▤</button>
-              <button type="button" aria-label="Panel layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-500">▭</button>
-              <button type="button" aria-label="Grid layout" className="grid size-8 place-items-center rounded-md border border-white/10 bg-white/[0.04] text-zinc-500">▦</button>
-            </div>
           </div>
         </div>
       </ReactFlowProvider>

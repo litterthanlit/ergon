@@ -20,18 +20,25 @@ const systemGroups = [
 ];
 
 export function TextureOperatorBrowser() {
+  const patch = useTexturePatchStore((state) => state.patch);
   const browser = useTexturePatchStore((state) => state.operatorBrowser);
   const setOperatorSearch = useTexturePatchStore((state) => state.setOperatorSearch);
   const addOperator = useTexturePatchStore((state) => state.addOperator);
   const loadRecipe = useTexturePatchStore((state) => state.loadRecipe);
   const groups = searchTextureOperators(browser.tab, browser.search);
-  const libraryItems = Object.values(groups).flat();
+  const hasOut = patch.nodes.some((node) => node.type === "out");
+  const libraryItems = Object.values(groups).flat().filter((operator) => operator.type !== "out" || !hasOut);
 
   return (
     <aside className="flex min-h-0 flex-col border-r border-white/10 bg-[#15181b]/78 backdrop-blur-xl">
-      <div className="grid grid-cols-2 border-b border-white/10 p-3 pb-0 text-[13px]">
-        <button type="button" className="rounded-t-md bg-white/10 px-4 py-3 font-medium text-white">Systems</button>
-        <button type="button" className="px-4 py-3 text-zinc-500">Node Library</button>
+      <div className="border-b border-white/10 p-3 pb-0 text-[13px]">
+        <button
+          type="button"
+          onClick={() => setOperatorSearch("")}
+          className="rounded-t-md bg-white/10 px-4 py-3 font-medium text-white"
+        >
+          Systems
+        </button>
       </div>
 
       <div className="space-y-2 p-4">

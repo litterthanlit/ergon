@@ -1,11 +1,14 @@
+import { ReactFlowProvider } from "@xyflow/react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TextureInspector } from "@/components/studio/TextureInspector";
+import { TextureNetwork } from "@/components/studio/TextureNetwork";
 import { TextureOperatorBrowser } from "@/components/studio/TextureOperatorBrowser";
 import { TextureProHeader } from "@/components/studio/TextureProHeader";
 import { TextureRightPanel } from "@/components/studio/TextureRightPanel";
 import { TextureViewer } from "@/components/studio/TextureViewer";
 import { compileTexturePatch, textureRecipes } from "@/lib/texture-patch";
+import { createTexturePatchHistory } from "@/lib/texture-patch-history";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
 
 vi.mock("next/link", () => ({
@@ -16,21 +19,22 @@ vi.mock("next/link", () => ({
 
 function resetStore() {
   const patch = textureRecipes[0].create();
-    useTexturePatchStore.setState({
-      patch,
-      renderPlan: compileTexturePatch(patch),
-      stats: null,
-      playback: {
-        playing: true,
-        frame: patch.timeline?.currentFrame ?? 0,
-        fpsTarget: patch.timeline?.fps ?? 60,
-        durationFrames: patch.timeline?.durationFrames ?? 720,
-        loop: patch.timeline?.loop ?? true,
-        playbackRate: 1,
-      },
-      operatorBrowser: { tab: "TOP", search: "" },
-    });
-  }
+  useTexturePatchStore.setState({
+    patch,
+    renderPlan: compileTexturePatch(patch),
+    history: createTexturePatchHistory(),
+    stats: null,
+    playback: {
+      playing: true,
+      frame: patch.timeline?.currentFrame ?? 0,
+      fpsTarget: patch.timeline?.fps ?? 60,
+      durationFrames: patch.timeline?.durationFrames ?? 720,
+      loop: patch.timeline?.loop ?? true,
+      playbackRate: 1,
+    },
+    operatorBrowser: { tab: "TOP", search: "" },
+  });
+}
 
 describe("Texture studio controls", () => {
   beforeEach(() => {
@@ -81,6 +85,23 @@ describe("Texture studio controls", () => {
     expect(useTexturePatchStore.getState().playback.playing).toBe(false);
   });
 
+  it("header quality select updates the patch quality", () => {
+    render(
+      <TextureProHeader
+        onExport={vi.fn()}
+        onSave={vi.fn()}
+        onPublish={vi.fn()}
+        isSaving={false}
+        isPublishing={false}
+        workSlug={null}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Preview quality"), { target: { value: "final" } });
+
+    expect(useTexturePatchStore.getState().patch.quality).toBe("final");
+  });
+
   it("operator browser systems and search filter TOP operators", () => {
     render(<TextureOperatorBrowser />);
     expect(screen.getByRole("button", { name: /Systems/ })).toBeInTheDocument();
@@ -105,5 +126,65 @@ describe("Texture studio controls", () => {
     fireEvent.change(screen.getByLabelText("Timeline frame"), { target: { value: "240" } });
     expect(useTexturePatchStore.getState().playback.frame).toBe(240);
     expect(useTexturePatchStore.getState().playback.playing).toBe(false);
+  });
+
+  it("graph controls duplicate, delete, and disconnect real patch data", () => {
+    render(
+      <ReactFlowProvider>
+        <TextureNetwork />
+      </ReactFlowProvider>
+    );
+
+    const initialNodeCount = useTexturePatchStore.getState().patch.nodes.length;
+    fireEvent.click(screen.getByRole("button", { name: "Duplicate node" }));
+    expect(useTexturePatchStore.getState().patch.nodes).toHaveLength(initialNodeCount + 1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete node" }));
+    expect(useTexturePatchStore.getState().patch.nodes).toHaveLength(initialNodeCount);
+
+    const initialEdgeCount = useTexturePatchStore.getState().patch.edges.length;
+    fireEvent.change(screen.getByLabelText("Selected cable"), { target: { value: "curl-1:advection-1:in1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Disconnect cable" }));
+    expect(useTexturePatchStore.getState().patch.edges).toHaveLength(initialEdgeCount - 1);
+    expect(useTexturePatchStore.getState().patch.edges.some((edge) => edge.id === "curl-1:advection-1:in1")).toBe(false);
+  });
+
+  it("does not delete the only Out TOP", () => {
+    useTexturePatchStore.getState().setSelectedNode("out-1");
+    render(
+      <ReactFlowProvider>
+        <TextureNetwork />
+      </ReactFlowProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete node" }));
+
+    expect(useTexturePatchStore.getState().patch.nodes.filter((node) => node.type === "out")).toHaveLength(1);
+  });
+
+  it("does not render fake controls", () => {
+    const noop = vi.fn();
+    const { rerender } = render(
+      <TextureProHeader
+        onExport={noop}
+        onSave={noop}
+        onPublish={noop}
+        isSaving={false}
+        isPublishing={false}
+        workSlug={null}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Play preview" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Studio" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Graph" })).not.toBeInTheDocument();
+
+    rerender(<TextureRightPanel />);
+    expect(screen.queryByText("Expose to Look")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Replace Node/ })).not.toBeInTheDocument();
+
+    rerender(<TextureOperatorBrowser />);
+    expect(screen.queryByRole("button", { name: "Node Library" })).not.toBeInTheDocument();
   });
 });

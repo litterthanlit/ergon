@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Background,
   Controls,
@@ -11,6 +11,7 @@ import {
   type Edge,
   type Node,
   type NodeProps,
+  useReactFlow,
 } from "@xyflow/react";
 import {
   getTextureOperator,
@@ -92,11 +93,21 @@ function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
 const nodeTypes = { textureNode: TextureGraphNode };
 
 export function TextureNetwork() {
+  const flow = useReactFlow();
+  const [selectedEdgeId, setSelectedEdgeId] = useState("");
   const patch = useTexturePatchStore((state) => state.patch);
   const setSelectedNode = useTexturePatchStore((state) => state.setSelectedNode);
   const setViewerNode = useTexturePatchStore((state) => state.setViewerNode);
   const setNodePosition = useTexturePatchStore((state) => state.setNodePosition);
   const connectNodes = useTexturePatchStore((state) => state.connectNodes);
+  const disconnectEdge = useTexturePatchStore((state) => state.disconnectEdge);
+  const deleteSelectedNode = useTexturePatchStore((state) => state.deleteSelectedNode);
+  const duplicateSelectedNode = useTexturePatchStore((state) => state.duplicateSelectedNode);
+  const autoLayout = useTexturePatchStore((state) => state.autoLayout);
+  const selectedNode = patch.nodes.find((node) => node.id === patch.selectedNodeId);
+  const canDeleteSelected = Boolean(selectedNode && !selectedNode.lock && (selectedNode.type !== "out" || patch.nodes.filter((node) => node.type === "out").length > 1));
+  const canDuplicateSelected = Boolean(selectedNode && selectedNode.type !== "out");
+  const activeEdgeId = patch.edges.some((edge) => edge.id === selectedEdgeId) ? selectedEdgeId : patch.edges[0]?.id ?? "";
 
   const nodes: Node<TextureNodeData>[] = useMemo(
     () =>
@@ -121,10 +132,13 @@ export function TextureNetwork() {
         sourceHandle: edge.sourcePort,
         target: edge.target,
         targetHandle: edge.targetPort,
-        style: { stroke: patch.viewerNodeId === edge.target ? "rgba(173,216,255,0.88)" : "rgba(196, 214, 220, 0.5)", strokeWidth: patch.viewerNodeId === edge.target ? 2 : 1.35 },
+        style: {
+          stroke: edge.id === activeEdgeId ? "rgba(255,255,255,0.92)" : patch.viewerNodeId === edge.target ? "rgba(173,216,255,0.88)" : "rgba(196, 214, 220, 0.5)",
+          strokeWidth: edge.id === activeEdgeId ? 2.4 : patch.viewerNodeId === edge.target ? 2 : 1.35,
+        },
         animated: patch.viewerNodeId === edge.target,
       })),
-    [patch.edges, patch.viewerNodeId]
+    [activeEdgeId, patch.edges, patch.viewerNodeId]
   );
 
   const handleConnect = (connection: Connection) => {
@@ -135,15 +149,70 @@ export function TextureNetwork() {
 
   return (
     <section className="relative min-h-[360px] bg-[#121619]">
-      <div className="absolute left-0 right-0 top-0 z-10 flex h-10 items-center justify-between border-b border-white/10 bg-[#171a1d]/80 px-4 backdrop-blur-xl">
-        <div className="mx-auto flex items-center gap-2 text-[13px] text-zinc-300">
+      <div className="absolute left-0 right-0 top-0 z-10 flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#171a1d]/80 px-4 py-2 backdrop-blur-xl">
+        <div className="flex items-center gap-2 text-[13px] text-zinc-300">
           <span className="text-zinc-500">⌃</span>
           <span>Advanced Graph</span>
         </div>
-        <div className="absolute right-4 flex items-center gap-1 text-[12px] text-zinc-600">
-          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">⇤</button>
-          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">⇥</button>
-          <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-white/10 hover:text-zinc-200">▦</button>
+        <div className="flex flex-wrap items-center justify-end gap-2 text-[12px] text-zinc-300">
+          <button
+            type="button"
+            aria-label="Duplicate node"
+            onClick={duplicateSelectedNode}
+            disabled={!canDuplicateSelected}
+            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
+          >
+            Duplicate
+          </button>
+          <button
+            type="button"
+            aria-label="Delete node"
+            onClick={deleteSelectedNode}
+            disabled={!canDeleteSelected}
+            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
+          >
+            Delete
+          </button>
+          <label className="sr-only" htmlFor="selected-texture-cable">Selected cable</label>
+          <select
+            id="selected-texture-cable"
+            aria-label="Selected cable"
+            value={activeEdgeId}
+            onChange={(event) => setSelectedEdgeId(event.target.value)}
+            disabled={patch.edges.length === 0}
+            className="h-8 max-w-44 rounded-md border border-white/10 bg-black/25 px-2 text-xs text-zinc-200 outline-none disabled:text-zinc-700"
+          >
+            {patch.edges.map((edge) => (
+              <option key={edge.id} value={edge.id}>
+                {edge.source} → {edge.target}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            aria-label="Disconnect cable"
+            onClick={() => activeEdgeId && disconnectEdge(activeEdgeId)}
+            disabled={!activeEdgeId}
+            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
+          >
+            Disconnect
+          </button>
+          <button
+            type="button"
+            aria-label="Fit graph"
+            onClick={() => flow.fitView({ padding: 0.2, duration: 220 })}
+            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10"
+          >
+            Fit
+          </button>
+          <button
+            type="button"
+            aria-label="Auto layout"
+            onClick={autoLayout}
+            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10"
+          >
+            Layout
+          </button>
         </div>
       </div>
       <ReactFlow
@@ -154,6 +223,7 @@ export function TextureNetwork() {
         minZoom={0.3}
         maxZoom={1.6}
         onConnect={handleConnect}
+        onEdgeClick={(_, edge) => setSelectedEdgeId(edge.id)}
         onNodeClick={(_, node) => setSelectedNode(node.id)}
         onNodeDoubleClick={(_, node) => setViewerNode(node.id)}
         onNodeDragStop={(_, node) => setNodePosition(node.id, node.position)}

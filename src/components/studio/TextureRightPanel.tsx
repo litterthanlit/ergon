@@ -16,7 +16,7 @@ const recipeActions: { label: string; commandId: TextureCommandId }[] = [
 ];
 
 export function TextureRightPanel() {
-  const [tab, setTab] = useState<"look" | "node" | "recipe">("node");
+  const [tab, setTab] = useState<"node" | "recipe">("node");
   const patch = useTexturePatchStore((state) => state.patch);
   const loadRecipe = useTexturePatchStore((state) => state.loadRecipe);
   const applyCommand = useTexturePatchStore((state) => state.applyCommand);
@@ -27,8 +27,8 @@ export function TextureRightPanel() {
 
   return (
     <aside className="flex min-h-0 flex-col border-l border-white/10 bg-[#15181b]/80 backdrop-blur-xl">
-      <div className="grid grid-cols-3 border-b border-white/10 px-3 pt-2 text-[13px]">
-        {(["look", "node", "recipe"] as const).map((item) => (
+      <div className="grid grid-cols-2 border-b border-white/10 px-3 pt-2 text-[13px]">
+        {(["node", "recipe"] as const).map((item) => (
           <button
             key={item}
             type="button"
@@ -49,13 +49,8 @@ export function TextureRightPanel() {
                 <div className="truncate text-[14px] font-medium text-white">{selectedNode?.label.replace(" TOP", "") ?? "No node"}</div>
                 <div className="mt-1 text-xs text-zinc-500">{operator?.description ?? "Select a node to edit it."}</div>
               </div>
-              <button type="button" aria-label="Favorite" className="text-zinc-400 hover:text-white">☆</button>
             </div>
             <div className="space-y-3 border-b border-white/10 py-4 text-[13px]">
-              <label className="flex items-center justify-between gap-4 text-zinc-400">
-                Expose to Look
-                <input type="checkbox" defaultChecked className="size-4 accent-blue-400" />
-              </label>
               <label className="flex items-center justify-between gap-4 text-zinc-400">
                 Bypass
                 <input
@@ -65,28 +60,11 @@ export function TextureRightPanel() {
                   className="size-4 accent-blue-400"
                 />
               </label>
-              <button type="button" className="flex w-full items-center justify-between rounded-md py-1 text-left text-zinc-400 hover:text-white">
-                Replace Node <span>›</span>
-              </button>
               <button type="button" onClick={() => selectedNode && setViewerNode(selectedNode.id)} className="flex w-full items-center justify-between rounded-md py-1 text-left text-zinc-400 hover:text-white">
                 View Output <span>↗</span>
               </button>
             </div>
             <TextureInspector embedded />
-          </div>
-        )}
-
-        {tab === "look" && (
-          <div className="space-y-5 p-4">
-            {["Motion", "Liquid", "Glow", "Depth", "Color", "Grain", "Detail"].map((label, index) => (
-              <label key={label} className="block">
-                <span className="mb-2 flex justify-between text-[13px] text-zinc-300">
-                  {label}
-                  <span className="text-zinc-600">{[42, 68, 76, 58, 64, 21, 72][index]}%</span>
-                </span>
-                <input type="range" min={0} max={100} defaultValue={[42, 68, 76, 58, 64, 21, 72][index]} className="ergon-dark-range" />
-              </label>
-            ))}
           </div>
         )}
 
