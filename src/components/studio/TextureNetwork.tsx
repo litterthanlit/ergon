@@ -17,9 +17,9 @@ import {
   getTextureOperator,
   type TextureNode,
   type TextureOperatorCategory,
-  type TextureOperatorType,
 } from "@/lib/texture-patch";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
+import { StudioSecondaryButton, studio } from "./studio-primitives";
 
 type TextureNodeData = {
   textureNode: TextureNode;
@@ -28,21 +28,12 @@ type TextureNodeData = {
 };
 
 const categoryTone: Record<TextureOperatorCategory, string> = {
-  generator: "#67e8f9",
-  simulation: "#8cf8d2",
-  modifier: "#c4b5fd",
-  network: "#fde68a",
-  output: "#86efac",
+  generator: "#64d2ff",
+  simulation: "#5de6b5",
+  modifier: "#bf5af2",
+  network: "#ffd60a",
+  output: "#30d158",
 };
-
-function miniPreviewClass(type: TextureOperatorType) {
-  if (type === "raymarch-glass") return "from-white/30 via-cyan-200/25 to-black";
-  if (type === "bloom") return "from-amber-200/45 via-cyan-200/18 to-black";
-  if (type === "reaction-diffusion") return "from-teal-200/35 via-amber-200/20 to-black";
-  if (type === "chromatic-aberration") return "from-cyan-200/25 via-fuchsia-300/25 to-black";
-  if (type === "film-grain" || type === "color-grade") return "from-slate-200/25 via-cyan-200/18 to-black";
-  return "from-cyan-300/30 via-violet-300/20 to-black";
-}
 
 function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
   const { textureNode, selected, viewerNodeId } = data;
@@ -52,9 +43,9 @@ function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
 
   return (
     <div
-      className={`min-w-[148px] overflow-hidden rounded-lg border bg-[#1a1d20]/92 shadow-xl shadow-black/25 backdrop-blur ${
-        selected ? "border-blue-400 shadow-blue-500/10" : "border-white/14"
-      } ${textureNode.bypass ? "opacity-55" : ""}`}
+      className={`min-w-[140px] overflow-hidden rounded-[10px] border bg-[#2c2c2e] shadow-lg ${
+        selected ? "border-[#0a84ff] ring-2 ring-[#0a84ff]/30" : "border-white/[0.1]"
+      } ${textureNode.bypass ? "opacity-50" : ""}`}
     >
       {(operator?.inputs ?? []).map((port, index) => (
         <Handle
@@ -62,27 +53,24 @@ function TextureGraphNode({ data }: NodeProps<Node<TextureNodeData>>) {
           id={port.id}
           type="target"
           position={Position.Left}
-          className="!size-3 !rounded-none !border !border-black"
-          style={{ top: 38 + index * 18, background: tone }}
+          className="!size-2.5 !rounded-full !border-2 !border-[#1c1c1e]"
+          style={{ top: 36 + index * 16, background: tone }}
         />
       ))}
-      <div className={`relative mx-3 mt-3 h-12 overflow-hidden rounded-md bg-gradient-to-r ${miniPreviewClass(textureNode.type)}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_28%,rgba(255,255,255,0.65),transparent_18%),radial-gradient(circle_at_72%_64%,rgba(255,255,255,0.22),transparent_24%)]" />
-        <div className="absolute right-2 top-2 flex items-center gap-1.5">
-          <span className="size-2" style={{ backgroundColor: tone }} />
-        </div>
+      <div className="mx-2.5 mt-2.5 h-10 rounded-[6px]" style={{ background: `linear-gradient(135deg, ${tone}33, #1c1c1e)` }} />
+      <div className="px-2.5 py-2">
+        <div className="truncate text-[12px] font-medium text-[#f5f5f7]">{textureNode.label.replace(" TOP", "")}</div>
       </div>
-      <div className="px-3 py-2.5">
-        <div className="truncate text-[13px] font-medium text-zinc-100">{textureNode.label.replace(" TOP", "")}</div>
-      </div>
-      <span className={`absolute right-3 bottom-3 size-2.5 rounded-full ${isViewer ? "bg-white" : "bg-white/20"}`} />
+      {isViewer && (
+        <span className="absolute bottom-2 right-2 size-1.5 rounded-full bg-[#0a84ff]" />
+      )}
       {operator?.outputs.map((port) => (
         <Handle
           key={port.id}
           id={port.id}
           type="source"
           position={Position.Right}
-          className="!size-3 !rounded-none !border !border-black"
+          className="!size-2.5 !rounded-full !border-2 !border-[#1c1c1e]"
           style={{ background: tone }}
         />
       ))}
@@ -133,8 +121,8 @@ export function TextureNetwork() {
         target: edge.target,
         targetHandle: edge.targetPort,
         style: {
-          stroke: edge.id === activeEdgeId ? "rgba(255,255,255,0.92)" : patch.viewerNodeId === edge.target ? "rgba(173,216,255,0.88)" : "rgba(196, 214, 220, 0.5)",
-          strokeWidth: edge.id === activeEdgeId ? 2.4 : patch.viewerNodeId === edge.target ? 2 : 1.35,
+          stroke: edge.id === activeEdgeId ? "#f5f5f7" : patch.viewerNodeId === edge.target ? "#0a84ff" : "#636366",
+          strokeWidth: edge.id === activeEdgeId ? 2 : patch.viewerNodeId === edge.target ? 1.75 : 1.25,
         },
         animated: patch.viewerNodeId === edge.target,
       })),
@@ -148,31 +136,19 @@ export function TextureNetwork() {
   };
 
   return (
-    <section className="relative min-h-[360px] bg-[#121619]">
-      <div className="absolute left-0 right-0 top-0 z-10 flex min-h-12 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#171a1d]/80 px-4 py-2 backdrop-blur-xl">
-        <div className="flex items-center gap-2 text-[13px] text-zinc-300">
-          <span className="text-zinc-500">⌃</span>
-          <span>Advanced Graph</span>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2 text-[12px] text-zinc-300">
-          <button
-            type="button"
-            aria-label="Duplicate node"
-            onClick={duplicateSelectedNode}
-            disabled={!canDuplicateSelected}
-            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
-          >
+    <section className={`relative h-[240px] shrink-0 border-t ${studio.separator} bg-[#161618]`}>
+      <div
+        className={`absolute left-0 right-0 top-0 z-10 flex h-9 items-center justify-between border-b ${studio.separator} px-3`}
+        style={{ background: "rgba(44, 44, 46, 0.85)" }}
+      >
+        <span className="text-[12px] font-medium text-[#98989d]">Node Graph</span>
+        <div className="flex items-center gap-1">
+          <StudioSecondaryButton ariaLabel="Duplicate node" onClick={duplicateSelectedNode} disabled={!canDuplicateSelected}>
             Duplicate
-          </button>
-          <button
-            type="button"
-            aria-label="Delete node"
-            onClick={deleteSelectedNode}
-            disabled={!canDeleteSelected}
-            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
-          >
+          </StudioSecondaryButton>
+          <StudioSecondaryButton ariaLabel="Delete node" onClick={deleteSelectedNode} disabled={!canDeleteSelected}>
             Delete
-          </button>
+          </StudioSecondaryButton>
           <label className="sr-only" htmlFor="selected-texture-cable">Selected cable</label>
           <select
             id="selected-texture-cable"
@@ -180,7 +156,7 @@ export function TextureNetwork() {
             value={activeEdgeId}
             onChange={(event) => setSelectedEdgeId(event.target.value)}
             disabled={patch.edges.length === 0}
-            className="h-8 max-w-44 rounded-md border border-white/10 bg-black/25 px-2 text-xs text-zinc-200 outline-none disabled:text-zinc-700"
+            className="h-[28px] max-w-[140px] rounded-[6px] border border-white/[0.08] bg-white/[0.06] px-2 text-[11px] text-[#f5f5f7] outline-none disabled:opacity-30"
           >
             {patch.edges.map((edge) => (
               <option key={edge.id} value={edge.id}>
@@ -188,38 +164,22 @@ export function TextureNetwork() {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            aria-label="Disconnect cable"
-            onClick={() => activeEdgeId && disconnectEdge(activeEdgeId)}
-            disabled={!activeEdgeId}
-            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10 disabled:text-zinc-700"
-          >
+          <StudioSecondaryButton ariaLabel="Disconnect cable" onClick={() => activeEdgeId && disconnectEdge(activeEdgeId)} disabled={!activeEdgeId}>
             Disconnect
-          </button>
-          <button
-            type="button"
-            aria-label="Fit graph"
-            onClick={() => flow.fitView({ padding: 0.2, duration: 220 })}
-            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10"
-          >
+          </StudioSecondaryButton>
+          <StudioSecondaryButton ariaLabel="Fit graph" onClick={() => flow.fitView({ padding: 0.2, duration: 220 })}>
             Fit
-          </button>
-          <button
-            type="button"
-            aria-label="Auto layout"
-            onClick={autoLayout}
-            className="rounded-md border border-white/10 bg-white/[0.045] px-2.5 py-1.5 hover:bg-white/10"
-          >
+          </StudioSecondaryButton>
+          <StudioSecondaryButton ariaLabel="Auto layout" onClick={autoLayout}>
             Layout
-          </button>
+          </StudioSecondaryButton>
         </div>
       </div>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        defaultViewport={{ x: 28, y: 110, zoom: 0.78 }}
+        defaultViewport={{ x: 28, y: 80, zoom: 0.82 }}
         minZoom={0.3}
         maxZoom={1.6}
         onConnect={handleConnect}
@@ -228,9 +188,9 @@ export function TextureNetwork() {
         onNodeDoubleClick={(_, node) => setViewerNode(node.id)}
         onNodeDragStop={(_, node) => setNodePosition(node.id, node.position)}
         proOptions={{ hideAttribution: true }}
-        className="bg-[radial-gradient(circle_at_45%_18%,rgba(110,135,152,0.14),transparent_32%),#121619]"
+        className="bg-[#161618]"
       >
-        <Background color="rgba(255,255,255,0.08)" gap={24} size={1} />
+        <Background color="rgba(255,255,255,0.04)" gap={20} size={1} />
         <Controls className="!hidden" />
       </ReactFlow>
     </section>

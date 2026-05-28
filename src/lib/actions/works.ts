@@ -181,13 +181,23 @@ export async function publishWork(workId: string, title: string): Promise<Publis
     return { error: "Not authenticated" };
   }
 
-  const slug = generateSlug(title);
+  const { data: existing, error: existingError } = await supabase
+    .from("works")
+    .select("slug")
+    .eq("id", workId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existingError) return { error: existingError.message };
+
+  const existingSlug = typeof existing?.slug === "string" && existing.slug.length > 0 ? existing.slug : null;
+  const slug = existingSlug ?? generateSlug(title);
 
   const { error } = await supabase
     .from("works")
     .update({
       is_published: true,
-      slug,
+      ...(existingSlug ? {} : { slug }),
       title,
       updated_at: new Date().toISOString(),
     })

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { TextureInspector } from "./TextureInspector";
-import { TextureThumb } from "./TextureThumb";
 import { getTextureOperator, textureCommands, textureStarters, type TextureCommandId, type TextureRecipeId } from "@/lib/texture-patch";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
+import { StudioGroupedPanel, StudioSegmented, StudioSidebarRow, studio } from "./studio-primitives";
 
 const recipeActions: { label: string; commandId: TextureCommandId }[] = [
   { label: "Make softer", commandId: "slow-motion" },
@@ -15,8 +15,10 @@ const recipeActions: { label: string; commandId: TextureCommandId }[] = [
   { label: "More organic detail", commandId: "make-more-liquid" },
 ];
 
+type PanelTab = "node" | "recipe";
+
 export function TextureRightPanel() {
-  const [tab, setTab] = useState<"node" | "recipe">("node");
+  const [tab, setTab] = useState<PanelTab>("node");
   const patch = useTexturePatchStore((state) => state.patch);
   const loadRecipe = useTexturePatchStore((state) => state.loadRecipe);
   const applyCommand = useTexturePatchStore((state) => state.applyCommand);
@@ -26,85 +28,90 @@ export function TextureRightPanel() {
   const operator = selectedNode ? getTextureOperator(selectedNode.type) : null;
 
   return (
-    <aside className="flex min-h-0 flex-col border-l border-white/10 bg-[#15181b]/80 backdrop-blur-xl">
-      <div className="grid grid-cols-2 border-b border-white/10 px-3 pt-2 text-[13px]">
-        {(["node", "recipe"] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setTab(item)}
-            className={`rounded-t-md px-3 py-3 capitalize ${tab === item ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-200"}`}
-          >
-            {item}
-          </button>
-        ))}
+    <aside
+      className={`flex w-[280px] shrink-0 flex-col border-l ${studio.separator} ${studio.bg}`}
+    >
+      <div className={`flex items-center justify-between border-b ${studio.separator} px-3 py-2.5`}>
+        <span className="text-[13px] font-semibold text-[#f5f5f7]">Inspector</span>
+        <StudioSegmented
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: "node", label: "Node", ariaLabel: "node" },
+            { value: "recipe", label: "Templates", ariaLabel: "recipe" },
+          ]}
+        />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
         {tab === "node" && (
-          <div className="p-4">
-            <div className="flex items-start gap-3 border-b border-white/10 pb-4">
-              <TextureThumb id="organic-refraction" accent="#67e8f9" className="h-12 w-12 shrink-0 rounded-md border border-white/10" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-medium text-white">{selectedNode?.label.replace(" TOP", "") ?? "No node"}</div>
-                <div className="mt-1 text-xs text-zinc-500">{operator?.description ?? "Select a node to edit it."}</div>
-              </div>
-            </div>
-            <div className="space-y-3 border-b border-white/10 py-4 text-[13px]">
-              <label className="flex items-center justify-between gap-4 text-zinc-400">
-                Bypass
-                <input
-                  type="checkbox"
-                  checked={selectedNode?.bypass ?? false}
-                  onChange={() => selectedNode && toggleBypass(selectedNode.id)}
-                  className="size-4 accent-blue-400"
-                />
-              </label>
-              <button type="button" onClick={() => selectedNode && setViewerNode(selectedNode.id)} className="flex w-full items-center justify-between rounded-md py-1 text-left text-zinc-400 hover:text-white">
-                View Output <span>↗</span>
-              </button>
-            </div>
+          <div className="space-y-3">
+            <StudioGroupedPanel>
+              <p className="text-[15px] font-semibold text-[#f5f5f7]">
+                {selectedNode?.label.replace(" TOP", "") ?? "No Selection"}
+              </p>
+              <p className="mt-1 text-pretty text-[13px] leading-relaxed text-[#98989d]">
+                {operator?.description ?? "Select a node in the graph to inspect its properties."}
+              </p>
+            </StudioGroupedPanel>
+
+            {selectedNode && (
+              <StudioGroupedPanel className="space-y-3">
+                <label className="flex items-center justify-between text-[13px] text-[#f5f5f7]">
+                  <span>Bypass</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedNode.bypass}
+                    onChange={() => toggleBypass(selectedNode.id)}
+                    className="size-4 rounded accent-[#0a84ff]"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setViewerNode(selectedNode.id)}
+                  className="w-full rounded-[6px] bg-white/[0.06] py-1.5 text-[13px] text-[#64b5ff] hover:bg-white/[0.1]"
+                >
+                  Set as viewer output
+                </button>
+              </StudioGroupedPanel>
+            )}
+
             <TextureInspector embedded />
           </div>
         )}
 
         {tab === "recipe" && (
-          <div className="space-y-2 p-4">
+          <div className="space-y-2">
+            <p className="px-1 text-pretty text-[13px] leading-relaxed text-[#98989d]">
+              Start from a template to load a complete operator graph.
+            </p>
             {textureStarters.map((starter) => (
               <button
                 key={starter.id}
                 type="button"
                 onClick={() => loadRecipe(starter.recipeId as TextureRecipeId)}
-                className="grid w-full grid-cols-[44px_1fr] gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-2 text-left hover:bg-white/[0.07]"
+                className={`w-full ${studio.radius} ${studio.surface} p-3 text-left transition-colors hover:bg-[#48484a]`}
                 aria-label={starter.label}
                 title={starter.description}
               >
-                <TextureThumb id={starter.thumbnail} accent={starter.accent} className="h-10 rounded-md border border-white/10" />
-                <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium text-zinc-200">{starter.label}</span>
-                  <span className="mt-0.5 block truncate text-[11px] text-zinc-600">{starter.tags.join(" / ")}</span>
-                </span>
+                <span className="block text-[13px] font-medium text-[#f5f5f7]">{starter.label}</span>
+                <span className="mt-0.5 block text-[11px] text-[#98989d]">{starter.tags.join(" · ")}</span>
               </button>
             ))}
           </div>
         )}
       </div>
 
-      <div className="border-t border-white/10 p-4">
-        <div className="mb-3 flex items-center justify-between text-[14px] font-medium text-zinc-200">
-          Recipe <span className="text-zinc-500">⌃</span>
-        </div>
-        <div className="space-y-2">
+      <div className={`border-t ${studio.separator} p-3`}>
+        <p className="mb-2 text-[11px] font-semibold text-[#98989d]">Adjustments</p>
+        <div className="space-y-0.5">
           {recipeActions.map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={() => applyCommand(action.commandId)}
-                className="flex h-8 w-full items-center gap-3 rounded-md border border-white/10 bg-white/[0.04] px-3 text-left text-[13px] text-zinc-300 hover:bg-white/[0.08]"
-              >
-                <span className="text-zinc-400">✦</span>
-                {action.label}
-              </button>
+            <StudioSidebarRow
+              key={action.label}
+              onClick={() => applyCommand(action.commandId)}
+            >
+              {action.label}
+            </StudioSidebarRow>
           ))}
           <span className="sr-only">{textureCommands.length} recipe commands available</span>
         </div>

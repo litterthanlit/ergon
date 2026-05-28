@@ -68,6 +68,7 @@ type TexturePatchState = {
   setPlaybackRate: (rate: number) => void;
   selectOperatorCategory: (tab: TextureOperatorBrowserTab) => void;
   setOperatorSearch: (search: string) => void;
+  loadPatch: (patch: TexturePatch) => void;
   loadRecipe: (id: TextureRecipeId) => void;
   applyCommand: (id: TextureCommandId) => void;
   undo: () => void;
@@ -454,6 +455,14 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
     set((state) => ({
       operatorBrowser: { ...state.operatorBrowser, search },
     })),
+
+  loadPatch: (patch) =>
+    set({
+      ...recompute(patch),
+      history: createTexturePatchHistory(),
+      stats: null,
+      playback: playbackFromPatch(patch),
+    }),
 
   loadRecipe: (id) =>
     set((state) => {

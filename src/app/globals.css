@@ -22,8 +22,7 @@
 
 html,
 body {
-  height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
   background: #09090b;
   color: #fafafa;
   font-feature-settings: "ss01" 1, "ss02" 1, "cv01" 1;

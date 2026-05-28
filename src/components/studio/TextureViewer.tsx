@@ -85,62 +85,64 @@ export function TextureViewer({ plan, onRuntimeReady }: Props) {
     };
   }, [onRuntimeReady, setFrame, setStats]);
 
-  const backendLabel = `${plan.rendererBackend.toUpperCase()} preferred / ${(stats?.backend ?? "webgl2").toUpperCase()} cook`;
   const fallback = capabilities?.fallbackReason && plan.rendererBackend === "webgpu" ? capabilities.fallbackReason : null;
+  const frameLabel = `${(playback.frame / playback.fpsTarget).toFixed(2)}s`;
 
   return (
-    <section className="relative h-full min-h-[360px] overflow-hidden bg-[#030507]">
+    <section className="relative min-h-0 flex-1 bg-black">
       <canvas
         ref={canvasRef}
         data-testid="texture-viewer-canvas"
-        className="absolute inset-0 h-full w-full bg-black"
+        className="absolute inset-0 h-full w-full"
       />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_42%_16%,rgba(255,255,255,0.18),transparent_16%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_52%,rgba(0,0,0,0.24))] mix-blend-screen" />
-      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_80px_130px_rgba(0,0,0,0.48),inset_0_-80px_120px_rgba(0,0,0,0.42)]" />
 
-      <div className="pointer-events-none absolute bottom-4 left-5 right-5 flex flex-wrap items-end justify-between gap-3 text-xs text-zinc-400">
-        <div className="rounded-lg border border-white/10 bg-black/28 px-3 py-2 backdrop-blur-xl">
-          <span className="text-zinc-200">{plan.name}</span>
-          <span className="mx-2 text-zinc-600">·</span>
-          <span>{plan.passes.length} nodes</span>
-          <span className="mx-2 text-zinc-600">·</span>
-          <span>{stats?.fps.toFixed(0) ?? "--"} fps</span>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-black/28 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] backdrop-blur-xl">
-          {backendLabel} · {plan.quality} · {plan.resolution[0]}x{plan.resolution[1]}
-        </div>
-        {fallback && (
-          <div className="max-w-sm rounded-lg border border-amber-300/20 bg-amber-950/35 px-3 py-2 leading-5 text-amber-100/80 backdrop-blur">
-            {fallback}
-          </div>
-        )}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2.5">
+        <span className="text-[13px] font-medium text-white/90">{plan.name}</span>
+        <span className="tabular-nums text-[11px] text-white/45">
+          {stats?.fps.toFixed(0) ?? "--"} fps · {plan.quality}
+        </span>
       </div>
 
+      {fallback && (
+        <div className="absolute right-4 top-12 max-w-xs rounded-[8px] bg-[#2c2c2e]/90 px-3 py-2 text-[12px] leading-relaxed text-[#ffd60a] backdrop-blur-md">
+          {fallback}
+        </div>
+      )}
+
       {plan.errors.length > 0 && (
-        <div className="absolute right-4 top-4 max-w-xs border border-red-400/30 bg-red-950/70 px-3 py-2 text-xs text-red-100">
+        <div className="absolute right-4 top-12 max-w-xs rounded-[8px] bg-red-950/80 px-3 py-2 text-[12px] text-red-100">
           {plan.errors[0]}
         </div>
       )}
+
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black px-6 text-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/90 px-6 text-center">
           <div>
-            <p className="text-sm font-semibold text-zinc-100">GPU canvas unavailable</p>
-            <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">{error}</p>
+            <p className="text-[15px] font-semibold text-[#f5f5f7]">Preview unavailable</p>
+            <p className="mt-2 max-w-md text-pretty text-[13px] leading-relaxed text-[#98989d]">{error}</p>
           </div>
         </div>
       )}
-      <input
-        aria-label="Timeline frame"
-        type="range"
-        min={0}
-        max={playback.durationFrames}
-        value={playback.frame}
-        onChange={(event) => {
-          setPlaying(false);
-          setFrame(Number(event.target.value));
-        }}
-        className="sr-only"
-      />
+
+      <div className="absolute inset-x-0 bottom-0 border-t border-white/[0.08] bg-black/50 px-4 py-2 backdrop-blur-md">
+        <div className="mb-1 flex items-center justify-between text-[11px] text-white/45">
+          <span>Timeline</span>
+          <span className="tabular-nums">{frameLabel}</span>
+        </div>
+        <input
+          aria-label="Timeline frame"
+          type="range"
+          min={0}
+          max={playback.durationFrames}
+          value={playback.frame}
+          onChange={(event) => {
+            setPlaying(false);
+            setFrame(Number(event.target.value));
+          }}
+          className="ergon-dark-range w-full"
+        />
+      </div>
+
       <select
         aria-label="Viewer playback rate"
         value={playback.playbackRate}

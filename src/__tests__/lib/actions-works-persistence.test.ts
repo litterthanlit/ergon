@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerSupabase: vi.fn(async () => mockState.supabase),
 }));
 
-import { saveWork } from "@/lib/actions/works";
+import { publishWork, saveWork } from "@/lib/actions/works";
 
 type QueryChain = {
   error: null;
@@ -30,12 +30,21 @@ function createSupabaseMock() {
   const updates: unknown[] = [];
   const eqCalls: unknown[][] = [];
   const uploads: unknown[][] = [];
+  let selectedWork: { slug: string | null } | null = null;
 
   const updateChain = createQueryChain();
   updateChain.eq.mockImplementation((...args: unknown[]) => {
     eqCalls.push(args);
     return updateChain;
   });
+
+  const selectChain = {
+    eq: vi.fn((...args: unknown[]) => {
+      eqCalls.push(args);
+      return selectChain;
+    }),
+    single: vi.fn(async () => ({ data: selectedWork, error: null })),
+  };
 
   const supabase = {
     auth: {
@@ -54,7 +63,7 @@ function createSupabaseMock() {
         updates.push(payload);
         return updateChain;
       }),
-      select: vi.fn(() => updateChain),
+      select: vi.fn(() => selectChain),
     })),
     storage: {
       from: vi.fn(() => ({
@@ -69,7 +78,16 @@ function createSupabaseMock() {
     },
   };
 
-  return { supabase, inserts, updates, eqCalls, uploads };
+  return {
+    supabase,
+    inserts,
+    updates,
+    eqCalls,
+    uploads,
+    setSelectedWork: (work: { slug: string | null } | null) => {
+      selectedWork = work;
+    },
+  };
 }
 
 describe("work persistence", () => {
@@ -139,5 +157,20 @@ describe("work persistence", () => {
     });
     expect(eqCalls).toContainEqual(["id", "work-99"]);
     expect(eqCalls).toContainEqual(["user_id", "user-1"]);
+  });
+
+  it("publishes with the existing slug when a saved work is already live", async () => {
+    const { supabase, updates, setSelectedWork } = createSupabaseMock();
+    mockState.supabase = supabase;
+    setSelectedWork({ slug: "saved-glass-live" });
+
+    const result = await publishWork("work-2", "Saved Glass");
+
+    expect(result).toEqual({ slug: "saved-glass-live" });
+    expect(updates[0]).toMatchObject({
+      is_published: true,
+      title: "Saved Glass",
+    });
+    expect(updates[0]).not.toHaveProperty("slug");
   });
 });

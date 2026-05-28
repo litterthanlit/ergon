@@ -4,12 +4,15 @@ import { TextureStudio } from "@/components/studio/TextureStudio";
 import { compileTexturePatch, textureRecipes } from "@/lib/texture-patch";
 import { createTexturePatchHistory } from "@/lib/texture-patch-history";
 import { useTexturePatchStore } from "@/lib/texture-patch-store";
+import type { Work } from "@/lib/supabase/types";
 
 type StoreWithHistory = ReturnType<typeof useTexturePatchStore.getState> & {
   history: { dirty: boolean };
 };
 
 const actionMocks = vi.hoisted(() => ({
+  listMyWorks: vi.fn(),
+  loadWork: vi.fn(),
   saveWork: vi.fn(),
   publishWork: vi.fn(),
 }));
@@ -70,6 +73,8 @@ function resetStore() {
 
 describe("TextureStudio persistence feedback", () => {
   beforeEach(() => {
+    actionMocks.listMyWorks.mockReset();
+    actionMocks.loadWork.mockReset();
     actionMocks.saveWork.mockReset();
     actionMocks.publishWork.mockReset();
     resetStore();
@@ -116,5 +121,44 @@ describe("TextureStudio persistence feedback", () => {
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("Not authenticated");
     });
+  });
+
+  it("opens a saved texture patch and keeps its publish slug", async () => {
+    const savedPatch = textureRecipes[1].create();
+    savedPatch.name = "Saved Glass";
+    const savedWork: Work = {
+      id: "work-2",
+      user_id: "user-1",
+      title: "Saved Glass",
+      code: JSON.stringify(savedPatch),
+      template_id: "texture-patch",
+      params: { patch: savedPatch },
+      engine: "texture-patch",
+      document_version: 1,
+      document: {
+        engine: "texture-patch",
+        version: 1,
+        patch: savedPatch,
+        exposedControls: [],
+        seeds: {},
+      },
+      thumbnail_url: "https://cdn.example/thumb.png",
+      is_published: true,
+      slug: "saved-glass-live",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+    };
+    actionMocks.listMyWorks.mockResolvedValue({ works: [savedWork] });
+    actionMocks.loadWork.mockResolvedValue({ work: savedWork });
+
+    render(<TextureStudio />);
+    fireEvent.click(screen.getByRole("button", { name: "Open saved work" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Open Saved Glass" }));
+
+    await waitFor(() => {
+      expect(useTexturePatchStore.getState().patch.name).toBe("Saved Glass");
+    });
+    expect(useTexturePatchStore.getState().history.dirty).toBe(false);
+    expect(screen.getByRole("link", { name: "View Live" })).toHaveAttribute("href", "/work/saved-glass-live");
   });
 });

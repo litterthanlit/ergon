@@ -55,14 +55,14 @@ export function TextureInspector({ embedded = false }: Props) {
 
   if (embedded) {
     return (
-      <div className="mt-4 space-y-5">
+      <div className="space-y-3">
         {groups.length === 0 ? (
-          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-500">
-            This node has no exposed artist controls.
+          <div className="rounded-[10px] bg-[#2c2c2e] p-4 text-[13px] text-[#98989d]">
+            This node has no adjustable properties.
           </div>
         ) : (
           groups.map((group) => (
-            <div key={group.label} className="rounded-lg border border-white/10 bg-white/[0.025] p-3">
+            <div key={group.label} className="rounded-[10px] bg-[#2c2c2e] p-3">
               <ParameterPanel
                 schema={group.schema}
                 values={valuesFor(group.schema, selectedNode.params)}
@@ -76,9 +76,9 @@ export function TextureInspector({ embedded = false }: Props) {
         )}
 
         {operator.presets && operator.presets.length > 0 && (
-          <div>
-            <h3 className="text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500">Quick Presets</h3>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="rounded-[10px] bg-[#2c2c2e] p-3">
+            <h3 className="text-[11px] font-semibold text-[#98989d]">Presets</h3>
+            <div className="mt-2 grid grid-cols-2 gap-1.5">
               {operator.presets.map((preset) => (
                 <button
                   key={preset.id}
@@ -88,7 +88,7 @@ export function TextureInspector({ embedded = false }: Props) {
                       updateNodeParam(selectedNode.id, key, value as ParamValue);
                     }
                   }}
-                  className="rounded-md border border-white/10 bg-white/[0.035] px-3 py-2 text-left text-xs text-zinc-300 hover:bg-white/8"
+                  className="rounded-[6px] bg-white/[0.06] px-2.5 py-1.5 text-left text-[12px] text-[#f5f5f7] hover:bg-white/[0.1]"
                 >
                   {preset.label}
                 </button>
@@ -97,13 +97,13 @@ export function TextureInspector({ embedded = false }: Props) {
           </div>
         )}
 
-        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-3">
-          <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500">Cook Stats</div>
-          <div className="grid grid-cols-2 gap-2 text-[11px] text-zinc-500">
+        <div className="rounded-[10px] bg-[#2c2c2e] p-3">
+          <div className="mb-2 text-[11px] font-semibold text-[#98989d]">Performance</div>
+          <div className="grid grid-cols-2 gap-2 text-[11px] tabular-nums text-[#636366]">
             <span>{nodeStats?.cookMs.toFixed(2) ?? "0.00"} ms</span>
-            <span>{nodeStats?.resolution.join("x") ?? "pending"}</span>
-            <span>{operator.inputs.length} in</span>
-            <span>{operator.outputs.length} out</span>
+            <span>{nodeStats?.resolution.join("×") ?? "—"}</span>
+            <span>{operator.inputs.length} inputs</span>
+            <span>{operator.outputs.length} outputs</span>
           </div>
         </div>
       </div>
