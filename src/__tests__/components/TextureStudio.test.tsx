@@ -24,6 +24,7 @@ function resetStore() {
     renderPlan: compileTexturePatch(patch),
     history: createTexturePatchHistory(),
     stats: null,
+    nodePreviews: {},
     playback: {
       playing: true,
       frame: patch.timeline?.currentFrame ?? 0,
@@ -105,10 +106,24 @@ describe("Texture studio controls", () => {
   it("operator browser systems and search filter TOP operators", () => {
     render(<TextureOperatorBrowser />);
     expect(screen.getByRole("button", { name: /Systems/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "TOP" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "CHOP" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Depth/ }));
     fireEvent.change(screen.getByLabelText("Search Operators"), { target: { value: "glass" } });
     expect(screen.getByRole("button", { name: "Raymarch Glass" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Curl Noise" })).not.toBeInTheDocument();
+  });
+
+  it("graph pane accepts a resizable height instead of a fixed 240px strip", () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <TextureNetwork heightPx={320} />
+      </ReactFlowProvider>
+    );
+    const network = container.querySelector('[data-testid="texture-network"]');
+    expect(network).toBeTruthy();
+    expect((network as HTMLElement).style.height).toBe("320px");
+    expect(network?.className.includes("h-[240px]")).toBe(false);
   });
 
   it("recipe rail loads starter systems", () => {

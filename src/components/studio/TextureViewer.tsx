@@ -10,11 +10,14 @@ type Props = {
   onRuntimeReady: (runtime: TextureRuntime | null) => void;
 };
 
+const PREVIEW_EVERY_N_FRAMES = 6;
+
 export function TextureViewer({ plan, onRuntimeReady }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runtimeRef = useRef<TextureRuntime | null>(null);
   const planRef = useRef(plan);
   const setStats = useTexturePatchStore((state) => state.setStats);
+  const setNodePreviews = useTexturePatchStore((state) => state.setNodePreviews);
   const stats = useTexturePatchStore((state) => state.stats);
   const playback = useTexturePatchStore((state) => state.playback);
   const setPlaying = useTexturePatchStore((state) => state.setPlaying);
@@ -67,6 +70,14 @@ export function TextureViewer({ plan, onRuntimeReady }: Props) {
         const renderTime = (playbackState.playing ? playbackClockRef.current.frame : playbackState.frame) / playbackState.fpsTarget;
         const nextStats = runtime.renderFrame(renderTime);
         if (nextStats.frame % 12 === 0) setStats(nextStats);
+        if (nextStats.frame % PREVIEW_EVERY_N_FRAMES === 0) {
+          const previews: Record<string, string> = {};
+          for (const pass of planRef.current.passes) {
+            const url = runtime.exportNodePreview(pass.nodeId, 96);
+            if (url) previews[pass.nodeId] = url;
+          }
+          if (Object.keys(previews).length > 0) setNodePreviews(previews);
+        }
         frame = window.requestAnimationFrame(tick);
       };
       frame = window.requestAnimationFrame(tick);
@@ -83,10 +94,11 @@ export function TextureViewer({ plan, onRuntimeReady }: Props) {
       runtimeRef.current = null;
       onRuntimeReady(null);
     };
-  }, [onRuntimeReady, setFrame, setStats]);
+  }, [onRuntimeReady, setFrame, setNodePreviews, setStats]);
 
   const fallback = capabilities?.fallbackReason && plan.rendererBackend === "webgpu" ? capabilities.fallbackReason : null;
   const frameLabel = `${(playback.frame / playback.fpsTarget).toFixed(2)}s`;
+  const progress = playback.durationFrames > 0 ? playback.frame / playback.durationFrames : 0;
 
   return (
     <section className="relative min-h-0 flex-1 bg-black">
@@ -96,11 +108,17 @@ export function TextureViewer({ plan, onRuntimeReady }: Props) {
         className="absolute inset-0 h-full w-full"
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 py-2.5">
-        <span className="text-[13px] font-medium text-white/90">{plan.name}</span>
-        <span className="tabular-nums text-[11px] text-white/45">
-          {stats?.fps.toFixed(0) ?? "--"} fps · {plan.quality}
-        </span>
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 py-2.5">
+        <span className="truncate text-[13px] font-medium text-white/90">{plan.name}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="rounded-[5px] border border-white/10 bg-black/40 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-white/55 backdrop-blur-sm">
+            {plan.quality}
+          </span>
+          <span className="tabular-nums text-[11px] text-white/45">
+            {stats?.fps.toFixed(0) ?? "--"} fps
+            {stats ? ` · ${stats.cookMs.toFixed(1)} ms` : ""}
+          </span>
+        </div>
       </div>
 
       {fallback && (
@@ -124,23 +142,33 @@ export function TextureViewer({ plan, onRuntimeReady }: Props) {
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 border-t border-white/[0.08] bg-black/50 px-4 py-2 backdrop-blur-md">
-        <div className="mb-1 flex items-center justify-between text-[11px] text-white/45">
+      <div className="absolute inset-x-0 bottom-0 border-t border-white/[0.08] bg-black/55 px-4 py-2.5 backdrop-blur-md">
+        <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/45">
           <span>Timeline</span>
-          <span className="tabular-nums">{frameLabel}</span>
+          <span className="tabular-nums">
+            {frameLabel}
+            <span className="text-white/25"> / {(playback.durationFrames / playback.fpsTarget).toFixed(1)}s</span>
+          </span>
         </div>
-        <input
-          aria-label="Timeline frame"
-          type="range"
-          min={0}
-          max={playback.durationFrames}
-          value={playback.frame}
-          onChange={(event) => {
-            setPlaying(false);
-            setFrame(Number(event.target.value));
-          }}
-          className="ergon-dark-range w-full"
-        />
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-white/10" />
+          <div
+            className="pointer-events-none absolute left-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-[#0a84ff]/80"
+            style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}
+          />
+          <input
+            aria-label="Timeline frame"
+            type="range"
+            min={0}
+            max={playback.durationFrames}
+            value={playback.frame}
+            onChange={(event) => {
+              setPlaying(false);
+              setFrame(Number(event.target.value));
+            }}
+            className="ergon-dark-range relative z-10 w-full"
+          />
+        </div>
       </div>
 
       <select

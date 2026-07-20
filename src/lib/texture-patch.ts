@@ -539,6 +539,9 @@ const textureOperatorDefinitions: Omit<TextureOperatorDefinition, "defaults" | "
 
 export const textureOperatorBrowserTabs: TextureOperatorBrowserTab[] = ["TOP", "CHOP", "SOP", "MAT", "DAT"];
 
+/** Only families that currently ship operators. Empty families stay out of the studio browser. */
+export const activeTextureOperatorBrowserTabs: TextureOperatorBrowserTab[] = ["TOP"];
+
 export const textureOperatorCategoryLabels: Record<TextureOperatorCategory, string> = {
   generator: "Generators",
   simulation: "Fields",
@@ -650,12 +653,12 @@ function makePatch(
 
 export function createLiquidAuroraPatch(): TexturePatch {
   const nodes = [
-    createTextureNode("curl-noise", { x: 0, y: 20 }, { id: "curl-1", params: { scale: 8.4, speed: 0.28, flow: 1.62, contrast: 1.48, seed: 18, colorA: "#02040a", colorB: "#3ec7e8", colorC: "#8b5cf6" } }),
-    createTextureNode("fluid-advection", { x: 220, y: 20 }, { id: "advection-1", params: { strength: 0.046, scale: 8.5, speed: 0.2, flow: 1.42, mix: 0.78 } }),
-    createTextureNode("raymarch-glass", { x: 450, y: 20 }, { id: "glass-1", params: { depth: 1.05, refraction: 0.034, softness: 1.22, strength: 0.52, scale: 8.4 } }),
-    createTextureNode("bloom", { x: 680, y: 20 }, { id: "bloom-1", params: { strength: 0.62, threshold: 0.46, radius: 9, softness: 0.76 } }),
-    createTextureNode("color-grade", { x: 910, y: 20 }, { id: "grade-1", viewerActive: true, params: { colorA: "#01040a", colorB: "#67d7ee", colorC: "#b8c6d4", exposure: -0.18, contrast: 1.08, saturation: 1, temperature: -0.12, intensity: 0.38 } }),
-    createTextureNode("film-grain", { x: 1140, y: 20 }, { id: "grain-1", params: { grain: 0.055, vignette: 0.5, intensity: 0.98 } }),
+    createTextureNode("curl-noise", { x: 0, y: 20 }, { id: "curl-1", params: { scale: 7.8, speed: 0.32, flow: 1.85, contrast: 1.55, seed: 18, colorA: "#02040a", colorB: "#3ec7e8", colorC: "#8b5cf6" } }),
+    createTextureNode("fluid-advection", { x: 220, y: 20 }, { id: "advection-1", params: { strength: 0.058, scale: 9.2, speed: 0.24, flow: 1.68, mix: 0.86 } }),
+    createTextureNode("raymarch-glass", { x: 450, y: 20 }, { id: "glass-1", params: { depth: 1.18, refraction: 0.042, softness: 1.28, strength: 0.68, scale: 8.8 } }),
+    createTextureNode("bloom", { x: 680, y: 20 }, { id: "bloom-1", params: { strength: 0.88, threshold: 0.38, radius: 12, softness: 0.9 } }),
+    createTextureNode("color-grade", { x: 910, y: 20 }, { id: "grade-1", viewerActive: true, params: { colorA: "#01040a", colorB: "#67d7ee", colorC: "#d4dde8", exposure: -0.12, contrast: 1.14, saturation: 1.05, temperature: -0.14, intensity: 0.44 } }),
+    createTextureNode("film-grain", { x: 1140, y: 20 }, { id: "grain-1", params: { grain: 0.048, vignette: 0.46, intensity: 0.98 } }),
     createTextureNode("out", { x: 1370, y: 20 }, { id: "out-1" }),
   ];
 
@@ -696,29 +699,29 @@ export const textureRecipes: TextureRecipe[] = [
   {
     id: "liquid-aurora",
     label: "Liquid Aurora",
-    description: "Curl flow, glass refraction, bloom, and silver-cyan color grade.",
+    description: "Curl-driven liquid flow with refractive glass, cinematic bloom, and silver-cyan grade.",
     thumbnail: "organic-refraction",
     accent: "#67e8f9",
-    tags: ["glass", "curl", "bloom"],
+    tags: ["liquid", "glass", "bloom"],
     featuredOperatorTypes: ["curl-noise", "fluid-advection", "raymarch-glass", "bloom", "color-grade"],
     create: createLiquidAuroraPatch,
   },
   {
     id: "glass-veil",
     label: "Glass Veil",
-    description: "A refractive gradient system with soft folds and restrained highlights.",
+    description: "Refractive caustic folds over a soft gradient — depth, fresnel rims, and restrained glow.",
     thumbnail: "volumetric-veil",
     accent: "#a7f3d0",
-    tags: ["refraction", "veil", "soft"],
+    tags: ["glass", "caustic", "refraction"],
     featuredOperatorTypes: ["gradient", "curl-noise", "displace", "raymarch-glass", "color-grade"],
     create: () => {
       const nodes = [
-        createTextureNode("gradient", { x: 0, y: -50 }, { id: "gradient-1", params: { colorA: "#01040a", colorB: "#a7f3d0", angle: 0.58, softness: 1.25 } }),
-        createTextureNode("curl-noise", { x: 0, y: 135 }, { id: "curl-1", params: { scale: 5.6, speed: 0.18, flow: 2.1, contrast: 1.1, seed: 32, colorA: "#02040a", colorB: "#b8d7de", colorC: "#ffffff" } }),
-        createTextureNode("displace", { x: 260, y: 45 }, { id: "displace-1", params: { strength: 0.072, scale: 7, speed: 0.16 } }),
-        createTextureNode("raymarch-glass", { x: 500, y: 45 }, { id: "glass-1", params: { depth: 1.65, refraction: 0.068, softness: 0.84, strength: 0.95, scale: 11 } }),
-        createTextureNode("bloom", { x: 735, y: 45 }, { id: "bloom-1", params: { strength: 0.72, threshold: 0.42, radius: 12, softness: 0.75 } }),
-        createTextureNode("color-grade", { x: 970, y: 45 }, { id: "grade-1", params: { colorA: "#02040a", colorB: "#b8d7de", colorC: colorWarm, exposure: 0.02, contrast: 1.2, saturation: 0.86, temperature: 0.16, intensity: 0.42 } }),
+        createTextureNode("gradient", { x: 0, y: -50 }, { id: "gradient-1", params: { colorA: "#01040a", colorB: "#9fe8d0", angle: 0.62, softness: 1.35 } }),
+        createTextureNode("curl-noise", { x: 0, y: 135 }, { id: "curl-1", params: { scale: 5.2, speed: 0.16, flow: 2.35, contrast: 1.18, seed: 32, colorA: "#02040a", colorB: "#c5e4ea", colorC: "#ffffff" } }),
+        createTextureNode("displace", { x: 260, y: 45 }, { id: "displace-1", params: { strength: 0.082, scale: 7.4, speed: 0.14 } }),
+        createTextureNode("raymarch-glass", { x: 500, y: 45 }, { id: "glass-1", viewerActive: true, params: { depth: 1.85, refraction: 0.078, softness: 0.78, strength: 1.15, scale: 12 } }),
+        createTextureNode("bloom", { x: 735, y: 45 }, { id: "bloom-1", params: { strength: 0.95, threshold: 0.36, radius: 14, softness: 0.82 } }),
+        createTextureNode("color-grade", { x: 970, y: 45 }, { id: "grade-1", params: { colorA: "#02040a", colorB: "#b8d7de", colorC: colorWarm, exposure: 0.04, contrast: 1.22, saturation: 0.82, temperature: 0.12, intensity: 0.4 } }),
         createTextureNode("out", { x: 1200, y: 45 }, { id: "out-1" }),
       ];
       return makePatch("texture-glass-veil", "Glass Veil", "glass-1", "out-1", nodes, [
@@ -734,19 +737,19 @@ export const textureRecipes: TextureRecipe[] = [
   {
     id: "bloom-signal",
     label: "Bloom Signal",
-    description: "Graphic masks pushed through additive bloom and finished as a poster-like field.",
+    description: "Hard signal geometry punched through additive bloom and chromatic edge energy.",
     thumbnail: "fluid-bloom",
     accent: "#f7c978",
-    tags: ["signal", "bloom", "poster"],
+    tags: ["signal", "bloom", "tech"],
     featuredOperatorTypes: ["shape", "curl-noise", "composite", "bloom", "chromatic-aberration"],
     create: () => {
       const nodes = [
-        createTextureNode("shape", { x: 0, y: -40 }, { id: "shape-1", params: { shape: "Ring", size: 0.62, feather: 0.1, colorA: "#ffffff" } }),
-        createTextureNode("curl-noise", { x: 0, y: 150 }, { id: "curl-1", params: { scale: 12, speed: 0.42, flow: 1.2, contrast: 2.05, seed: 45, colorA: "#030712", colorB: "#e0f2fe", colorC: "#f7c978" } }),
-        createTextureNode("composite", { x: 270, y: 45 }, { id: "composite-1", params: { mode: "Add", opacity: 0.68 } }),
-        createTextureNode("bloom", { x: 510, y: 45 }, { id: "bloom-1", params: { strength: 1.45, threshold: 0.24, radius: 15, softness: 0.95 } }),
-        createTextureNode("chromatic-aberration", { x: 750, y: 45 }, { id: "aberration-1", params: { aberration: 0.011, softness: 0.9, mix: 0.62 } }),
-        createTextureNode("color-grade", { x: 995, y: 45 }, { id: "grade-1", params: { colorA: "#050505", colorB: "#fde68a", colorC: "#fb7185", exposure: 0.08, contrast: 1.28, saturation: 1.02, temperature: 0.08, intensity: 0.5 } }),
+        createTextureNode("shape", { x: 0, y: -40 }, { id: "shape-1", params: { shape: "Ring", size: 0.58, feather: 0.06, colorA: "#ffffff" } }),
+        createTextureNode("curl-noise", { x: 0, y: 150 }, { id: "curl-1", params: { scale: 14, speed: 0.48, flow: 1.05, contrast: 2.2, seed: 45, colorA: "#030712", colorB: "#e0f2fe", colorC: "#f7c978" } }),
+        createTextureNode("composite", { x: 270, y: 45 }, { id: "composite-1", params: { mode: "Add", opacity: 0.74 } }),
+        createTextureNode("bloom", { x: 510, y: 45 }, { id: "bloom-1", viewerActive: true, params: { strength: 1.72, threshold: 0.18, radius: 18, softness: 1.05 } }),
+        createTextureNode("chromatic-aberration", { x: 750, y: 45 }, { id: "aberration-1", params: { aberration: 0.014, softness: 0.95, mix: 0.72 } }),
+        createTextureNode("color-grade", { x: 995, y: 45 }, { id: "grade-1", params: { colorA: "#050505", colorB: "#fde68a", colorC: "#fb7185", exposure: 0.1, contrast: 1.34, saturation: 1.08, temperature: 0.1, intensity: 0.55 } }),
         createTextureNode("out", { x: 1225, y: 45 }, { id: "out-1" }),
       ];
       return makePatch("texture-bloom-signal", "Bloom Signal", "bloom-1", "out-1", nodes, [

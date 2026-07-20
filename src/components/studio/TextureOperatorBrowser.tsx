@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  activeTextureOperatorBrowserTabs,
   searchTextureOperators,
   textureStarters,
   type TextureRecipeId,
@@ -24,9 +25,11 @@ export function TextureOperatorBrowser() {
   const patch = useTexturePatchStore((state) => state.patch);
   const browser = useTexturePatchStore((state) => state.operatorBrowser);
   const setOperatorSearch = useTexturePatchStore((state) => state.setOperatorSearch);
+  const selectOperatorCategory = useTexturePatchStore((state) => state.selectOperatorCategory);
   const addOperator = useTexturePatchStore((state) => state.addOperator);
   const loadRecipe = useTexturePatchStore((state) => state.loadRecipe);
-  const groups = searchTextureOperators(browser.tab, browser.search);
+  const activeTab = activeTextureOperatorBrowserTabs.includes(browser.tab) ? browser.tab : "TOP";
+  const groups = searchTextureOperators(activeTab, browser.search);
   const hasOut = patch.nodes.some((node) => node.type === "out");
   const libraryItems = Object.values(groups).flat().filter((operator) => operator.type !== "out" || !hasOut);
   const activeQuery = browser.search.trim().toLowerCase();
@@ -43,6 +46,24 @@ export function TextureOperatorBrowser() {
         >
           Library
         </button>
+        <div className="mt-2 flex gap-1" role="tablist" aria-label="Operator family">
+          {activeTextureOperatorBrowserTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab}
+              onClick={() => selectOperatorCategory(tab)}
+              className={`rounded-[6px] px-2 py-1 text-[11px] font-semibold tracking-wide ${
+                activeTab === tab
+                  ? "bg-[#0a84ff]/20 text-[#64b5ff]"
+                  : "text-[#636366] hover:bg-white/[0.06] hover:text-[#98989d]"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="px-3 py-2">

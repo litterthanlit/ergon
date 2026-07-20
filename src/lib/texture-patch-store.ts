@@ -9,6 +9,7 @@ import {
   getTextureOperator,
   getTextureRecipe,
   textureRecipes,
+  activeTextureOperatorBrowserTabs,
   type TextureCommandId,
   type TextureEdge,
   type TextureNode,
@@ -37,6 +38,7 @@ type TexturePatchState = {
   renderPlan: TextureRenderPlan;
   history: TexturePatchHistory;
   stats: TextureRuntimeStats | null;
+  nodePreviews: Record<string, string>;
   playback: {
     playing: boolean;
     frame: number;
@@ -75,6 +77,7 @@ type TexturePatchState = {
   redo: () => void;
   markSaved: () => void;
   setStats: (stats: TextureRuntimeStats) => void;
+  setNodePreviews: (previews: Record<string, string>) => void;
 };
 
 const starterPatch = textureRecipes[0].create();
@@ -216,6 +219,7 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
   ...recompute(starterPatch),
   history: createTexturePatchHistory(),
   stats: null,
+  nodePreviews: {},
   playback: playbackFromPatch(starterPatch),
   operatorBrowser: { tab: "TOP", search: "" },
 
@@ -448,7 +452,10 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
 
   selectOperatorCategory: (tab) =>
     set((state) => ({
-      operatorBrowser: { ...state.operatorBrowser, tab },
+      operatorBrowser: {
+        ...state.operatorBrowser,
+        tab: activeTextureOperatorBrowserTabs.includes(tab) ? tab : "TOP",
+      },
     })),
 
   setOperatorSearch: (search) =>
@@ -461,6 +468,7 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
       ...recompute(patch),
       history: createTexturePatchHistory(),
       stats: null,
+      nodePreviews: {},
       playback: playbackFromPatch(patch),
     }),
 
@@ -476,6 +484,7 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
       });
       return {
         ...committed,
+        nodePreviews: {},
         playback: playbackFromPatch(patch),
       };
     }),
@@ -509,4 +518,5 @@ export const useTexturePatchStore = create<TexturePatchState>((set) => ({
     }),
 
   setStats: (stats) => set({ stats }),
+  setNodePreviews: (previews) => set({ nodePreviews: previews }),
 }));

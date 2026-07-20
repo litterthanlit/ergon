@@ -42,9 +42,12 @@ vi.mock("@xyflow/react", () => ({
 vi.mock("@/components/studio/TextureViewer", async () => {
   const React = await import("react");
   return {
-    TextureViewer: ({ onRuntimeReady }: { onRuntimeReady: (runtime: { exportPng: () => string } | null) => void }) => {
+    TextureViewer: ({ onRuntimeReady }: { onRuntimeReady: (runtime: { exportPng: () => string; exportNodePreview: () => string | null } | null) => void }) => {
       React.useEffect(() => {
-        onRuntimeReady({ exportPng: () => "data:image/png;base64,AA==" });
+        onRuntimeReady({
+          exportPng: () => "data:image/png;base64,AA==",
+          exportNodePreview: () => null,
+        });
         return () => onRuntimeReady(null);
       }, [onRuntimeReady]);
       return <div data-testid="texture-viewer-mock" />;
@@ -59,6 +62,7 @@ function resetStore() {
     renderPlan: compileTexturePatch(patch),
     history: createTexturePatchHistory(),
     stats: null,
+    nodePreviews: {},
     playback: {
       playing: true,
       frame: patch.timeline?.currentFrame ?? 0,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { downloadDataUrl, exportFilename } from "@/lib/export";
 import { listMyWorks, loadWork, publishWork, saveWork } from "@/lib/actions/works";
@@ -20,6 +20,23 @@ type PersistenceStatus = {
   message: string;
 };
 
+const GRAPH_HEIGHT_KEY = "ergon.textureStudio.graphHeight";
+const DEFAULT_GRAPH_RATIO = 0.4;
+const MIN_GRAPH_PX = 180;
+const MIN_VIEWER_PX = 200;
+
+function readStoredGraphHeight(containerHeight: number): number {
+  const fallback = Math.round(containerHeight * DEFAULT_GRAPH_RATIO);
+  if (typeof window === "undefined" || containerHeight <= 0) return fallback;
+  const raw = window.sessionStorage.getItem(GRAPH_HEIGHT_KEY);
+  const parsed = raw ? Number(raw) : NaN;
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(
+    Math.max(parsed, MIN_GRAPH_PX),
+    Math.max(MIN_GRAPH_PX, containerHeight - MIN_VIEWER_PX)
+  );
+}
+
 export function TextureStudio() {
   const patch = useTexturePatchStore((state) => state.patch);
   const renderPlan = useTexturePatchStore((state) => state.renderPlan);
@@ -36,6 +53,59 @@ export function TextureStudio() {
   const [isLoadingWorks, setIsLoadingWorks] = useState(false);
   const [openingWorkId, setOpeningWorkId] = useState<string | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus | null>(null);
+  const centerRef = useRef<HTMLDivElement>(null);
+  const [centerHeight, setCenterHeight] = useState(720);
+  const [graphHeight, setGraphHeight] = useState(Math.round(720 * DEFAULT_GRAPH_RATIO));
+  const dragRef = useRef<{ startY: number; startHeight: number } | null>(null);
+
+  useEffect(() => {
+    const el = centerRef.current;
+    if (!el) return;
+    const update = () => {
+      const next = el.clientHeight;
+      setCenterHeight(next);
+      setGraphHeight((current) => {
+        const max = Math.max(MIN_GRAPH_PX, next - MIN_VIEWER_PX);
+        if (current < MIN_GRAPH_PX || current > max) return readStoredGraphHeight(next);
+        return current;
+      });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(GRAPH_HEIGHT_KEY, String(graphHeight));
+  }, [graphHeight]);
+
+  const onSplitterPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    dragRef.current = { startY: event.clientY, startHeight: graphHeight };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, [graphHeight]);
+
+  const onSplitterPointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const delta = dragRef.current.startY - event.clientY;
+    const max = Math.max(MIN_GRAPH_PX, centerHeight - MIN_VIEWER_PX);
+    const next = Math.min(max, Math.max(MIN_GRAPH_PX, dragRef.current.startHeight + delta));
+    setGraphHeight(next);
+  }, [centerHeight]);
+
+  const onSplitterPointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  const nudgeGraph = useCallback((delta: number) => {
+    const max = Math.max(MIN_GRAPH_PX, centerHeight - MIN_VIEWER_PX);
+    setGraphHeight((current) => Math.min(max, Math.max(MIN_GRAPH_PX, current + delta)));
+  }, [centerHeight]);
 
   const savedTextureWorks = useMemo(
     () => savedWorks.filter((work) => parseWorkDocument(work).engine === "texture-patch"),
@@ -253,9 +323,34 @@ export function TextureStudio() {
       <div className="flex min-h-0 flex-1">
         <TextureOperatorBrowser />
         <ReactFlowProvider>
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div ref={centerRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
             <TextureViewer plan={renderPlan} onRuntimeReady={setRuntime} />
-            <TextureNetwork />
+            <div
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize node graph"
+              aria-valuemin={MIN_GRAPH_PX}
+              aria-valuemax={Math.max(MIN_GRAPH_PX, centerHeight - MIN_VIEWER_PX)}
+              aria-valuenow={graphHeight}
+              tabIndex={0}
+              onPointerDown={onSplitterPointerDown}
+              onPointerMove={onSplitterPointerMove}
+              onPointerUp={onSplitterPointerUp}
+              onPointerCancel={onSplitterPointerUp}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  nudgeGraph(16);
+                } else if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  nudgeGraph(-16);
+                }
+              }}
+              className="group relative z-20 flex h-2 shrink-0 cursor-row-resize items-center justify-center bg-[#1c1c1e] hover:bg-[#2c2c2e] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a84ff]/50"
+            >
+              <span className="h-0.5 w-10 rounded-full bg-white/20 group-hover:bg-white/35" />
+            </div>
+            <TextureNetwork heightPx={graphHeight} />
           </div>
         </ReactFlowProvider>
         <TextureRightPanel />

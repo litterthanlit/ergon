@@ -11,6 +11,7 @@ import {
   searchTextureOperators,
   textureStarters,
   textureRecipes,
+  activeTextureOperatorBrowserTabs,
   timeToFrame,
   validateTexturePatch,
 } from "@/lib/texture-patch";
@@ -74,6 +75,23 @@ describe("texture patch", () => {
     const results = searchTextureOperators("TOP", "glass");
     expect(results.modifier.map((operator) => operator.type)).toContain("raymarch-glass");
     expect(searchTextureOperators("TOP", "noise").generator.length).toBeGreaterThan(0);
+  });
+
+  it("exposes only TOP as an active operator family tab", () => {
+    expect(activeTextureOperatorBrowserTabs).toEqual(["TOP"]);
+  });
+
+  it("compiles Mixed hero recipes into valid render plans", () => {
+    for (const id of ["liquid-aurora", "glass-veil", "bloom-signal"] as const) {
+      const recipe = textureRecipes.find((item) => item.id === id);
+      expect(recipe).toBeDefined();
+      const patch = recipe!.create();
+      expect(validateTexturePatch(patch).valid).toBe(true);
+      const plan = compileTexturePatch(patch);
+      expect(plan.passes.length).toBeGreaterThan(3);
+      expect(plan.errors).toEqual([]);
+      expect(plan.passes.some((pass) => pass.type === "bloom")).toBe(true);
+    }
   });
 
   it("converts between timeline frames and seconds", () => {

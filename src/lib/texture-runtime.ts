@@ -21,6 +21,8 @@ type TextureRuntime = {
   setViewerNode: (nodeId: string) => void;
   renderFrame: (time: number) => TextureRuntimeStats;
   exportPng: (scale?: number) => string;
+  /** Blit a cooked node FBO to a small data URL for graph thumbs. Returns null if the node has not cooked yet. */
+  exportNodePreview: (nodeId: string, size?: number) => string | null;
   getCapabilities: () => TextureRuntimeCapabilities;
   destroy: () => void;
 };
@@ -87,6 +89,7 @@ uniform float uTemperature;
 uniform float uMix;
 uniform float uDiffusion;
 uniform float uSharpness;
+uniform float uBlurDir;
 uniform vec3 uColorA;
 uniform vec3 uColorB;
 uniform vec3 uColorC;
@@ -153,6 +156,13 @@ vec3 gradePalette(float value) {
 
 float grainAt(vec2 uv, float time) {
   return hash(uv * uResolution.xy + vec2(time * 71.13, time * 19.91)) - 0.5;
+}
+
+vec3 softThreshold(vec3 color, float threshold, float knee) {
+  vec3 soft = color - threshold + knee;
+  soft = max(soft, vec3(0.0));
+  soft = (soft * soft) / (4.0 * knee + 0.0001);
+  return max(color - threshold, soft);
 }
 `;
 
@@ -275,27 +285,44 @@ void main() {
 void main() {
   vec2 uv = vUv;
   vec2 p = uv * uScale + vec2(uTime * uSpeed, -uTime * uSpeed * 0.72);
-  vec2 flow = curlField(p) * uStrength * (0.55 + uFlow);
+  vec2 flowA = curlField(p) * uStrength * (0.55 + uFlow);
+  vec2 flowB = curlField(p * 1.37 + 2.1) * uStrength * (0.32 + uFlow * 0.55);
+  vec2 flow = flowA + flowB * 0.55;
+  vec3 base = texture(uInput0, uv).rgb;
   vec3 a = texture(uInput0, uv + flow).rgb;
   vec3 b = texture(uInput0, uv + flow * 0.42 + vec2(0.003, -0.002)).rgb;
-  float filament = pow(fbm(p + flow * 8.0), 2.2);
-  vec3 color = mix(texture(uInput0, uv).rgb, mix(a, b, 0.45) + filament * 0.045, uMix);
-  outColor = vec4(clamp(color, 0.0, 1.25), 1.0);
+  vec3 c = texture(uInput0, uv + flowB * 1.15 + vec2(-0.002, 0.004)).rgb;
+  float filament = pow(fbm(p + flow * 8.0), 2.05);
+  float ribbon = pow(1.0 - abs(fbm(p * 2.2 + flow * 4.0) * 2.0 - 1.0), 2.4);
+  vec3 advected = mix(mix(a, b, 0.48), c, 0.28);
+  advected += (uColorB * 0.5 + uColorC * 0.35) * filament * 0.085;
+  advected += uColorC * ribbon * 0.06;
+  vec3 color = mix(base, advected, uMix);
+  color = mix(color, color * color * (1.0 + filament * 0.35), 0.18);
+  outColor = vec4(clamp(color, 0.0, 1.35), 1.0);
 }`,
   raymarchGlass: `${shaderPrelude}
 void main() {
   vec2 uv = vUv;
   vec2 p = uv * uScale + uTime * 0.035;
   float h = fbm(p);
-  float hx = fbm(p + vec2(0.04, 0.0));
-  float hy = fbm(p + vec2(0.0, 0.04));
+  float hx = fbm(p + vec2(0.022, 0.0));
+  float hy = fbm(p + vec2(0.0, 0.022));
   vec2 normal = normalize(vec2(h - hx, h - hy) + vec2(0.0001));
-  float fresnel = pow(1.0 - clamp(dot(normalize(vec3(normal * uDepth, 1.0)), vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 1.8);
-  vec3 refracted = texture(uInput0, uv + normal * uRefraction * (0.45 + uDepth)).rgb;
-  vec3 caustic = gradePalette(smoothstep(0.32, 0.95, h)) * fresnel * uStrength;
-  vec3 color = mix(texture(uInput0, uv).rgb, refracted, 0.74);
-  color += caustic * (0.18 + uSoftness * 0.08);
-  outColor = vec4(clamp(color, 0.0, 1.55), 1.0);
+  vec3 n3 = normalize(vec3(normal * (0.55 + uDepth), 1.0));
+  float fresnel = pow(1.0 - clamp(dot(n3, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 2.35);
+  float rim = pow(fresnel, 0.72);
+  vec2 refrOff = normal * uRefraction * (0.55 + uDepth * 0.85);
+  vec3 refracted = texture(uInput0, uv + refrOff).rgb;
+  vec3 refractedDeep = texture(uInput0, uv + refrOff * 1.55).rgb;
+  float causticMask = smoothstep(0.38, 0.92, h) * smoothstep(0.95, 0.55, h);
+  vec3 caustic = gradePalette(causticMask) * rim * uStrength;
+  float highlight = pow(max(0.0, 1.0 - length(normal) * 2.2), 8.0) * uStrength;
+  vec3 color = mix(texture(uInput0, uv).rgb, mix(refracted, refractedDeep, 0.35), 0.78);
+  color += caustic * (0.22 + uSoftness * 0.1);
+  color += vec3(0.92, 0.96, 1.0) * highlight * 0.55;
+  color += rim * uColorC * 0.08;
+  outColor = vec4(clamp(color, 0.0, 1.65), 1.0);
 }`,
   levels: `${shaderPrelude}
 void main() {
@@ -313,18 +340,42 @@ void main() {
   vec3 color = gradePalette(value);
   outColor = vec4(color * uIntensity, max(src.a, 1.0));
 }`,
+  bloomExtract: `${shaderPrelude}
+void main() {
+  vec3 base = texture(uInput0, vUv).rgb;
+  float knee = max(0.001, uSoftness * 0.22);
+  vec3 soft = softThreshold(base, uThreshold, knee);
+  outColor = vec4(soft, 1.0);
+}`,
+  bloomBlur: `${shaderPrelude}
+void main() {
+  vec2 texel = 1.0 / uResolution;
+  vec2 dir = mix(vec2(1.0, 0.0), vec2(0.0, 1.0), uBlurDir) * texel * max(0.5, uRadius);
+  vec3 c = texture(uInput0, vUv).rgb * 0.227027;
+  c += texture(uInput0, vUv + dir * 1.384615).rgb * 0.316216;
+  c += texture(uInput0, vUv - dir * 1.384615).rgb * 0.316216;
+  c += texture(uInput0, vUv + dir * 3.230769).rgb * 0.07027;
+  c += texture(uInput0, vUv - dir * 3.230769).rgb * 0.07027;
+  outColor = vec4(c, 1.0);
+}`,
+  bloomComposite: `${shaderPrelude}
+void main() {
+  vec3 base = texture(uInput0, vUv).rgb;
+  vec3 glow = texture(uInput1, vUv).rgb;
+  vec3 color = base + glow * uStrength * (0.85 + uSoftness * 0.2);
+  outColor = vec4(clamp(color, 0.0, 1.85), 1.0);
+}`,
+  /** Fallback single-pass bloom if multipass path is unavailable. */
   bloom: `${shaderPrelude}
 void main() {
   vec2 texel = 1.0 / uResolution;
   vec2 radius = texel * uRadius;
   vec3 base = texture(uInput0, vUv).rgb;
-  vec3 glow = max(base - vec3(uThreshold), vec3(0.0));
-  glow += max(texture(uInput0, vUv + vec2(radius.x, 0.0)).rgb - uThreshold, vec3(0.0)) * 0.62;
-  glow += max(texture(uInput0, vUv - vec2(radius.x, 0.0)).rgb - uThreshold, vec3(0.0)) * 0.62;
-  glow += max(texture(uInput0, vUv + vec2(0.0, radius.y)).rgb - uThreshold, vec3(0.0)) * 0.62;
-  glow += max(texture(uInput0, vUv - vec2(0.0, radius.y)).rgb - uThreshold, vec3(0.0)) * 0.62;
-  glow += max(texture(uInput0, vUv + radius).rgb - uThreshold, vec3(0.0)) * 0.38;
-  glow += max(texture(uInput0, vUv - radius).rgb - uThreshold, vec3(0.0)) * 0.38;
+  vec3 glow = softThreshold(base, uThreshold, max(0.001, uSoftness * 0.22));
+  glow += softThreshold(texture(uInput0, vUv + vec2(radius.x, 0.0)).rgb, uThreshold, 0.05) * 0.62;
+  glow += softThreshold(texture(uInput0, vUv - vec2(radius.x, 0.0)).rgb, uThreshold, 0.05) * 0.62;
+  glow += softThreshold(texture(uInput0, vUv + vec2(0.0, radius.y)).rgb, uThreshold, 0.05) * 0.62;
+  glow += softThreshold(texture(uInput0, vUv - vec2(0.0, radius.y)).rgb, uThreshold, 0.05) * 0.62;
   glow *= 0.38 + uSoftness * 0.2;
   vec3 color = base + glow * uStrength;
   outColor = vec4(clamp(color, 0.0, 1.8), 1.0);
@@ -426,6 +477,44 @@ function createTarget(gl: WebGL2RenderingContext, width: number, height: number)
   return { texture, framebuffer, width, height };
 }
 
+/** Encode RGBA pixels as a BMP data URL so previews work without Canvas2D (e.g. happy-dom tests). */
+function rgbaToBmpDataUrl(pixels: Uint8Array, width: number, height: number): string {
+  const rowSize = Math.ceil((width * 3) / 4) * 4;
+  const pixelDataSize = rowSize * height;
+  const fileSize = 54 + pixelDataSize;
+  const buffer = new ArrayBuffer(fileSize);
+  const view = new DataView(buffer);
+  const bytes = new Uint8Array(buffer);
+
+  bytes[0] = 0x42;
+  bytes[1] = 0x4d;
+  view.setUint32(2, fileSize, true);
+  view.setUint32(10, 54, true);
+  view.setUint32(14, 40, true);
+  view.setInt32(18, width, true);
+  view.setInt32(22, height, true);
+  view.setUint16(26, 1, true);
+  view.setUint16(28, 24, true);
+  view.setUint32(34, pixelDataSize, true);
+
+  for (let y = 0; y < height; y++) {
+    // WebGL readPixels and BMP are both bottom-up — copy rows without flipping.
+    const srcRow = y * width * 4;
+    const dstRow = 54 + y * rowSize;
+    for (let x = 0; x < width; x++) {
+      const src = srcRow + x * 4;
+      const dst = dstRow + x * 3;
+      bytes[dst] = pixels[src + 2] ?? 0;
+      bytes[dst + 1] = pixels[src + 1] ?? 0;
+      bytes[dst + 2] = pixels[src] ?? 0;
+    }
+  }
+
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  return `data:image/bmp;base64,${btoa(binary)}`;
+}
+
 function hexToRgb(value: unknown): [number, number, number] {
   if (typeof value !== "string") return [1, 1, 1];
   const match = value.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
@@ -510,14 +599,19 @@ export function createTextureRuntime(
   let fps = 60;
   const nodeStats: TextureRuntimeStats["nodeStats"] = {};
 
-  const getProgram = (pass: TextureRenderPass | "copy") => {
-    const shader = pass === "copy" ? "copy" : pass.shaderModules.webgl2 ?? pass.shader;
-    const key = fragmentShaders[shader] ? shader : "copy";
-    const existing = programs.get(key);
+  const getProgramByKey = (key: string) => {
+    const shaderKey = fragmentShaders[key] ? key : "copy";
+    const existing = programs.get(shaderKey);
     if (existing) return existing;
-    const program = createProgram(gl, fragmentShaders[key]);
-    programs.set(key, program);
+    const program = createProgram(gl, fragmentShaders[shaderKey]);
+    programs.set(shaderKey, program);
     return program;
+  };
+
+  const getProgram = (pass: TextureRenderPass | "copy") => {
+    if (pass === "copy") return getProgramByKey("copy");
+    const shader = pass.shaderModules.webgl2 ?? pass.shader;
+    return getProgramByKey(fragmentShaders[shader] ? shader : "copy");
   };
 
   const ensureSize = (width: number, height: number) => {
@@ -568,35 +662,37 @@ export function createTextureRuntime(
     return pair[writeIndex === 0 ? 1 : 0].texture;
   };
 
-  const renderPass = (pass: TextureRenderPass, time: number) => {
-    const start = performance.now();
-    const program = pass.bypass ? getProgram("copy") : getProgram(pass);
-    const output = pass.usesFeedback ? persistentFor(pass.nodeId)[persistentIndex.get(pass.nodeId) ?? 0] : targetFor(pass.nodeId);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+  const drawFullscreen = (
+    program: WebGLProgram,
+    output: RenderTarget | null,
+    bindings: { input0?: WebGLTexture | null; input1?: WebGLTexture | null; feedback?: WebGLTexture | null },
+    time: number,
+    params: ParamValues,
+    extras?: { blurDir?: number }
+  ) => {
+    if (output) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, output.framebuffer);
+      gl.viewport(0, 0, output.width, output.height);
+    } else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
     gl.useProgram(program);
-
     const position = gl.getAttribLocation(program, "aPosition");
     gl.bindBuffer(gl.ARRAY_BUFFER, quad);
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
-    const input0 = outputTextureFor(pass.inputNodeIds[0]);
-    const input1 = outputTextureFor(pass.inputNodeIds[1]) ?? input0;
-    const pair = pass.usesFeedback ? persistentFor(pass.nodeId) : null;
-    const previous = pair ? pair[(persistentIndex.get(pass.nodeId) ?? 0) === 0 ? 1 : 0].texture : input0;
-
-    bindTexture(0, input0);
-    bindTexture(1, input1);
-    bindTexture(2, previous);
+    bindTexture(0, bindings.input0 ?? null);
+    bindTexture(1, bindings.input1 ?? bindings.input0 ?? null);
+    bindTexture(2, bindings.feedback ?? bindings.input0 ?? null);
 
     setUniform1i(gl, program, "uInput0", 0);
     setUniform1i(gl, program, "uInput1", 1);
     setUniform1i(gl, program, "uFeedback", 2);
-    setUniform2f(gl, program, "uResolution", canvas.width, canvas.height);
+    setUniform2f(gl, program, "uResolution", output?.width ?? canvas.width, output?.height ?? canvas.height);
     setUniform1f(gl, program, "uTime", time);
 
-    const params = pass.params;
     const [aR, aG, aB] = hexToRgb(params.colorA);
     const [bR, bG, bB] = hexToRgb(params.colorB);
     const [cR, cG, cB] = hexToRgb(params.colorC);
@@ -641,31 +737,77 @@ export function createTextureRuntime(
     setUniform1f(gl, program, "uMix", numeric(params, "mix", 1));
     setUniform1f(gl, program, "uDiffusion", numeric(params, "diffusion", 0.35));
     setUniform1f(gl, program, "uSharpness", numeric(params, "sharpness", 1));
+    setUniform1f(gl, program, "uBlurDir", extras?.blurDir ?? 0);
     const mode = typeof params.shape === "string"
       ? modeValue(params.shape, ["Circle", "Box", "Ring"])
       : modeValue(params.mode, ["Over", "Add", "Screen", "Multiply"]);
     setUniform1f(gl, program, "uMode", mode);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+
+  const renderBloomPass = (pass: TextureRenderPass, time: number) => {
+    const start = performance.now();
+    const input0 = outputTextureFor(pass.inputNodeIds[0]);
+    const extract = targetFor(`${pass.nodeId}__bloomExtract`);
+    const blurH = targetFor(`${pass.nodeId}__bloomBlurH`);
+    const blurV = targetFor(`${pass.nodeId}__bloomBlurV`);
+    const output = targetFor(pass.nodeId);
+    const params = pass.params;
+
+    drawFullscreen(getProgramByKey("bloomExtract"), extract, { input0 }, time, params);
+    drawFullscreen(getProgramByKey("bloomBlur"), blurH, { input0: extract.texture }, time, params, { blurDir: 0 });
+    drawFullscreen(getProgramByKey("bloomBlur"), blurV, { input0: blurH.texture }, time, params, { blurDir: 1 });
+    drawFullscreen(
+      getProgramByKey("bloomComposite"),
+      output,
+      { input0, input1: blurV.texture },
+      time,
+      params
+    );
+
+    nodeStats[pass.nodeId] = { cookMs: performance.now() - start, resolution: [canvas.width, canvas.height] };
+  };
+
+  const renderPass = (pass: TextureRenderPass, time: number) => {
+    const start = performance.now();
+    const shaderKey = pass.shaderModules.webgl2 ?? pass.shader;
+    if (!pass.bypass && shaderKey === "bloom") {
+      renderBloomPass(pass, time);
+      return;
+    }
+
+    const program = pass.bypass ? getProgram("copy") : getProgram(pass);
+    const output = pass.usesFeedback ? persistentFor(pass.nodeId)[persistentIndex.get(pass.nodeId) ?? 0] : targetFor(pass.nodeId);
+    const input0 = outputTextureFor(pass.inputNodeIds[0]);
+    const input1 = outputTextureFor(pass.inputNodeIds[1]) ?? input0;
+    const pair = pass.usesFeedback ? persistentFor(pass.nodeId) : null;
+    const previous = pair ? pair[(persistentIndex.get(pass.nodeId) ?? 0) === 0 ? 1 : 0].texture : input0;
+
+    drawFullscreen(program, output, { input0, input1, feedback: previous }, time, pass.params);
+
     if (pass.usesFeedback) persistentIndex.set(pass.nodeId, (persistentIndex.get(pass.nodeId) ?? 0) === 0 ? 1 : 0);
     nodeStats[pass.nodeId] = { cookMs: performance.now() - start, resolution: [canvas.width, canvas.height] };
   };
 
   const drawToScreen = (nodeId: string, time: number) => {
     const program = getProgram("copy");
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.useProgram(program);
-    const position = gl.getAttribLocation(program, "aPosition");
-    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
-    gl.enableVertexAttribArray(position);
-    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
     const texture = outputTextureFor(nodeId);
-    bindTexture(0, texture ?? null);
-    setUniform1i(gl, program, "uInput0", 0);
-    setUniform2f(gl, program, "uResolution", canvas.width, canvas.height);
-    setUniform1f(gl, program, "uTime", time);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    drawFullscreen(program, null, { input0: texture }, time, {});
+  };
+
+  let previewReadTarget: RenderTarget | null = null;
+
+  const ensurePreviewReadTarget = (size: number) => {
+    if (previewReadTarget && previewReadTarget.width === size && previewReadTarget.height === size) {
+      return previewReadTarget;
+    }
+    if (previewReadTarget) {
+      gl.deleteTexture(previewReadTarget.texture);
+      gl.deleteFramebuffer(previewReadTarget.framebuffer);
+    }
+    previewReadTarget = createTarget(gl, size, size);
+    return previewReadTarget;
   };
 
   return {
@@ -722,6 +864,16 @@ export function createTextureRuntime(
       ctx.drawImage(canvas, 0, 0, out.width, out.height);
       return out.toDataURL("image/png");
     },
+    exportNodePreview(nodeId, size = 96) {
+      const texture = outputTextureFor(nodeId);
+      if (!texture) return null;
+      const clamped = Math.max(32, Math.min(160, Math.floor(size)));
+      const target = ensurePreviewReadTarget(clamped);
+      drawFullscreen(getProgram("copy"), target, { input0: texture }, 0, {});
+      const pixels = new Uint8Array(clamped * clamped * 4);
+      gl.readPixels(0, 0, clamped, clamped, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      return rgbaToBmpDataUrl(pixels, clamped, clamped);
+    },
     getCapabilities() {
       return capabilities;
     },
@@ -737,6 +889,11 @@ export function createTextureRuntime(
           gl.deleteFramebuffer(target.framebuffer);
         })
       );
+      if (previewReadTarget) {
+        gl.deleteTexture(previewReadTarget.texture);
+        gl.deleteFramebuffer(previewReadTarget.framebuffer);
+        previewReadTarget = null;
+      }
     },
   };
 }
